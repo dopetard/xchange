@@ -1,0 +1,53 @@
+#!/usr/bin/env node
+
+const Walli = require('../dist/Walli').default;
+const deepMerge = require('../dist/Utils').deepMerge;
+
+const { argv } = require('yargs')
+  .options({
+    'xud.host': {
+      describe: 'Host of the xud gRPC interface',
+      type: 'string',
+      default: 'localhost',
+    },
+    'xud.port': {
+      describe: 'Port of the xud gRPC interface',
+      type: 'number',
+      default: 8885,
+    },
+    'db.database': {
+      describe: 'SQL database name',
+      type: 'string',
+      default: 'walli',
+    },
+    'db.host': {
+      describe: 'Hostname for SQL database',
+      type: 'string',
+      default: 'localhost',
+    },
+    'db.port': {
+      describe: 'Port for SQL database',
+      type: 'number',
+      default: 3306,
+    },
+    'db.username': {
+      describe: 'User for SQL database ',
+      type: 'string',
+      default: 'walli',
+    },
+  });
+
+
+// Delete non-config keys from argv
+delete argv._;
+delete argv.version;
+delete argv.help;
+delete argv.$0;
+
+const config = {}
+
+deepMerge(config, argv);
+
+const walli = new Walli(config);
+walli.start();
+
