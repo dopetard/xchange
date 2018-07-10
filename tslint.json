@@ -1,0 +1,36 @@
+{
+    "extends": "tslint-config-airbnb",
+    "rules": {
+        "variable-name": false,
+        "import-name": false,
+        "max-line-length": [
+            true,
+            150
+        ],
+        "no-else-after-return": false,
+        "function-name": false,
+        "no-this-assignment": [
+            true,
+            {
+                "allow-destructuring": true
+            }
+        ],
+        "align": false,
+        "typedef-whitespace": [
+            true,
+            {
+                "call-signature": "nospace",
+                "index-signature": "nospace",
+                "parameter": "nospace",
+                "property-declaration": "nospace",
+                "variable-declaration": "nospace"
+            }
+        ],
+        "member-access": true
+    },
+    "linterOptions": {
+        "exclude": [
+            "lib/lndclient/lndrpc_pb.d.ts"
+        ]
+    }
+}
