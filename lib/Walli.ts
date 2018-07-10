@@ -1,13 +1,9 @@
+import DB, { DbConfig } from './db/DB';
+import UserRepository from './users/UserRepository';
+
 type XudConfig = {
   host: string,
   port: number,
-};
-
-type DbConfig = {
-  database: string,
-  host: string,
-  port: number,
-  username: string,
 };
 
 type Config = {
@@ -17,11 +13,17 @@ type Config = {
 
 class Walli {
 
-  constructor(private config: Config) {
-    console.log(config);
-  }
+  private db!: DB;
+  private userRepo!: UserRepository;
 
-  public start = () => {};
+  constructor(private config: Config) {}
+
+  public start = async () => {
+    this.db = new DB(this.config.db);
+    await this.db.init();
+
+    this.userRepo = new UserRepository(this.db);
+  }
 
 }
 
