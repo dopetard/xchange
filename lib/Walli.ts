@@ -1,4 +1,4 @@
-import DB, { DbConfig } from './db/DB';
+import DB, { DBConfig } from './db/DB';
 import UserRepository from './users/UserRepository';
 
 type XudConfig = {
@@ -8,7 +8,7 @@ type XudConfig = {
 
 type Config = {
   xud: XudConfig,
-  db: DbConfig,
+  db: DBConfig,
 };
 
 class Walli {

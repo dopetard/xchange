@@ -3,7 +3,7 @@ import path from 'path';
 import fs from 'fs';
 import * as db from '../types/DB';
 
-type DbConfig = {
+type DBConfig = {
   database?: string,
   host: string,
   port: number,
@@ -20,12 +20,12 @@ class Db {
 
   private sequelize: Sequelize.Sequelize;
 
-  constructor(private config: DbConfig) {
+  constructor(private config: DBConfig) {
     this.sequelize = this.createSequelizeInstance(config);
     this.models = this.loadModels();
   }
 
-  private createSequelizeInstance = (config: DbConfig): Sequelize.Sequelize => {
+  private createSequelizeInstance = (config: DBConfig): Sequelize.Sequelize => {
     return new Sequelize({
       ...config,
       dialect: 'mysql',
@@ -96,4 +96,4 @@ class Db {
 }
 
 export default Db;
-export { DbConfig, Models };
+export { DBConfig, Models };
