@@ -13,9 +13,11 @@ type DBConfig = {
 
 type Models = {
   User: Sequelize.Model<db.UserInstance, db.UserAttributes>,
+  Currency: Sequelize.Model<db.CurrencyInstance, db.CurrencyAttributes>,
+  Invoice: Sequelize.Model<db.InvoiceInstance, db.InvoiceAttributes>,
 };
 
-class Db {
+class DB {
   public models: Models;
 
   private sequelize: Sequelize.Sequelize;
@@ -62,18 +64,20 @@ class Db {
       const { host, port, database } = this.config;
       console.log(`connected to database. host:${host} port:${port} database:${database}`);
     } catch (err) {
-      if (Db.isDbDoesNotExistError(err)) {
+      if (DB.isDbDoesNotExistError(err)) {
         await this.createDatabase();
       } else {
         console.error('unable to connect to the database', err);
         throw err;
       }
     }
-    const { User } = this.models;
+    const { User, Currency, Invoice } = this.models;
 
     await Promise.all([
       User.sync(),
+      Currency.sync(),
     ]);
+    await Invoice.sync();
   }
 
   private static isDbDoesNotExistError(err: Error): boolean {
@@ -92,8 +96,7 @@ class Db {
       throw err;
     }
   }
-
 }
 
-export default Db;
+export default DB;
 export { DBConfig, Models };

@@ -1,5 +1,5 @@
 import DB, { DBConfig } from './db/DB';
-import UserRepository from './users/UserRepository';
+import DBRepository from './db/DBRepo';
 
 type XudConfig = {
   host: string,
@@ -14,7 +14,7 @@ type Config = {
 class Walli {
 
   private db!: DB;
-  private userRepo!: UserRepository;
+  private dbRepo!: DBRepository;
 
   constructor(private config: Config) {}
 
@@ -22,9 +22,8 @@ class Walli {
     this.db = new DB(this.config.db);
     await this.db.init();
 
-    this.userRepo = new UserRepository(this.db);
+    this.dbRepo = new DBRepository(this.db);
   }
-
 }
 
 export default Walli;

@@ -21,3 +21,21 @@ export type UserFactory = {
 export type UserAttributes = UserFactory;
 
 export type UserInstance = UserAttributes & Sequelize.Instance<UserAttributes>;
+
+export type CurrencyFactory = {
+  id: string,
+};
+
+export type CurrencyAttributes = CurrencyFactory;
+
+export type CurrencyInstance = CurrencyAttributes & Sequelize.Instance<CurrencyAttributes>;
+
+export type InvoiceFactory = {
+  user: string,
+  currency: string,
+  rHash: string,
+};
+
+export type InvoiceAttributes = InvoiceFactory;
+
+export type InvoiceInstance = InvoiceAttributes & Sequelize.Instance<InvoiceAttributes>;
