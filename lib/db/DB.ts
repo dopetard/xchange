@@ -14,13 +14,14 @@ type DBConfig = {
 type Models = {
   User: Sequelize.Model<db.UserInstance, db.UserAttributes>,
   Currency: Sequelize.Model<db.CurrencyInstance, db.CurrencyAttributes>,
+  Balance: Sequelize.Model<db.BalanceInstance, db.BalanceAttributes>,
   Invoice: Sequelize.Model<db.InvoiceInstance, db.InvoiceAttributes>,
 };
 
 class DB {
-  public models: Models;
 
-  private sequelize: Sequelize.Sequelize;
+  public models: Models;
+  public sequelize: Sequelize.Sequelize;
 
   constructor(private config: DBConfig) {
     this.sequelize = this.createSequelizeInstance(config);
@@ -71,13 +72,16 @@ class DB {
         throw err;
       }
     }
-    const { User, Currency, Invoice } = this.models;
+    const { User, Currency, Balance, Invoice } = this.models;
 
     await Promise.all([
       User.sync(),
       Currency.sync(),
     ]);
-    await Invoice.sync();
+    await Promise.all([
+      Balance.sync(),
+      Invoice.sync(),
+    ]);
   }
 
   private static isDbDoesNotExistError(err: Error): boolean {

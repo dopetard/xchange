@@ -30,10 +30,20 @@ export type CurrencyAttributes = CurrencyFactory;
 
 export type CurrencyInstance = CurrencyAttributes & Sequelize.Instance<CurrencyAttributes>;
 
-export type InvoiceFactory = {
+export type BalanceFactory = {
   user: string,
   currency: string,
+  balance: number | Sequelize.literal,
+};
+
+export type BalanceAttributes = BalanceFactory;
+
+export type BalanceInstance = BalanceAttributes & Sequelize.Instance<BalanceAttributes>;
+
+export type InvoiceFactory = {
   rHash: string,
+  user: string,
+  currency: string,
 };
 
 export type InvoiceAttributes = InvoiceFactory;
