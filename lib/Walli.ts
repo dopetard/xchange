@@ -1,28 +1,32 @@
+import DB, { DBConfig } from './db/DB';
+import UserManager from './users/UserManager';
+
 type XudConfig = {
   host: string,
   port: number,
 };
 
-type DbConfig = {
-  database: string,
-  host: string,
-  port: number,
-  username: string,
-};
-
 type Config = {
   xud: XudConfig,
-  db: DbConfig,
+  db: DBConfig,
 };
 
 class Walli {
 
-  constructor(private config: Config) {
-    console.log(config);
+  private db!: DB;
+  private userManager!: UserManager;
+
+  constructor(private config: Config) {}
+
+  public start = async () => {
+    this.db = new DB(this.config.db);
+    await this.db.init();
+
+    this.userManager = new UserManager(this.db);
+    await this.userManager.init();
+
+    this.userManager.updateBalance('c11f6cf0-8520-11e8-8d67-73acf1b3ad86', 'BTC', -5);
   }
-
-  public start = () => {};
-
 }
 
 export default Walli;

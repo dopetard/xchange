@@ -35,6 +35,10 @@ const { argv } = require('yargs')
       type: 'string',
       default: 'walli',
     },
+    'db.password': {
+      describe: 'Password for SQL database ',
+      type: 'string',
+    },
   });
 
 
