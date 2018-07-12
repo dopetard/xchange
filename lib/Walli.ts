@@ -1,13 +1,9 @@
 import DB, { DBConfig } from './db/DB';
+import { XudClientConfig } from './xudclient/XudClient';
 import UserManager from './users/UserManager';
 
-type XudConfig = {
-  host: string,
-  port: number,
-};
-
 type Config = {
-  xud: XudConfig,
+  xud: XudClientConfig,
   db: DBConfig,
 };
 
