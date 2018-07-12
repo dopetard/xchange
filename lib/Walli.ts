@@ -23,7 +23,6 @@ class Walli {
     await this.userManager.init();
 
     this.xudClient = new XudClient(this.config.xud);
-    console.log(await this.xudClient.addInvoice(1, 'test'));
   }
 }
 
