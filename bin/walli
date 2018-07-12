@@ -13,7 +13,7 @@ const { argv } = require('yargs')
     'xud.port': {
       describe: 'Port of the xud gRPC interface',
       type: 'number',
-      default: 8885,
+      default: 8886,
     },
     'db.database': {
       describe: 'SQL database name',

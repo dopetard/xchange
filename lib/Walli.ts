@@ -1,5 +1,5 @@
 import DB, { DBConfig } from './db/DB';
-import { XudClientConfig } from './xudclient/XudClient';
+import XudClient, { XudClientConfig } from './xudclient/XudClient';
 import UserManager from './users/UserManager';
 
 type Config = {
@@ -11,6 +11,7 @@ class Walli {
 
   private db!: DB;
   private userManager!: UserManager;
+  private xudClient!: XudClient;
 
   constructor(private config: Config) {}
 
@@ -21,7 +22,8 @@ class Walli {
     this.userManager = new UserManager(this.db);
     await this.userManager.init();
 
-    this.userManager.updateBalance('c11f6cf0-8520-11e8-8d67-73acf1b3ad86', 'BTC', -5);
+    this.xudClient = new XudClient(this.config.xud);
+    console.log(await this.xudClient.addInvoice(1, 'test'));
   }
 }
 
