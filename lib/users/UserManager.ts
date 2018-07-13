@@ -20,13 +20,13 @@ class UserManager {
     const { id } = await this.userRepo.addUser();
 
     const promises: Bluebird<any>[] = [];
-    for (const currency of this.currencies) {
+    this.currencies.forEach((currency) => {
       promises.push(this.userRepo.addBalance({
         user: id,
         currency: currency.id,
         balance: 0,
       }));
-    }
+    });
     await Promise.all(promises);
 
     return id;
