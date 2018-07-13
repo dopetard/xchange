@@ -47,6 +47,10 @@ class XudClient extends EventEmitter {
         const data = message.toObject();
         console.log(data);
         this.emit('invoice.settled', data);
+      })
+      .on('error', (message) => {
+        console.log(`Could not connect to XUD: ${message}`);
+        process.exit(1);
       });
   }
 
