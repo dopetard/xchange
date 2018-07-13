@@ -64,7 +64,7 @@ class UserManager {
   public getInvoice = async (user: string, currency: string, amount: number, memo: string = ''): Promise<string> => {
     this.checkCurrencySupport(currency);
 
-    // TODO: supoprt for more currencies
+    // TODO: support for more currencies
     assert(currency === 'BTC');
 
     const { invoice, rHash } = await this.xudClient.addInvoice(amount, memo);
@@ -100,7 +100,7 @@ class UserManager {
     return response.error;
   }
 
-  // TODO: show the memo to the user? Transactions tab?
+  // TODO: show the memo to the user? "Transactions" tab?
   private subscribeInvoices = async () => {
     await this.xudClient.subscribeInvoices();
     this.xudClient.on('invoice.settled', async (data) => {
@@ -109,6 +109,10 @@ class UserManager {
 
       // Make sure that the invoice is in the database which means that is was created by walli-server
       if (typeof dbResult === 'object') {
+        console.log(`Invoice update: ${JSON.stringify(data, null, 2)}`);
+
+        await this.userRepo.deleteInvoice(rHash);
+
         const { user, currency } = dbResult as db.InvoiceInstance;
         await this.userRepo.updateUserBalance(user, currency, value);
       }
