@@ -19,10 +19,10 @@ class Walli {
     this.db = new DB(this.config.db);
     await this.db.init();
 
-    this.userManager = new UserManager(this.db);
-    await this.userManager.init();
-
     this.xudClient = new XudClient(this.config.xud);
+
+    this.userManager = new UserManager(this.db, this.xudClient);
+    await this.userManager.init();
   }
 }
 

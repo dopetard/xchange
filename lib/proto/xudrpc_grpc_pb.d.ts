@@ -15,6 +15,7 @@ interface IXudService extends grpc.ServiceDefinition<grpc.UntypedServiceImplemen
     placeOrder: IXudService_IPlaceOrder;
     connect: IXudService_IConnect;
     addInvoice: IXudService_IAddInvoice;
+    decodeInvoice: IXudService_IDecodeInvoice;
     payInvoice: IXudService_IPayInvoice;
     subscribeInvoices: IXudService_ISubscribeInvoices;
     tokenSwap: IXudService_ITokenSwap;
@@ -84,12 +85,21 @@ interface IXudService_IAddInvoice extends grpc.MethodDefinition<xudrpc_pb.AddInv
     responseSerialize: grpc.serialize<xudrpc_pb.AddInvoiceResponse>;
     responseDeserialize: grpc.deserialize<xudrpc_pb.AddInvoiceResponse>;
 }
-interface IXudService_IPayInvoice extends grpc.MethodDefinition<xudrpc_pb.PayInvoiceRequest, xudrpc_pb.PayInvoiceResponse> {
+interface IXudService_IDecodeInvoice extends grpc.MethodDefinition<xudrpc_pb.InvoiceRequest, xudrpc_pb.DecodeInvoiceResponse> {
+    path: string; // "/xudrpc.Xud/DecodeInvoice"
+    requestStream: boolean; // false
+    responseStream: boolean; // false
+    requestSerialize: grpc.serialize<xudrpc_pb.InvoiceRequest>;
+    requestDeserialize: grpc.deserialize<xudrpc_pb.InvoiceRequest>;
+    responseSerialize: grpc.serialize<xudrpc_pb.DecodeInvoiceResponse>;
+    responseDeserialize: grpc.deserialize<xudrpc_pb.DecodeInvoiceResponse>;
+}
+interface IXudService_IPayInvoice extends grpc.MethodDefinition<xudrpc_pb.InvoiceRequest, xudrpc_pb.PayInvoiceResponse> {
     path: string; // "/xudrpc.Xud/PayInvoice"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestSerialize: grpc.serialize<xudrpc_pb.PayInvoiceRequest>;
-    requestDeserialize: grpc.deserialize<xudrpc_pb.PayInvoiceRequest>;
+    requestSerialize: grpc.serialize<xudrpc_pb.InvoiceRequest>;
+    requestDeserialize: grpc.deserialize<xudrpc_pb.InvoiceRequest>;
     responseSerialize: grpc.serialize<xudrpc_pb.PayInvoiceResponse>;
     responseDeserialize: grpc.deserialize<xudrpc_pb.PayInvoiceResponse>;
 }
@@ -131,7 +141,8 @@ export interface IXudServer {
     placeOrder: grpc.handleUnaryCall<xudrpc_pb.PlaceOrderRequest, xudrpc_pb.PlaceOrderResponse>;
     connect: grpc.handleUnaryCall<xudrpc_pb.ConnectRequest, xudrpc_pb.ConnectResponse>;
     addInvoice: grpc.handleUnaryCall<xudrpc_pb.AddInvoiceRequest, xudrpc_pb.AddInvoiceResponse>;
-    payInvoice: grpc.handleUnaryCall<xudrpc_pb.PayInvoiceRequest, xudrpc_pb.PayInvoiceResponse>;
+    decodeInvoice: grpc.handleUnaryCall<xudrpc_pb.InvoiceRequest, xudrpc_pb.DecodeInvoiceResponse>;
+    payInvoice: grpc.handleUnaryCall<xudrpc_pb.InvoiceRequest, xudrpc_pb.PayInvoiceResponse>;
     subscribeInvoices: grpc.handleServerStreamingCall<xudrpc_pb.SubscribeInvoicesRequest, xudrpc_pb.SubscribeInvoicesResponse>;
     tokenSwap: grpc.handleUnaryCall<xudrpc_pb.TokenSwapRequest, xudrpc_pb.TokenSwapResponse>;
     shutdown: grpc.handleUnaryCall<xudrpc_pb.ShutdownRequest, xudrpc_pb.ShutdownResponse>;
@@ -158,9 +169,12 @@ export interface IXudClient {
     addInvoice(request: xudrpc_pb.AddInvoiceRequest, callback: (error: Error | null, response: xudrpc_pb.AddInvoiceResponse) => void): grpc.ClientUnaryCall;
     addInvoice(request: xudrpc_pb.AddInvoiceRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: xudrpc_pb.AddInvoiceResponse) => void): grpc.ClientUnaryCall;
     addInvoice(request: xudrpc_pb.AddInvoiceRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: xudrpc_pb.AddInvoiceResponse) => void): grpc.ClientUnaryCall;
-    payInvoice(request: xudrpc_pb.PayInvoiceRequest, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
-    payInvoice(request: xudrpc_pb.PayInvoiceRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
-    payInvoice(request: xudrpc_pb.PayInvoiceRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
+    decodeInvoice(request: xudrpc_pb.InvoiceRequest, callback: (error: Error | null, response: xudrpc_pb.DecodeInvoiceResponse) => void): grpc.ClientUnaryCall;
+    decodeInvoice(request: xudrpc_pb.InvoiceRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: xudrpc_pb.DecodeInvoiceResponse) => void): grpc.ClientUnaryCall;
+    decodeInvoice(request: xudrpc_pb.InvoiceRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: xudrpc_pb.DecodeInvoiceResponse) => void): grpc.ClientUnaryCall;
+    payInvoice(request: xudrpc_pb.InvoiceRequest, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
+    payInvoice(request: xudrpc_pb.InvoiceRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
+    payInvoice(request: xudrpc_pb.InvoiceRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
     subscribeInvoices(request: xudrpc_pb.SubscribeInvoicesRequest, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<xudrpc_pb.SubscribeInvoicesRequest>;
     subscribeInvoices(request: xudrpc_pb.SubscribeInvoicesRequest, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<xudrpc_pb.SubscribeInvoicesRequest>;
     tokenSwap(request: xudrpc_pb.TokenSwapRequest, callback: (error: Error | null, response: xudrpc_pb.TokenSwapResponse) => void): grpc.ClientUnaryCall;
@@ -193,9 +207,12 @@ export class XudClient extends grpc.Client implements IXudClient {
     public addInvoice(request: xudrpc_pb.AddInvoiceRequest, callback: (error: Error | null, response: xudrpc_pb.AddInvoiceResponse) => void): grpc.ClientUnaryCall;
     public addInvoice(request: xudrpc_pb.AddInvoiceRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: xudrpc_pb.AddInvoiceResponse) => void): grpc.ClientUnaryCall;
     public addInvoice(request: xudrpc_pb.AddInvoiceRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: xudrpc_pb.AddInvoiceResponse) => void): grpc.ClientUnaryCall;
-    public payInvoice(request: xudrpc_pb.PayInvoiceRequest, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
-    public payInvoice(request: xudrpc_pb.PayInvoiceRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
-    public payInvoice(request: xudrpc_pb.PayInvoiceRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
+    public decodeInvoice(request: xudrpc_pb.InvoiceRequest, callback: (error: Error | null, response: xudrpc_pb.DecodeInvoiceResponse) => void): grpc.ClientUnaryCall;
+    public decodeInvoice(request: xudrpc_pb.InvoiceRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: xudrpc_pb.DecodeInvoiceResponse) => void): grpc.ClientUnaryCall;
+    public decodeInvoice(request: xudrpc_pb.InvoiceRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: xudrpc_pb.DecodeInvoiceResponse) => void): grpc.ClientUnaryCall;
+    public payInvoice(request: xudrpc_pb.InvoiceRequest, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
+    public payInvoice(request: xudrpc_pb.InvoiceRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
+    public payInvoice(request: xudrpc_pb.InvoiceRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: xudrpc_pb.PayInvoiceResponse) => void): grpc.ClientUnaryCall;
     public subscribeInvoices(request: xudrpc_pb.SubscribeInvoicesRequest, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<xudrpc_pb.SubscribeInvoicesRequest>;
     public subscribeInvoices(request: xudrpc_pb.SubscribeInvoicesRequest, metadata?: grpc.Metadata, options?: Partial<grpc.CallOptions>): grpc.ClientReadableStream<xudrpc_pb.SubscribeInvoicesRequest>;
     public tokenSwap(request: xudrpc_pb.TokenSwapRequest, callback: (error: Error | null, response: xudrpc_pb.TokenSwapResponse) => void): grpc.ClientUnaryCall;

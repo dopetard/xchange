@@ -59,8 +59,16 @@ service Xud {
     };
   }
 
+  /* Decode a Lightning invoice */
+  rpc DecodeInvoice(InvoiceRequest) returns (DecodeInvoiceResponse) {
+    option (google.api.http) = {
+      post: "/v1/payinvoice"
+      body: "*"
+    };
+  }
+
   /* Pay a Lightning invoice. */
-  rpc PayInvoice(PayInvoiceRequest) returns (PayInvoiceResponse) {
+  rpc PayInvoice(InvoiceRequest) returns (PayInvoiceResponse) {
     option (google.api.http) = {
       post: "/v1/payinvoice"
       body: "*"
@@ -102,8 +110,12 @@ message AddInvoiceResponse {
   string invoice = 2 [json_name = "invoice"];
 }
 
-message PayInvoiceRequest {
+message InvoiceRequest {
   string invoice = 1 [json_name = "invoice"];
+}
+
+message DecodeInvoiceResponse {
+  int64 value = 1 [json_name = "value"];
 }
 
 message PayInvoiceResponse {

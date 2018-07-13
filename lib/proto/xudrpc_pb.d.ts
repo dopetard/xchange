@@ -58,24 +58,45 @@ export namespace AddInvoiceResponse {
     }
 }
 
-export class PayInvoiceRequest extends jspb.Message { 
+export class InvoiceRequest extends jspb.Message { 
     getInvoice(): string;
     setInvoice(value: string): void;
 
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): PayInvoiceRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: PayInvoiceRequest): PayInvoiceRequest.AsObject;
+    toObject(includeInstance?: boolean): InvoiceRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: InvoiceRequest): InvoiceRequest.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: PayInvoiceRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): PayInvoiceRequest;
-    static deserializeBinaryFromReader(message: PayInvoiceRequest, reader: jspb.BinaryReader): PayInvoiceRequest;
+    static serializeBinaryToWriter(message: InvoiceRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): InvoiceRequest;
+    static deserializeBinaryFromReader(message: InvoiceRequest, reader: jspb.BinaryReader): InvoiceRequest;
 }
 
-export namespace PayInvoiceRequest {
+export namespace InvoiceRequest {
     export type AsObject = {
         invoice: string,
+    }
+}
+
+export class DecodeInvoiceResponse extends jspb.Message { 
+    getValue(): number;
+    setValue(value: number): void;
+
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): DecodeInvoiceResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: DecodeInvoiceResponse): DecodeInvoiceResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: DecodeInvoiceResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): DecodeInvoiceResponse;
+    static deserializeBinaryFromReader(message: DecodeInvoiceResponse, reader: jspb.BinaryReader): DecodeInvoiceResponse;
+}
+
+export namespace DecodeInvoiceResponse {
+    export type AsObject = {
+        value: number,
     }
 }
 
