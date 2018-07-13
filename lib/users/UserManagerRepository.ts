@@ -30,8 +30,8 @@ class UserManagerRepository {
     return this.models.Currency.bulkCreate(currencies);
   }
 
-  public updateUserBalance = async (user: string, currency: string, increasedAmount: number) => {
-    await this.models.Balance.update({ balance: this.sequelize.literal(`balance + ${increasedAmount}`) }, {
+  public updateUserBalance = (user: string, currency: string, increasedAmount: number): Bluebird<[number, db.BalanceInstance[]]> => {
+    return this.models.Balance.update({ balance: this.sequelize.literal(`balance + ${increasedAmount}`) }, {
       where: {
         user: {
           [Op.eq]: user,
@@ -39,6 +39,14 @@ class UserManagerRepository {
         currency: {
           [Op.eq]: currency,
         },
+      },
+    });
+  }
+
+  public deleteInvoice = (rHash: string) => {
+    return this.models.Invoice.destroy({
+      where: {
+        rHash: { [Op.eq]: rHash },
       },
     });
   }

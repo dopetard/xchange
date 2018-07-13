@@ -29,10 +29,16 @@ class XudClient extends EventEmitter {
     return this.unaryCall<xudrpc.AddInvoiceRequest, xudrpc.AddInvoiceResponse.AsObject>('addInvoice', request);
   }
 
-  public payInvoice = (invoice: string): Promise<xudrpc.PayInvoiceResponse.AsObject> => {
-    const request = new xudrpc.PayInvoiceRequest();
+  public decodeInvoice = (invoice: string): Promise<xudrpc.DecodeInvoiceResponse.AsObject> => {
+    const request = new xudrpc.InvoiceRequest();
     request.setInvoice(invoice);
-    return this.unaryCall<xudrpc.PayInvoiceRequest, xudrpc.PayInvoiceResponse.AsObject>('payInvoice', request);
+    return this.unaryCall<xudrpc.InvoiceRequest, xudrpc.DecodeInvoiceResponse.AsObject>('decodeInvoice', request);
+  }
+
+  public payInvoice = (invoice: string): Promise<xudrpc.PayInvoiceResponse.AsObject> => {
+    const request = new xudrpc.InvoiceRequest();
+    request.setInvoice(invoice);
+    return this.unaryCall<xudrpc.InvoiceRequest, xudrpc.PayInvoiceResponse.AsObject>('payInvoice', request);
   }
 
   public subscribeInvoices = () => {
