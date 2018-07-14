@@ -111,7 +111,7 @@ class UserManager {
 
       // Make sure that the invoice is in the database which means that is was created by walli-server
       if (isObject(dbResult)) {
-        this.logger.info(`Invoice update: ${JSON.stringify(data, null, 2)}`);
+        this.logger.info(`Invoice settled: ${JSON.stringify(data, null, 2)}`);
 
         await this.userRepo.deleteInvoice(rHash);
 

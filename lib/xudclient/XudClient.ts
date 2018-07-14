@@ -46,7 +46,6 @@ class XudClient extends EventEmitter {
     this.xudClient.subscribeInvoices(new xudrpc.SubscribeInvoicesRequest())
       .on('data', (message: GrpcResponse) => {
         const data = message.toObject();
-        this.logger.info(data);
         this.emit('invoice.settled', data);
       })
       .on('error', (message) => {

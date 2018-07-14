@@ -1,6 +1,5 @@
 import UserManager from '../users/UserManager';
 
-// TODO: error handling not enough arguments
 class Controller {
 
   constructor(private userManager: UserManager) {}
@@ -27,7 +26,7 @@ class Controller {
       const invoice = await this.userManager.getInvoice(user, currency, amount, memo);
       res.json({ invoice });
     } catch (exception) {
-      res.json({ error: exception.message });
+      this.handleException(exception, res);
     }
   }
 
@@ -37,14 +36,22 @@ class Controller {
       const balance = await this.userManager.getBalance(user, currency);
       res.json({ balance });
     } catch (exception) {
-      res.json({ error: exception.message });
+      this.handleException(exception, res);
     }
   }
 
   public getBalances = async (req, res) => {
     const { user } = req.body;
-    const balances = await this.userManager.getBalances(user);
-    res.json({ balances });
+    try {
+      const balances = await this.userManager.getBalances(user);
+      res.json({ balances });
+    } catch (exception) {
+      this.handleException(exception, res);
+    }
+  }
+
+  private handleException = (exception: any, res: any) => {
+    res.json({ error: exception.message });
   }
 }
 
