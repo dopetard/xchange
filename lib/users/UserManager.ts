@@ -6,6 +6,7 @@ import UserManagerRepository from './UserManagerRepository';
 import XudClient from '../xudclient/XudClient';
 import errors from './Errors';
 import Logger from '../Logger';
+import { isObject } from '../Utils';
 
 class UserManager {
 
@@ -79,7 +80,7 @@ class UserManager {
   }
 
   // TODO: who pays the routing fees? Not included in the value of the invoice
-  public sendPayment = async (user: string, invoice: string): Promise<string> => {
+  public sendPayment = async (user: string, invoice: string): Promise<{ error: string }> => {
     const currency = this.detectCurrency(invoice);
 
     const { balance } = await this.userRepo.getBalance(user, currency) as db.BalanceInstance;
@@ -91,14 +92,16 @@ class UserManager {
 
     await this.userRepo.updateUserBalance(user, currency, value * -1);
 
-    const response = await this.xudClient.payInvoice(invoice);
+    const invoiceResponse = await this.xudClient.payInvoice(invoice);
 
-    if (response.error !== '') {
+    if (invoiceResponse.error !== '') {
       // Add the value of the invoice to the balance of the user because the payment failed
       await this.userRepo.updateUserBalance(user, currency, value);
     }
 
-    return response.error;
+    return {
+      error: invoiceResponse.error,
+    };
   }
 
   // TODO: show the memo to the user? "Transactions" tab?
@@ -109,7 +112,7 @@ class UserManager {
       const dbResult = await this.userRepo.getInvoice(rHash);
 
       // Make sure that the invoice is in the database which means that is was created by walli-server
-      if (typeof dbResult === 'object') {
+      if (isObject(dbResult)) {
         this.logger.info(`Invoice update: ${JSON.stringify(data, null, 2)}`);
 
         await this.userRepo.deleteInvoice(rHash);
@@ -118,6 +121,35 @@ class UserManager {
         await this.userRepo.updateUserBalance(user, currency, value);
       }
     });
+  }
+
+  public getBalance = async (user: string, currency: string): Promise<number> => {
+    this.checkCurrencySupport(currency);
+
+    // TODO: support for more currencies
+    assert(currency === 'BTC');
+
+    const result = await this.userRepo.getBalance(user, currency);
+
+    if (isObject(result)) {
+      const { balance } = result as db.BalanceInstance;
+      return balance as number;
+    }
+
+    // There is no entry in the database for that specific user and currency
+    return 0;
+  }
+
+  public getBalances = async (user: string): Promise<{ [ currency: string ]: number }> => {
+    const results = await this.userRepo.getBalances(user);
+
+    const map: { [ currency: string ]: number } = {};
+    results.forEach((result) => {
+      const { currency, balance } = result;
+      map[currency] = balance as number;
+    });
+
+    return map;
   }
 
   private detectCurrency = (_invoice: string): string => {

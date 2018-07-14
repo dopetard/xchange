@@ -2,11 +2,13 @@ import Logger from './Logger';
 import DB, { DBConfig } from './db/DB';
 import XudClient, { XudClientConfig } from './xudclient/XudClient';
 import UserManager from './users/UserManager';
+import API, { APIConfig } from './api/API';
 
 type Config = {
   logfile: string,
-  xud: XudClientConfig,
   db: DBConfig,
+  xud: XudClientConfig,
+  api: APIConfig,
 };
 
 class Walli {
@@ -15,6 +17,7 @@ class Walli {
   private db!: DB;
   private userManager!: UserManager;
   private xudClient!: XudClient;
+  private api!: API;
 
   constructor(private config: Config) {
     this.logger = new Logger(config.logfile);
@@ -28,6 +31,9 @@ class Walli {
 
     this.userManager = new UserManager(this.db, this.xudClient, this.logger);
     await this.userManager.init();
+
+    this.api = new API(this.config.api, this.userManager, this.logger);
+    this.api.init();
   }
 }
 
