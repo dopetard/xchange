@@ -80,7 +80,7 @@ class UserManager {
   }
 
   // TODO: who pays the routing fees? Not included in the value of the invoice
-  public sendPayment = async (user: string, invoice: string): Promise<{ error: string }> => {
+  public sendPayment = async (user: string, invoice: string): Promise<string> => {
     const currency = this.detectCurrency(invoice);
 
     const { balance } = await this.userRepo.getBalance(user, currency) as db.BalanceInstance;
@@ -99,9 +99,7 @@ class UserManager {
       await this.userRepo.updateUserBalance(user, currency, value);
     }
 
-    return {
-      error: invoiceResponse.error,
-    };
+    return invoiceResponse.error;
   }
 
   // TODO: show the memo to the user? "Transactions" tab?
@@ -143,13 +141,13 @@ class UserManager {
   public getBalances = async (user: string): Promise<{ [ currency: string ]: number }> => {
     const results = await this.userRepo.getBalances(user);
 
-    const map: { [ currency: string ]: number } = {};
+    const object: { [ currency: string ]: number } = {};
     results.forEach((result) => {
       const { currency, balance } = result;
-      map[currency] = balance as number;
+      object[currency] = balance as number;
     });
 
-    return map;
+    return object;
   }
 
   private detectCurrency = (_invoice: string): string => {
