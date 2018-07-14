@@ -1,5 +1,6 @@
 import UserManager from '../users/UserManager';
 
+// TODO: HTTP codes for failed requests
 class Controller {
 
   constructor(private userManager: UserManager) {}
