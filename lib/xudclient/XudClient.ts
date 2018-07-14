@@ -2,6 +2,7 @@ import grpc from 'grpc';
 import * as xudapi from '../proto/xudrpc_grpc_pb';
 import * as xudrpc from '../proto/xudrpc_pb';
 import { EventEmitter } from 'events';
+import Logger from '../Logger';
 
 type XudClientConfig = {
   host: string,
@@ -16,7 +17,7 @@ class XudClient extends EventEmitter {
 
   private xudClient: xudapi.XudClient;
 
-  constructor(config: XudClientConfig) {
+  constructor(config: XudClientConfig, private logger: Logger) {
     super();
     const credentials = grpc.credentials.createInsecure();
     this.xudClient = new xudapi.XudClient(`${config.host}:${config.port}`, credentials);
@@ -45,11 +46,11 @@ class XudClient extends EventEmitter {
     this.xudClient.subscribeInvoices(new xudrpc.SubscribeInvoicesRequest())
       .on('data', (message: GrpcResponse) => {
         const data = message.toObject();
-        console.log(data);
+        this.logger.info(data);
         this.emit('invoice.settled', data);
       })
       .on('error', (message) => {
-        console.log(`Could not connect to XUD: ${message}`);
+        this.logger.error(`Could not connect to XUD ${message}`);
         process.exit(1);
       });
   }

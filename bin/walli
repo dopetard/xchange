@@ -5,6 +5,11 @@ const deepMerge = require('../dist/Utils').deepMerge;
 
 const { argv } = require('yargs')
   .options({
+    'logfile': {
+      describe: 'Path to the logfile',
+      type: 'string',
+      default: 'walli.log',
+    },
     'xud.host': {
       describe: 'Host of the xud gRPC interface',
       type: 'string',
@@ -39,7 +44,7 @@ const { argv } = require('yargs')
       describe: 'Password for SQL database ',
       type: 'string',
     },
-  });
+  }).config();
 
 
 // Delete non-config keys from argv

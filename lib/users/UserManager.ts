@@ -5,6 +5,7 @@ import * as db from '../types/DB';
 import UserManagerRepository from './UserManagerRepository';
 import XudClient from '../xudclient/XudClient';
 import errors from './Errors';
+import Logger from '../Logger';
 
 class UserManager {
 
@@ -13,7 +14,7 @@ class UserManager {
   private currencies: string[] = [];
   private users: string[] = [];
 
-  constructor(db: DB, private xudClient: XudClient) {
+  constructor(db: DB, private xudClient: XudClient, private logger: Logger) {
     this.userRepo = new UserManagerRepository(db);
   }
 
@@ -109,7 +110,7 @@ class UserManager {
 
       // Make sure that the invoice is in the database which means that is was created by walli-server
       if (typeof dbResult === 'object') {
-        console.log(`Invoice update: ${JSON.stringify(data, null, 2)}`);
+        this.logger.info(`Invoice update: ${JSON.stringify(data, null, 2)}`);
 
         await this.userRepo.deleteInvoice(rHash);
 

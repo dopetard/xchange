@@ -2,6 +2,7 @@ import Sequelize from 'sequelize';
 import path from 'path';
 import fs from 'fs';
 import * as db from '../types/DB';
+import Logger from '../Logger';
 
 type DBConfig = {
   database?: string,
@@ -23,7 +24,7 @@ class DB {
   public models: Models;
   public sequelize: Sequelize.Sequelize;
 
-  constructor(private config: DBConfig) {
+  constructor(private config: DBConfig, private logger: Logger) {
     this.sequelize = this.createSequelizeInstance(config);
     this.models = this.loadModels();
   }
@@ -63,24 +64,25 @@ class DB {
     try {
       await this.sequelize.authenticate();
       const { host, port, database } = this.config;
-      console.log(`connected to database. host:${host} port:${port} database:${database}`);
+      this.logger.info(`Connected to database. host:${host} port:${port} database:${database}`);
     } catch (err) {
       if (DB.isDbDoesNotExistError(err)) {
         await this.createDatabase();
       } else {
-        console.error('unable to connect to the database', err);
+        this.logger.error(`Unable to connect to the database ${err}`);
         throw err;
       }
     }
     const { User, Currency, Balance, Invoice } = this.models;
+    const options = { logging: this.logger.info };
 
     await Promise.all([
-      User.sync(),
-      Currency.sync(),
+      User.sync(options),
+      Currency.sync(options),
     ]);
     await Promise.all([
-      Balance.sync(),
-      Invoice.sync(),
+      Balance.sync(options),
+      Invoice.sync(options),
     ]);
   }
 
@@ -96,7 +98,7 @@ class DB {
       await sequelize.query(`CREATE DATABASE ${database} CHARACTER SET utf8 COLLATE utf8_general_ci;`);
       await sequelize.close();
     } catch (err) {
-      console.error('unable to create the database', err);
+      this.logger.error('Unable to create the database');
       throw err;
     }
   }
