@@ -83,23 +83,28 @@ class UserManager {
   public sendPayment = async (user: string, invoice: string): Promise<string> => {
     const currency = this.detectCurrency(invoice);
 
-    const { balance } = await this.userRepo.getBalance(user, currency) as db.BalanceInstance;
-    const { value } = await this.xudClient.decodeInvoice(invoice);
+    const dbResult = await this.userRepo.getBalance(user, currency);
+    if (isObject(dbResult)) {
+      const { balance } = dbResult as db.BalanceInstance;
+      const { value } = await this.xudClient.decodeInvoice(invoice);
 
-    if (value > balance) {
+      if (value > balance) {
+        throw errors.INSUFFICIENT_BALANCE;
+      }
+
+      await this.userRepo.updateUserBalance(user, currency, value * -1);
+
+      const invoiceResponse = await this.xudClient.payInvoice(invoice);
+
+      if (invoiceResponse.error !== '') {
+        // Add the value of the invoice to the balance of the user because the payment failed
+        await this.userRepo.updateUserBalance(user, currency, value);
+      }
+
+      return invoiceResponse.error;
+    } else {
       throw errors.INSUFFICIENT_BALANCE;
     }
-
-    await this.userRepo.updateUserBalance(user, currency, value * -1);
-
-    const invoiceResponse = await this.xudClient.payInvoice(invoice);
-
-    if (invoiceResponse.error !== '') {
-      // Add the value of the invoice to the balance of the user because the payment failed
-      await this.userRepo.updateUserBalance(user, currency, value);
-    }
-
-    return invoiceResponse.error;
   }
 
   // TODO: show the memo to the user? "Transactions" tab?

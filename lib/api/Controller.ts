@@ -12,13 +12,16 @@ class Controller {
 
   public sendPayment = async (req, res) => {
     const { user, invoice } = req.body;
-    let error = '';
     try {
-      error = await this.userManager.sendPayment(user, invoice);
+      const error = await this.userManager.sendPayment(user, invoice);
+      if (error !== '') {
+        res.status(400).json({ error });
+      } else {
+        res.json({ error });
+      }
     } catch (exception) {
-      error = exception.message;
+      this.handleException(exception, res);
     }
-    res.json({ error });
   }
 
   public getInvoice = async (req, res) => {
@@ -52,7 +55,8 @@ class Controller {
   }
 
   private handleException = (exception: any, res: any) => {
-    res.json({ error: exception.message });
+    const message = (exception.message) ? exception.message : exception;
+    res.status(400).json({ error: message });
   }
 }
 
