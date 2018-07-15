@@ -107,7 +107,6 @@ class UserManager {
     }
   }
 
-  // TODO: show the memo to the user? "Transactions" tab?
   private subscribeInvoices = async () => {
     await this.xudClient.subscribeInvoices();
     this.xudClient.on('invoice.settled', async (data) => {

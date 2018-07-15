@@ -25,9 +25,9 @@ class Controller {
   }
 
   public getInvoice = async (req, res) => {
-    const { user, currency, amount, memo } = req.body;
+    const { user, currency, amount } = req.body;
     try {
-      const invoice = await this.userManager.getInvoice(user, currency, amount, memo);
+      const invoice = await this.userManager.getInvoice(user, currency, amount);
       res.json({ invoice });
     } catch (exception) {
       this.handleException(exception, res);

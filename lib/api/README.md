@@ -24,7 +24,6 @@ The API provided by `walli-server` is a REST API. All arguments must encoded in 
     * string `user`: ID of the user who creates the invoice
     * string `currency`: currency of the invoice
     * string `amount`: amount in the smallets unit of the currency (Satoshi, Litoshi, ...)
-    * string `memo`: is optional, add a short message to the invoice
   * Reponse:
     * string `invoice`: the requested invoice
 
