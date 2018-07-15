@@ -10,16 +10,6 @@ const { argv } = require('yargs')
       type: 'string',
       default: 'walli.log',
     },
-    'xud.host': {
-      describe: 'Host of the xud gRPC interface',
-      type: 'string',
-      default: 'localhost',
-    },
-    'xud.port': {
-      describe: 'Port of the xud gRPC interface',
-      type: 'number',
-      default: 8886,
-    },
     'db.database': {
       describe: 'SQL database name',
       type: 'string',
@@ -43,6 +33,26 @@ const { argv } = require('yargs')
     'db.password': {
       describe: 'Password for SQL database ',
       type: 'string',
+    },
+    'xud.host': {
+      describe: 'Host of the xud gRPC interface',
+      type: 'string',
+      default: 'localhost',
+    },
+    'xud.port': {
+      describe: 'Port of the xud gRPC interface',
+      type: 'number',
+      default: 8886,
+    },
+    'api.host': {
+      describe: 'Host of the API',
+      type: 'string',
+      default: '0.0.0.0',
+    },
+    'api.port': {
+      describe: 'Port of the API',
+      type: 'number',
+      default: 8887,
     },
   }).config();
 

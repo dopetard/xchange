@@ -13,3 +13,4 @@ errors.INSUFFICIENT_BALANCE = {
 };
 
 export default errors;
+export { Error };

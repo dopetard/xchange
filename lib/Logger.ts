@@ -3,13 +3,14 @@ import winston from 'winston';
 class Logger {
 
   constructor(logFile: string) {
+    const { format } = winston;
     winston.configure({
       transports: [
         new winston.transports.Console({
-          format: winston.format.combine(winston.format.colorize(), winston.format.simple()),
+          format: format.combine(format.colorize(), format.simple()),
         }),
         new winston.transports.File({
-          format: winston.format.simple(),
+          format: format.simple(),
           filename: logFile,
         }),
       ],

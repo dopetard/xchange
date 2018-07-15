@@ -6,6 +6,7 @@ import UserManagerRepository from './UserManagerRepository';
 import XudClient from '../xudclient/XudClient';
 import errors from './Errors';
 import Logger from '../Logger';
+import { isObject } from '../Utils';
 
 class UserManager {
 
@@ -82,26 +83,30 @@ class UserManager {
   public sendPayment = async (user: string, invoice: string): Promise<string> => {
     const currency = this.detectCurrency(invoice);
 
-    const { balance } = await this.userRepo.getBalance(user, currency) as db.BalanceInstance;
-    const { value } = await this.xudClient.decodeInvoice(invoice);
+    const dbResult = await this.userRepo.getBalance(user, currency);
+    if (isObject(dbResult)) {
+      const { balance } = dbResult as db.BalanceInstance;
+      const { value } = await this.xudClient.decodeInvoice(invoice);
 
-    if (value > balance) {
+      if (value > balance) {
+        throw errors.INSUFFICIENT_BALANCE;
+      }
+
+      await this.userRepo.updateUserBalance(user, currency, value * -1);
+
+      const invoiceResponse = await this.xudClient.payInvoice(invoice);
+
+      if (invoiceResponse.error !== '') {
+        // Add the value of the invoice to the balance of the user because the payment failed
+        await this.userRepo.updateUserBalance(user, currency, value);
+      }
+
+      return invoiceResponse.error;
+    } else {
       throw errors.INSUFFICIENT_BALANCE;
     }
-
-    await this.userRepo.updateUserBalance(user, currency, value * -1);
-
-    const response = await this.xudClient.payInvoice(invoice);
-
-    if (response.error !== '') {
-      // Add the value of the invoice to the balance of the user because the payment failed
-      await this.userRepo.updateUserBalance(user, currency, value);
-    }
-
-    return response.error;
   }
 
-  // TODO: show the memo to the user? "Transactions" tab?
   private subscribeInvoices = async () => {
     await this.xudClient.subscribeInvoices();
     this.xudClient.on('invoice.settled', async (data) => {
@@ -109,8 +114,8 @@ class UserManager {
       const dbResult = await this.userRepo.getInvoice(rHash);
 
       // Make sure that the invoice is in the database which means that is was created by walli-server
-      if (typeof dbResult === 'object') {
-        this.logger.info(`Invoice update: ${JSON.stringify(data, null, 2)}`);
+      if (isObject(dbResult)) {
+        this.logger.info(`Invoice settled: ${JSON.stringify(data, null, 2)}`);
 
         await this.userRepo.deleteInvoice(rHash);
 
@@ -118,6 +123,35 @@ class UserManager {
         await this.userRepo.updateUserBalance(user, currency, value);
       }
     });
+  }
+
+  public getBalance = async (user: string, currency: string): Promise<number> => {
+    this.checkCurrencySupport(currency);
+
+    // TODO: support for more currencies
+    assert(currency === 'BTC');
+
+    const result = await this.userRepo.getBalance(user, currency);
+
+    if (isObject(result)) {
+      const { balance } = result as db.BalanceInstance;
+      return balance as number;
+    }
+
+    // There is no entry in the database for that specific user and currency
+    return 0;
+  }
+
+  public getBalances = async (user: string): Promise<{ [ currency: string ]: number }> => {
+    const results = await this.userRepo.getBalances(user);
+
+    const object: { [ currency: string ]: number } = {};
+    results.forEach((result) => {
+      const { currency, balance } = result;
+      object[currency] = balance as number;
+    });
+
+    return object;
   }
 
   private detectCurrency = (_invoice: string): string => {
