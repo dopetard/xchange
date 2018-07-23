@@ -3,7 +3,7 @@ import * as db from '../../types/DB';
 
 export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes) => {
   const attributes: db.SequelizeAttributes<db.InvoiceAttributes> = {
-    rHash: { type: DataTypes.STRING, allowNull: false, primaryKey: true },
+    identifier: { type: DataTypes.STRING, allowNull: false, primaryKey: true },
     user: { type: DataTypes.STRING },
     currency: { type: DataTypes.STRING, allowNull: false },
   };

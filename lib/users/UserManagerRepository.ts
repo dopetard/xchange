@@ -1,8 +1,8 @@
 import uuidv1 from 'uuid/v1';
 import Bluebird from 'bluebird';
+import { default as Sequelize, Op } from 'sequelize';
 import * as db from '../types/DB';
 import DB, { Models } from '../db/DB';
-import { default as Sequelize, Op } from 'sequelize';
 
 class UserManagerRepository {
 
@@ -30,8 +30,8 @@ class UserManagerRepository {
     return this.models.Currency.bulkCreate(currencies);
   }
 
-  public updateUserBalance = (user: string, currency: string, increasedAmount: number): Bluebird<[number, db.BalanceInstance[]]> => {
-    return this.models.Balance.update({ balance: this.sequelize.literal(`balance + ${increasedAmount}`) }, {
+  public updateUserBalance = async (user: string, currency: string, increasedAmount: number) => {
+    const whereClause = {
       where: {
         user: {
           [Op.eq]: user,
@@ -40,7 +40,16 @@ class UserManagerRepository {
           [Op.eq]: currency,
         },
       },
-    });
+    };
+    const result = await this.models.Balance.findOne(whereClause);
+
+    if (result !== null) {
+      // Update the existing entry
+      await this.models.Balance.update({ balance: this.sequelize.literal(`balance + ${increasedAmount}`) }, whereClause);
+    } else {
+      // Insert a new entry
+      await this.addBalance({ user, currency, balance: increasedAmount });
+    }
   }
 
   public deleteInvoice = (rHash: string) => {
@@ -54,7 +63,7 @@ class UserManagerRepository {
   public getInvoice = async (rHash: string): Promise<db.InvoiceInstance | null> => {
     return this.models.Invoice.find({
       where: {
-        rHash: { [Op.eq]: rHash },
+        identifier: { [Op.eq]: rHash },
       },
       raw: true,
     });

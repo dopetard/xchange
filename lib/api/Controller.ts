@@ -1,6 +1,5 @@
 import UserManager from '../users/UserManager';
 
-// TODO: HTTP codes for failed requests
 class Controller {
 
   constructor(private userManager: UserManager) {}
@@ -10,15 +9,11 @@ class Controller {
     res.json({ user });
   }
 
-  public sendPayment = async (req, res) => {
+  public payInvoice = async (req, res) => {
     const { user, invoice } = req.body;
     try {
-      const error = await this.userManager.sendPayment(user, invoice);
-      if (error !== '') {
-        res.status(400).json({ error });
-      } else {
-        res.json({ error });
-      }
+      this.userManager.payInvoice(user, invoice);
+      res.json({ error: '' });
     } catch (exception) {
       this.handleException(exception, res);
     }

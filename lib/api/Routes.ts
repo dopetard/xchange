@@ -7,7 +7,7 @@ export const registerRoutes = (app: express.Application, userManager: UserManage
 
   app.route('/user').post(controller.addUser);
 
-  app.route('/sendpayment').post(controller.sendPayment);
+  app.route('/payinvoice').post(controller.payInvoice);
 
   app.route('/getinvoice').post(controller.getInvoice);
 
