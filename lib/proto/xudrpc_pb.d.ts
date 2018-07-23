@@ -267,9 +267,6 @@ export class SubscribeChannelEventsResponse extends jspb.Message {
   getAmount(): number;
   setAmount(value: number): void;
 
-  getTarget(): string;
-  setTarget(value: string): void;
-
   serializeBinary(): Uint8Array;
   toObject(includeInstance?: boolean): SubscribeChannelEventsResponse.AsObject;
   static toObject(includeInstance: boolean, msg: SubscribeChannelEventsResponse): SubscribeChannelEventsResponse.AsObject;
@@ -286,7 +283,6 @@ export namespace SubscribeChannelEventsResponse {
     eventType: string,
     identifier: number,
     amount: number,
-    target: string,
   }
 }
 

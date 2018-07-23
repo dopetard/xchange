@@ -9,7 +9,7 @@ errors.CURRENCY_NOT_SUPPORTED = {
 };
 
 errors.NO_ERC20 = {
-  message: 'Currency you wanted to send is not a ERC20 token',
+  message: 'Currency you wanted to send is not an ERC20 token',
 };
 
 errors.INSUFFICIENT_BALANCE = {

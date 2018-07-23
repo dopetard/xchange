@@ -86,29 +86,34 @@ class UserManager {
     }
   }
 
-  public requestTokenPayment = async (user: string, currency: string): Promise<{ targetAddress: string, identifier: number }> => {
+  public requestTokenPayment = async (user: string, currency: string): Promise<{ identifier: number, targetAddress: string }> => {
     this.checkCurrencySupport(currency);
 
-    // Random integer from 0 to 100000000
-    const identifier = Math.floor(Math.random() * 100000001);
-    this.logger.info(`Adding ${currency} payment request with identifier ${identifier}`);
-    await this.userRepo.addInvoice({
-      user,
-      currency,
-      identifier: String(identifier),
-    });
+    const { tokenAddress } = this.currencies[currency];
+    if (tokenAddress !== null) {
+      // Random integer from 0 to 100000000
+      const identifier = Math.floor(Math.random() * 100000001);
+      this.logger.info(`Adding ${currency} payment request with identifier ${identifier}`);
+      await this.userRepo.addInvoice({
+        user,
+        currency,
+        identifier: String(identifier),
+      });
 
-    return {
-      identifier,
-      targetAddress: this.raidenAddress,
-    };
+      return {
+        identifier,
+        targetAddress: this.raidenAddress,
+      };
+
+    } else {
+      throw errors.NO_ERC20;
+    }
   }
 
   public sendToken = async (user: string, currency: string, targetAddress: string, amount: number, identifier: number) => {
     this.checkCurrencySupport(currency);
 
     const { tokenAddress } = this.currencies[currency];
-
     if (tokenAddress !== null) {
       const dbResult = await this.userRepo.getBalance(user, currency);
 
@@ -186,13 +191,14 @@ class UserManager {
   private subscribeChannelEvents = async () => {
     await this.xudClient.subscribeChannelEvents();
     this.xudClient.on('channel.event', async (data) => {
-      const { eventType, identifier, amount, target } = data;
+      const { eventType, identifier, amount } = data;
 
       if (eventType === 'EventTransferReceivedSuccess') {
         const dbResult = await this.userRepo.getInvoice(identifier);
 
         // Make sure that the invoice is in the database which means that it was created by walli-server
         if (dbResult !== null) {
+          // TODO: verfiy token sent is specified currency
           const { user, currency } = dbResult as db.InvoiceInstance;
           this.logIncreaseBalance(user, currency, amount);
 

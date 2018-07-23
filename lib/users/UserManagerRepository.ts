@@ -52,18 +52,18 @@ class UserManagerRepository {
     }
   }
 
-  public deleteInvoice = (rHash: string) => {
+  public deleteInvoice = (identifier: string) => {
     return this.models.Invoice.destroy({
       where: {
-        rHash: { [Op.eq]: rHash },
+        identifier: { [Op.eq]: identifier },
       },
     });
   }
 
-  public getInvoice = async (rHash: string): Promise<db.InvoiceInstance | null> => {
+  public getInvoice = async (identifier: string): Promise<db.InvoiceInstance | null> => {
     return this.models.Invoice.find({
       where: {
-        identifier: { [Op.eq]: rHash },
+        identifier: { [Op.eq]: identifier },
       },
       raw: true,
     });

@@ -7,11 +7,12 @@ export const registerRoutes = (app: express.Application, userManager: UserManage
 
   app.route('/user').post(controller.addUser);
 
+  app.route('/getinvoice').post(controller.getInvoice);
   app.route('/payinvoice').post(controller.payInvoice);
 
-  app.route('/getinvoice').post(controller.getInvoice);
+  app.route('/requesttokenpayment').post(controller.requestTokenPayment);
+  app.route('/sendtoken').post(controller.sendToken);
 
   app.route('/balance').post(controller.getBalance);
-
   app.route('/balances').post(controller.getBalances);
 };

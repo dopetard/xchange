@@ -192,7 +192,6 @@ message SubscribeChannelEventsResponse {
   string event_type = 2 [json_name = "event_type"];
   int64 identifier = 3 [json_name = "identifier"];
   int64 amount = 4 [json_name = "amount"];
-  string target = 5 [json_name = "target"];
 }
 
 message GetInfoRequest {}
