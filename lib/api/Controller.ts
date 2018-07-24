@@ -1,6 +1,5 @@
 import UserManager from '../users/UserManager';
 
-// TODO: HTTP codes for failed requests
 class Controller {
 
   constructor(private userManager: UserManager) {}
@@ -10,25 +9,41 @@ class Controller {
     res.json({ user });
   }
 
-  public sendPayment = async (req, res) => {
-    const { user, invoice } = req.body;
-    try {
-      const error = await this.userManager.sendPayment(user, invoice);
-      if (error !== '') {
-        res.status(400).json({ error });
-      } else {
-        res.json({ error });
-      }
-    } catch (exception) {
-      this.handleException(exception, res);
-    }
-  }
-
   public getInvoice = async (req, res) => {
     const { user, currency, amount } = req.body;
     try {
       const invoice = await this.userManager.getInvoice(user, currency, amount);
       res.json({ invoice });
+    } catch (exception) {
+      this.handleException(exception, res);
+    }
+  }
+
+  public payInvoice = async (req, res) => {
+    const { user, invoice } = req.body;
+    try {
+      await this.userManager.payInvoice(user, invoice);
+      res.json({ error: '' });
+    } catch (exception) {
+      this.handleException(exception, res);
+    }
+  }
+
+  public requestTokenPayment = async (req, res) => {
+    const { user, currency } = req.body;
+    try {
+      const request = await this.userManager.requestTokenPayment(user, currency);
+      res.json(request);
+    } catch (exception) {
+      this.handleException(exception, res);
+    }
+  }
+
+  public sendToken = async (req, res) => {
+    const { user, currency, targetAddress, amount, identifier } = req.body;
+    try {
+      await this.userManager.sendToken(user, currency, targetAddress, amount, identifier);
+      res.json({ error: '' });
     } catch (exception) {
       this.handleException(exception, res);
     }

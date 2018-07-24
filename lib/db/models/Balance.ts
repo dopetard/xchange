@@ -3,7 +3,7 @@ import * as db from '../../types/DB';
 
 export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes) => {
   const attributes: db.SequelizeAttributes<db.BalanceAttributes> = {
-    user: { type: DataTypes.STRING },
+    user: { type: DataTypes.STRING, allowNull: false },
     currency: { type: DataTypes.STRING, allowNull: false },
     balance: { type: DataTypes.INTEGER, allowNull: false },
   };

@@ -24,6 +24,7 @@ export type UserInstance = UserAttributes & Sequelize.Instance<UserAttributes>;
 
 export type CurrencyFactory = {
   id: string,
+  tokenAddress: string | null,
 };
 
 export type CurrencyAttributes = CurrencyFactory;
@@ -41,7 +42,7 @@ export type BalanceAttributes = BalanceFactory;
 export type BalanceInstance = BalanceAttributes & Sequelize.Instance<BalanceAttributes>;
 
 export type InvoiceFactory = {
-  rHash: string,
+  identifier: string,
   user: string,
   currency: string,
 };
