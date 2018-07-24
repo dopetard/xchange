@@ -16,7 +16,7 @@ errors.INSUFFICIENT_BALANCE = {
   message: 'Insufficient balance',
 };
 
-errors.AMOUNT_GREATER_ZERO = {
+errors.AMOUNT_NOT_GREATER_ZERO = {
   message: 'Amount has to be greater than 0',
 };
 

@@ -255,7 +255,7 @@ class UserManager {
   }
 
   private checkAmountGreaterZero = (amount: number) => {
-    if (!(amount > 0)) throw errors.AMOUNT_GREATER_ZERO;
+    if (!(amount > 0)) throw errors.AMOUNT_NOT_GREATER_ZERO;
   }
 }
 
