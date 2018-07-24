@@ -23,6 +23,10 @@ class XudClient extends EventEmitter {
     this.xudClient = new xudapi.XudClient(`${config.host}:${config.port}`, credentials);
   }
 
+  public getInfo = (): Promise<xudrpc.GetInfoResponse.AsObject> => {
+    return this.unaryCall<xudrpc.GetInfoRequest, xudrpc.GetInfoResponse.AsObject>('getInfo', new xudrpc.GetInfoRequest());
+  }
+
   public addInvoice = (value: number): Promise<xudrpc.AddInvoiceResponse.AsObject> => {
     const request = new xudrpc.AddInvoiceRequest();
     request.setValue(value);
