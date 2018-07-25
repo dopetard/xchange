@@ -4,7 +4,7 @@ The API provided by `walli-server` is a REST API. All arguments must encoded in 
 
 ## API endpoints
 
-* `/user`: creates a new user
+* `/adduser`: creates a new user
   * Method: `POST`
   * Arguments: none
   * Reponse:
