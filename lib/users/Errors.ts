@@ -24,5 +24,9 @@ errors.INVOICE_NOT_FOUND = {
   message: 'Could not find invoice',
 };
 
+errors.WRONG_CURRENCY = {
+  message: 'Wrong currency was sent',
+};
+
 export default errors;
 export { Error };

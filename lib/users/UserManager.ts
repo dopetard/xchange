@@ -221,18 +221,24 @@ class UserManager {
 
   // Everything we need to do is updating the balances
   // because the user wants to send a payment to another user on the same walli-server instance
-  private sendingToOwnNode = async (identifier: string, currency: string, amount: number, sender: string) => {
+  private sendingToOwnNode = async (identifier: string, sentCurrency: string, amount: number, sender: string) => {
     this.logger.info(`Recipient is on the same walli-server instance`);
     const dbResult = await this.userRepo.getInvoice(identifier);
 
     if (dbResult !== null) {
-      // TODO: verify requested currency was sent
-      const { user } = dbResult as db.InvoiceInstance;
-      await this.paymentSucceeded(identifier, user, currency, amount);
+      const { user, currency } = dbResult as db.InvoiceInstance;
+
+      if (sentCurrency === currency) {
+        await this.paymentSucceeded(identifier, user, currency, amount);
+        return;
+      } else {
+        throw errors.WRONG_CURRENCY;
+      }
     } else {
-      await this.userRepo.updateUserBalance(sender, currency, amount);
       throw errors.INVOICE_NOT_FOUND;
     }
+
+    await this.userRepo.updateUserBalance(sender, sentCurrency, amount);
   }
 
   private paymentSucceeded = async (identifier: string, user: string, currency: string, amount: number) => {
