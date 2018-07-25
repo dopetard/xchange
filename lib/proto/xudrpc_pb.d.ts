@@ -71,6 +71,9 @@ export namespace InvoiceRequest {
 }
 
 export class DecodeInvoiceResponse extends jspb.Message {
+  getDestination(): string;
+  setDestination(value: string): void;
+
   getValue(): number;
   setValue(value: number): void;
 
@@ -86,6 +89,7 @@ export class DecodeInvoiceResponse extends jspb.Message {
 
 export namespace DecodeInvoiceResponse {
   export type AsObject = {
+    destination: string,
     value: number,
   }
 }
@@ -389,6 +393,9 @@ export class LndInfo extends jspb.Message {
   getBlockheight(): number;
   setBlockheight(value: number): void;
 
+  getIdentityPubkey(): string;
+  setIdentityPubkey(value: string): void;
+
   clearUrisList(): void;
   getUrisList(): Array<string>;
   setUrisList(value: Array<string>): void;
@@ -413,6 +420,7 @@ export namespace LndInfo {
     channels?: LndChannels.AsObject,
     chainsList: Array<string>,
     blockheight: number,
+    identityPubkey: string,
     urisList: Array<string>,
     version: string,
   }

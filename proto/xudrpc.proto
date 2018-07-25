@@ -158,7 +158,8 @@ message InvoiceRequest {
 }
 
 message DecodeInvoiceResponse {
-  int64 value = 1 [json_name = "value"];
+  string destination = 1 [json_name = "destination"];
+  int64 value = 2 [json_name = "value"];
 }
 
 message PayInvoiceResponse {
@@ -214,8 +215,9 @@ message LndInfo {
   LndChannels channels = 2 [json_name = "channels"];
   repeated string chains = 3 [json_name = "chains"];
   int32 blockheight = 4 [json_name = "blockheight"];
-  repeated string uris = 5 [json_name = "uris"];
-  string version = 6 [json_name = "version"];
+  string identity_pubkey = 5 [json_name = "identity_pubkey"];
+  repeated string uris = 6 [json_name = "uris"];
+  string version = 7 [json_name = "version"];
 }
 
 message LndChannels {

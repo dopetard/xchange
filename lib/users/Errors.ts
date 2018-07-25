@@ -16,5 +16,17 @@ errors.INSUFFICIENT_BALANCE = {
   message: 'Insufficient balance',
 };
 
+errors.AMOUNT_NOT_GREATER_ZERO = {
+  message: 'Amount has to be greater than 0',
+};
+
+errors.INVOICE_NOT_FOUND = {
+  message: 'Could not find invoice',
+};
+
+errors.WRONG_CURRENCY = {
+  message: 'Wrong currency was sent',
+};
+
 export default errors;
 export { Error };

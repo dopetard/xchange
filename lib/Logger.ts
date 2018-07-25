@@ -28,7 +28,6 @@ class Logger {
   public error = (message: string) => {
     winston.log('error', message);
   }
-
 }
 
 export default Logger;
