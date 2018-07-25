@@ -28,7 +28,6 @@ export type CurrencyFactory = {
 };
 
 export type CurrencyAttributes = CurrencyFactory;
-
 export type CurrencyInstance = CurrencyAttributes & Sequelize.Instance<CurrencyAttributes>;
 
 export type BalanceFactory = {
@@ -38,7 +37,6 @@ export type BalanceFactory = {
 };
 
 export type BalanceAttributes = BalanceFactory;
-
 export type BalanceInstance = BalanceAttributes & Sequelize.Instance<BalanceAttributes>;
 
 export type InvoiceFactory = {
@@ -48,5 +46,19 @@ export type InvoiceFactory = {
 };
 
 export type InvoiceAttributes = InvoiceFactory;
-
 export type InvoiceInstance = InvoiceAttributes & Sequelize.Instance<InvoiceAttributes>;
+
+export type HistoryFactory = {
+  id: string,
+  base: string,
+  quote: string,
+  day: string | null,
+  week: string | null,
+  month: string | null,
+  threeMonths: string | null,
+  year: string | null,
+  twoYears: string | null,
+};
+
+export type HistoryAttributes = HistoryFactory;
+export type HistoryInstance = HistoryAttributes & Sequelize.Instance<HistoryAttributes>;

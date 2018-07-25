@@ -26,14 +26,18 @@ class UserManager {
       this.currencies[currency.id] = currency;
     });
 
-    const infoResponse = await this.xudClient.getInfo();
-    this.lndPubKey = infoResponse.lnd!.identityPubkey;
+    try {
+      const infoResponse = await this.xudClient.getInfo();
+      this.lndPubKey = infoResponse.lnd!.identityPubkey;
 
-    const { address } = await this.xudClient.getRaidenAddress();
-    this.raidenAddress = address;
+      const { address } = await this.xudClient.getRaidenAddress();
+      this.raidenAddress = address;
 
-    await this.subscribeInvoices();
-    await this.subscribeChannelEvents();
+      await this.subscribeInvoices();
+      await this.subscribeChannelEvents();
+    } catch (exception) {
+      XudClient.lostXudConnection(this.logger, exception);
+    }
   }
 
   public addUser = async (): Promise<string> => {

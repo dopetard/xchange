@@ -17,6 +17,7 @@ type Models = {
   Currency: Sequelize.Model<db.CurrencyInstance, db.CurrencyAttributes>,
   Balance: Sequelize.Model<db.BalanceInstance, db.BalanceAttributes>,
   Invoice: Sequelize.Model<db.InvoiceInstance, db.InvoiceAttributes>,
+  History: Sequelize.Model<db.HistoryInstance, db.HistoryAttributes>,
 };
 
 class DB {
@@ -73,7 +74,7 @@ class DB {
         throw err;
       }
     }
-    const { User, Currency, Balance, Invoice } = this.models;
+    const { User, Currency, Balance, Invoice, History } = this.models;
     const options = { logging: this.logger.info };
 
     await Promise.all([
@@ -83,6 +84,7 @@ class DB {
     await Promise.all([
       Balance.sync(options),
       Invoice.sync(options),
+      History.sync(options),
     ]);
   }
 

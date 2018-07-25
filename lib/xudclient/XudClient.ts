@@ -69,7 +69,7 @@ class XudClient extends EventEmitter {
         this.emit('invoice.settled', message.toObject());
       })
       .on('error', (message) => {
-        this.lostXudConnection(message);
+        XudClient.lostXudConnection(this.logger, message);
       });
   }
 
@@ -79,12 +79,12 @@ class XudClient extends EventEmitter {
         this.emit('channel.event', message.toObject());
       })
       .on('error', (message) => {
-        this.lostXudConnection(message);
+        XudClient.lostXudConnection(this.logger, message);
       });
   }
 
-  private lostXudConnection = (message: string) => {
-    this.logger.error(`Could not connect to XUD: ${message}`);
+  public static lostXudConnection = (logger: Logger, message: string) => {
+    logger.error(`Could not connect to XUD: ${message}`);
     process.exit(1);
   }
 
