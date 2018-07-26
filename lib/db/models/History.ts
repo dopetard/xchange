@@ -6,6 +6,7 @@ export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes) 
     id: { type: DataTypes.STRING, primaryKey: true },
     base: { type: DataTypes.STRING, allowNull: false },
     quote: { type: DataTypes.STRING, allowNull: false },
+    hour: { type: DataTypes.STRING },
     day: { type: DataTypes.STRING },
     week: { type: DataTypes.STRING },
     month: { type: DataTypes.STRING },

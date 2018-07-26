@@ -3,6 +3,7 @@ import DB, { DBConfig } from './db/DB';
 import XudClient, { XudClientConfig } from './xudclient/XudClient';
 import UserManager from './users/UserManager';
 import API, { APIConfig } from './api/API';
+import HistoryManager, { HistoryInterval } from './history/HistoryManager';
 
 type Config = {
   logfile: string,
@@ -27,13 +28,16 @@ class Walli {
     this.db = new DB(this.config.db, this.logger);
     await this.db.init();
 
-    this.xudClient = new XudClient(this.config.xud, this.logger);
+    /*this.xudClient = new XudClient(this.config.xud, this.logger);
 
     this.userManager = new UserManager(this.db, this.xudClient, this.logger);
     await this.userManager.init();
 
     this.api = new API(this.config.api, this.userManager, this.logger);
-    this.api.init();
+    this.api.init();*/
+
+    const history = new HistoryManager();
+    console.log(await history.getHistory(HistoryInterval.TwoYears, 'BTC', 'USD'));
   }
 }
 

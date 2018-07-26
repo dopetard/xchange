@@ -52,6 +52,7 @@ export type HistoryFactory = {
   id: string,
   base: string,
   quote: string,
+  hour: string | null,
   day: string | null,
   week: string | null,
   month: string | null,
