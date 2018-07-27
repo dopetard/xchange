@@ -1,11 +1,19 @@
 /**
+ * Get pair id of base and quote asset
+ */
+export const getPairId = (base: string, quote: string): string => {
+  return `${base}/${quote}`;
+};
+
+/**
 * Check whether a variable is a non-array object
 */
 export const isObject = (val: any): boolean => {
   return (val && typeof val === 'object' && !Array.isArray(val));
 };
 
-/** Get the current date in the LocaleString format.
+/**
+ * Get the current date in the LocaleString format.
 */
 export const getTsString = (): string => (new Date()).toLocaleString();
 

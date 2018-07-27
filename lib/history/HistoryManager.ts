@@ -1,4 +1,17 @@
+import Sequelize from 'sequelize';
 import CryptoCompareClient, { HistoryEntry, HistoryType } from './CryptoCompareClient';
+import HistoryManagerRepository from './HistoryManagerRepository';
+import { getPairId } from '../Utils';
+
+type History = {
+  hour?: number[],
+  day?: number[],
+  week?: number[],
+  month?: number[],
+  threeMonth?: number[],
+  year?: number[],
+  twoYears?: number[],
+};
 
 enum HistoryInterval {
   Hour,
@@ -10,28 +23,99 @@ enum HistoryInterval {
   TwoYears,
 }
 
-const HistoryIntervalValues: { [ interval: string ]: { type: HistoryType, limit: number } } = {
-  [HistoryInterval.Hour]: { type: HistoryType.Minutely, limit: 60 },
-  [HistoryInterval.Day]: { type: HistoryType.Minutely, limit: 1440 },
+const HistoryIntervalValues: { [ interval: string ]: { name: string, type: HistoryType, limit: number } } = {
+  [HistoryInterval.Hour]: { name: 'hour', type: HistoryType.Minutely, limit: 60 },
+  [HistoryInterval.Day]: { name: 'day', type: HistoryType.Minutely, limit: 1440 },
   // A week has 168 hours but I will use 170 for the sake of simplicity
   // The difference is neglicable because we are averaging the values anyway
-  [HistoryInterval.Week]: { type: HistoryType.Hourly, limit: 170 },
-  [HistoryInterval.Month]: { type: HistoryType.Daily, limit: 30 },
-  [HistoryInterval.ThreeMonths]: { type: HistoryType.Daily, limit: 90 },
-  [HistoryInterval.Year]: { type: HistoryType.Daily, limit: 365 },
-  [HistoryInterval.TwoYears]: { type: HistoryType.Daily, limit: 730 },
+  [HistoryInterval.Week]: { name: 'week', type: HistoryType.Hourly, limit: 170 },
+  [HistoryInterval.Month]: { name: 'month', type: HistoryType.Daily, limit: 30 },
+  [HistoryInterval.ThreeMonths]: { name: 'threeMonths', type: HistoryType.Daily, limit: 90 },
+  [HistoryInterval.Year]: { name: 'year', type: HistoryType.Daily, limit: 365 },
+  [HistoryInterval.TwoYears]: { name: 'twoYears', type: HistoryType.Daily, limit: 730 },
 };
 
+// TODO: is storing historical data in the database necessary?
 class HistoryManager {
 
+  public history: Map<String, History> = new Map<String, History>();
+
   private cryptoCompare = new CryptoCompareClient();
+  private historyRepo: HistoryManagerRepository;
 
-  // public initHistory = async (base: string, quote: string) => {};
+  constructor(models: Sequelize.Models) {
+    this.historyRepo = new HistoryManagerRepository(models);
+  }
 
-  public getHistory = async (interval: HistoryInterval, base: string, quote: string): Promise<number[]> => {
-    const { type, limit } = HistoryIntervalValues[interval];
-    const data = await this.cryptoCompare.getHistory(type, base, quote, limit);
-    return this.parseData(data.Data);
+  public init = async () => {
+    const histories = await this.historyRepo.getHistories();
+
+    histories.forEach((history) => {
+      this.history[history.id] = {
+        hour: JSON.parse(history.hour),
+        day: JSON.parse(history.day),
+        week: JSON.parse(history.week),
+        month: JSON.parse(history.month),
+        threeMonths: JSON.parse(history.threeMonths),
+        year: JSON.parse(history.year),
+        twoYears: JSON.parse(history.twoYears),
+      };
+    });
+  }
+
+  public initHistory = async (base: string, quote: string) => {
+    await this.historyRepo.addHistory({ base, quote });
+
+    this.history[getPairId(base, quote)] = {};
+
+    await Promise.all([
+      this.updateMinutelyHistory(base, quote),
+      this.updateHourlyHistory(base, quote),
+      this.updateDailyHistory(base, quote),
+    ]);
+
+    console.log(JSON.stringify(this.history));
+  }
+
+  public updateMinutelyHistory = async (base: string, quote: string) => {
+    await this.updateMultipleIntervals(base, quote, [
+      HistoryInterval.Hour,
+      HistoryInterval.Day,
+    ]);
+  }
+
+  public updateHourlyHistory = async (base: string, quote: string) => {
+    await this.updateMultipleIntervals(base, quote, [HistoryInterval.Week]);
+  }
+
+  public updateDailyHistory = async (base: string, quote: string) => {
+    await this.updateMultipleIntervals(base, quote, [
+      HistoryInterval.Month,
+      HistoryInterval.ThreeMonths,
+      HistoryInterval.Year, HistoryInterval.TwoYears,
+    ]);
+  }
+
+  // Works only if all intervals have the same HistoryType
+  // The last value in intervals has to be the one with the highest limit
+  private updateMultipleIntervals = async (base: string, quote: string, intervals: HistoryInterval[]) => {
+    const pairId = getPairId(base, quote);
+    const historyFactory = { base, quote };
+
+    const { type, limit } = HistoryIntervalValues[intervals[intervals.length - 1]];
+    const { Data } = await this.cryptoCompare.getHistory(type, base, quote, limit);
+
+    intervals.forEach((interval) => {
+      const dataClone = Object.assign([], Data);
+      const intervalValues = HistoryIntervalValues[interval];
+
+      const value = this.parseData(dataClone.splice(limit - intervalValues.limit));
+
+      this.history[pairId][intervalValues.name] = value;
+      historyFactory[intervalValues.name] = JSON.stringify(value);
+    });
+
+    await this.historyRepo.updateHistory(historyFactory);
   }
 
   private parseData = (data: HistoryEntry[]): number[] => {

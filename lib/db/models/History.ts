@@ -1,5 +1,6 @@
 import Sequelize from 'sequelize';
 import * as db from '../../types/DB';
+import { getPairId } from '../../Utils';
 
 export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes) => {
   const attributes: db.SequelizeAttributes<db.HistoryAttributes> = {
@@ -27,12 +28,8 @@ export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes) 
       foreignKey: 'base',
     });
 
-    models.History.belongsTo(models.Currency, {
-      foreignKey: 'quote',
-    });
-
     const derivePairId = (pair) => {
-      pair.id = `${pair.base}/${pair.quote}`;
+      pair.id = getPairId(pair.base, pair.quote);
     };
     models.History.beforeBulkCreate(histories => histories.forEach(history => derivePairId(history)));
     models.History.beforeCreate(history => derivePairId(history));

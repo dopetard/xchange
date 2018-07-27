@@ -49,17 +49,28 @@ export type InvoiceAttributes = InvoiceFactory;
 export type InvoiceInstance = InvoiceAttributes & Sequelize.Instance<InvoiceAttributes>;
 
 export type HistoryFactory = {
+  base: string,
+  quote: string,
+  hour?: string,
+  day?: string,
+  week?: string,
+  month?: string,
+  threeMonths?: string,
+  year?: string,
+  twoYears?: string,
+};
+
+export type HistoryAttributes = {
   id: string,
   base: string,
   quote: string,
-  hour: string | null,
-  day: string | null,
-  week: string | null,
-  month: string | null,
-  threeMonths: string | null,
-  year: string | null,
-  twoYears: string | null,
+  hour: string,
+  day: string,
+  week: string,
+  month: string,
+  threeMonths: string,
+  year: string,
+  twoYears: string,
 };
 
-export type HistoryAttributes = HistoryFactory;
 export type HistoryInstance = HistoryAttributes & Sequelize.Instance<HistoryAttributes>;

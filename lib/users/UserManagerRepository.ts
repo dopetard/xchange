@@ -1,6 +1,6 @@
 import uuidv1 from 'uuid/v1';
 import Bluebird from 'bluebird';
-import { default as Sequelize, Op } from 'sequelize';
+import Sequelize, { Op } from 'sequelize';
 import * as db from '../types/DB';
 import DB, { Models } from '../db/DB';
 
