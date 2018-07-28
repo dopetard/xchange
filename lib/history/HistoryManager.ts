@@ -50,16 +50,19 @@ class HistoryManager {
   public init = async () => {
     const histories = await this.historyRepo.getHistories();
 
+    const historyIntervals: string[] = [];
+    for (const interval in HistoryInterval) {
+      if (isNaN(Number(interval))) {
+        historyIntervals.push(this.lowerCaseFirstLetter(interval));
+      }
+    }
+
     histories.forEach((history) => {
-      this.history[history.id] = {
-        hour: JSON.parse(history.hour),
-        day: JSON.parse(history.day),
-        week: JSON.parse(history.week),
-        month: JSON.parse(history.month),
-        threeMonths: JSON.parse(history.threeMonths),
-        year: JSON.parse(history.year),
-        twoYears: JSON.parse(history.twoYears),
-      };
+      this.history[history.id] = {};
+
+      historyIntervals.forEach((interval) => {
+        this.history[history.id][interval] = JSON.parse(history[interval]);
+      });
     });
   }
 
@@ -73,8 +76,6 @@ class HistoryManager {
       this.updateHourlyHistory(base, quote),
       this.updateDailyHistory(base, quote),
     ]);
-
-    console.log(JSON.stringify(this.history));
   }
 
   public updateMinutelyHistory = async (base: string, quote: string) => {
@@ -122,29 +123,29 @@ class HistoryManager {
     const result: number[] = [];
     const resultAmount = 20;
 
-    const sliceEntries = Math.floor(data.length / resultAmount);
+    const spliceEntries = Math.floor(data.length / resultAmount);
     const divider = this.calculateDivider(data, resultAmount);
 
     for (let i = 0; i < resultAmount; i = i + 1) {
-      let temp = 0;
+      const temp: number[] = [];
 
-      const spliceAmount = this.calculateSpliceAmount(i, divider, sliceEntries);
+      const spliceAmount = this.calculateSpliceAmount(i, divider, spliceEntries);
       const splice = data.splice(0, spliceAmount);
 
       splice.forEach((value) => {
-        temp += this.calculateAverage(value);
+        temp.push(this.calculateHistoryEntry(value));
       });
 
-      // TODO: use mean instead of average
-      result.push(this.roundTwoDecimals(temp / spliceAmount));
+      const value = this.calculateMean(temp);
+      result.push(this.roundTwoDecimals(value));
     }
 
     return result;
   }
 
   private calculateDivider = (data: HistoryEntry[], resultAmount: number): number => {
-    const sliceEntries = data.length / resultAmount;
-    const decimal = sliceEntries % 1;
+    const spliceEntries = data.length / resultAmount;
+    const decimal = spliceEntries % 1;
 
     if (decimal !== 0) {
       const result = 1 / decimal;
@@ -159,20 +160,39 @@ class HistoryManager {
     }
   }
 
-  private calculateSpliceAmount = (index: number, divider: number, sliceEntries: number): number => {
+  private calculateSpliceAmount = (index: number, divider: number, spliceEntries: number): number => {
     if (divider !== 0) {
-      return (index + 1) % divider === 0 ? (sliceEntries + 1) : sliceEntries;
+      return (index + 1) % divider === 0 ? (spliceEntries + 1) : spliceEntries;
     } else {
-      return sliceEntries;
+      return spliceEntries;
     }
   }
 
-  private calculateAverage = (data: HistoryEntry): number => {
+  private calculateHistoryEntry = (data: HistoryEntry): number => {
     return (data.open + data.close) / 2;
   }
 
-  private roundTwoDecimals = (number: number) => {
+  private calculateMean = (values: number[]): number => {
+    const { length } = values;
+    if (length > 1) {
+      const mid = Math.floor(values.length / 2);
+
+      if (length % 2 === 0) {
+        return (values[mid] + values[mid + 1]) / 2;
+      } else {
+        return values[mid];
+      }
+    } else {
+      return values[0];
+    }
+  }
+
+  private roundTwoDecimals = (number: number): number => {
     return Math.round(number * 100) / 100;
+  }
+
+  private lowerCaseFirstLetter = (string: string): string => {
+    return string.charAt(0).toLowerCase() + string.slice(1);
   }
 }
 

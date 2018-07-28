@@ -24,12 +24,13 @@ class Walli {
     const db = new DB(this.config.db, this.logger);
     await  db.init();
 
-    const xudClient = new XudClient(this.config.xud, this.logger);
+    // const xudClient = new XudClient(this.config.xud, this.logger);
 
     const historyManager = new HistoryManager(db.models);
     await historyManager.init();
+    await historyManager.initHistory('BTC', 'USD');
 
-    const userManager = new UserManager({
+    /* const userManager = new UserManager({
       db,
       xudClient,
       historyManager,
@@ -38,7 +39,7 @@ class Walli {
     await userManager.init();
 
     const api = new API(this.config.api, userManager, this.logger);
-    api.init();
+    api.init();*/
   }
 }
 
