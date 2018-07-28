@@ -7,6 +7,8 @@ export default (sequelize: Sequelize.Sequelize, DataTypes: Sequelize.DataTypes) 
     id: { type: DataTypes.STRING, primaryKey: true },
     base: { type: DataTypes.STRING, allowNull: false },
     quote: { type: DataTypes.STRING, allowNull: false },
+    price: { type: DataTypes.FLOAT },
+    change: { type: DataTypes.FLOAT },
     hour: { type: DataTypes.STRING },
     day: { type: DataTypes.STRING },
     week: { type: DataTypes.STRING },

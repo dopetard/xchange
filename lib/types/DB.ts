@@ -51,6 +51,8 @@ export type InvoiceInstance = InvoiceAttributes & Sequelize.Instance<InvoiceAttr
 export type HistoryFactory = {
   base: string,
   quote: string,
+  price?: number,
+  change?: number,
   hour?: string,
   day?: string,
   week?: string,
@@ -64,6 +66,8 @@ export type HistoryAttributes = {
   id: string,
   base: string,
   quote: string,
+  price: number,
+  change: number,
   hour: string,
   day: string,
   week: string,

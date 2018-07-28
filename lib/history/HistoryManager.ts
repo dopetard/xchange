@@ -2,8 +2,11 @@ import Sequelize from 'sequelize';
 import CryptoCompareClient, { HistoryEntry, HistoryType } from './CryptoCompareClient';
 import HistoryManagerRepository from './HistoryManagerRepository';
 import { getPairId } from '../Utils';
+import * as db from '../types/DB';
 
 type History = {
+  price: number,
+  change: number,
   hour?: number[],
   day?: number[],
   week?: number[],
@@ -35,6 +38,7 @@ const HistoryIntervalValues: { [ interval: string ]: { name: string, type: Histo
   [HistoryInterval.TwoYears]: { name: 'twoYears', type: HistoryType.Daily, limit: 730 },
 };
 
+// TODO: update regularly
 // TODO: is storing historical data in the database necessary?
 class HistoryManager {
 
@@ -53,12 +57,15 @@ class HistoryManager {
     const historyIntervals: string[] = [];
     for (const interval in HistoryInterval) {
       if (isNaN(Number(interval))) {
-        historyIntervals.push(this.lowerCaseFirstLetter(interval));
+        historyIntervals.push(HistoryIntervalValues[HistoryInterval[interval]].name);
       }
     }
 
     histories.forEach((history) => {
-      this.history[history.id] = {};
+      this.history[history.id] = {
+        price: history.price,
+        change: history.change,
+      };
 
       historyIntervals.forEach((interval) => {
         this.history[history.id][interval] = JSON.parse(history[interval]);
@@ -72,10 +79,24 @@ class HistoryManager {
     this.history[getPairId(base, quote)] = {};
 
     await Promise.all([
+      this.updatePrice([base], quote),
       this.updateMinutelyHistory(base, quote),
       this.updateHourlyHistory(base, quote),
       this.updateDailyHistory(base, quote),
     ]);
+  }
+
+  public updatePrice = async (base: string[], quote: string) => {
+    const prices = await this.cryptoCompare.getPrices(quote, base);
+    Object.keys(prices).forEach((key) => {
+      const price = this.roundTwoDecimals(prices[key]);
+      this.history[getPairId(key, quote)].price = price;
+      this.historyRepo.updateHistory({
+        price,
+        quote,
+        base: key,
+      });
+    });
   }
 
   public updateMinutelyHistory = async (base: string, quote: string) => {
@@ -101,10 +122,20 @@ class HistoryManager {
   // The last value in intervals has to be the one with the highest limit
   private updateMultipleIntervals = async (base: string, quote: string, intervals: HistoryInterval[]) => {
     const pairId = getPairId(base, quote);
-    const historyFactory = { base, quote };
+    const historyFactory: db.HistoryFactory = { base, quote };
 
     const { type, limit } = HistoryIntervalValues[intervals[intervals.length - 1]];
     const { Data } = await this.cryptoCompare.getHistory(type, base, quote, limit);
+
+    // Set 'change' value if relevant data is updated
+    if (intervals.includes(HistoryInterval.Day)) {
+      const yesterday = this.calculateHistoryEntry(Data[0]);
+      const today = this.calculateHistoryEntry(Data[HistoryIntervalValues[HistoryInterval.Day].limit - 1]);
+
+      const change = this.roundTwoDecimals(((today - yesterday) / today) * 100);
+      this.history[pairId].change = change;
+      historyFactory.change = change;
+    }
 
     intervals.forEach((interval) => {
       const dataClone = Object.assign([], Data);
@@ -136,7 +167,7 @@ class HistoryManager {
         temp.push(this.calculateHistoryEntry(value));
       });
 
-      const value = this.calculateMean(temp);
+      const value = this.calculateMedian(temp);
       result.push(this.roundTwoDecimals(value));
     }
 
@@ -172,15 +203,17 @@ class HistoryManager {
     return (data.open + data.close) / 2;
   }
 
-  private calculateMean = (values: number[]): number => {
+  private calculateMedian = (values: number[]): number => {
+    values.sort();
+
     const { length } = values;
     if (length > 1) {
       const mid = Math.floor(values.length / 2);
 
       if (length % 2 === 0) {
-        return (values[mid] + values[mid + 1]) / 2;
+        return (values[mid - 1] + values[mid]) / 2;
       } else {
-        return values[mid];
+        return values[mid - 1];
       }
     } else {
       return values[0];
@@ -190,11 +223,7 @@ class HistoryManager {
   private roundTwoDecimals = (number: number): number => {
     return Math.round(number * 100) / 100;
   }
-
-  private lowerCaseFirstLetter = (string: string): string => {
-    return string.charAt(0).toLowerCase() + string.slice(1);
-  }
 }
 
 export default HistoryManager;
-export { HistoryInterval };
+export { History };

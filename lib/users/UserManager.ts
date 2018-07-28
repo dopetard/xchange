@@ -5,7 +5,8 @@ import UserManagerRepository from './UserManagerRepository';
 import XudClient from '../xudclient/XudClient';
 import errors from './Errors';
 import Logger from '../Logger';
-import HistoryManager from '../history/HistoryManager';
+import HistoryManager, { History } from '../history/HistoryManager';
+import { getPairId } from '../Utils';
 
 type UserManagerComponents = {
   logger: Logger;
@@ -15,6 +16,7 @@ type UserManagerComponents = {
 };
 
 // TODO: store balances in RAM?
+// TODO: support more fiat currencies than USD
 class UserManager {
 
   private logger: Logger;
@@ -62,7 +64,6 @@ class UserManager {
   public addCurrency = async (currency: string, tokenAddress: string | null = null) => {
     this.logger.info(`Adding currency ${currency}`);
     const response = await this.userRepo.addCurrencies([{ tokenAddress, id: currency }]);
-    // TODO: support more fiat currencies than USD
     await this.historyManager.initHistory(currency, 'USD');
     this.currencies[response[0].id] = response[0];
   }
@@ -182,9 +183,6 @@ class UserManager {
   public getBalance = async (user: string, currency: string): Promise<number> => {
     this.checkCurrencySupport(currency);
 
-    // TODO: support for more currencies
-    assert(currency === 'BTC');
-
     const result = await this.userRepo.getBalance(user, currency);
 
     if (result) {
@@ -202,10 +200,22 @@ class UserManager {
     const result: { [ currency: string ]: number } = {};
     dbResults.forEach((dbResult) => {
       const { currency, balance } = dbResult;
-      dbResult[currency] = balance as number;
+      result[currency] = balance as number;
     });
 
     return result;
+  }
+
+  public getHistory = (currency: string): History => {
+    return this.historyManager.history[getPairId(currency, 'USD')];
+  }
+
+  public getBasicHistory = (currency: string): { price: number, change: number } => {
+    const { price, change } = this.historyManager.history[getPairId(currency, 'USD')];
+    return {
+      price,
+      change,
+    };
   }
 
   private subscribeInvoices = async () => {

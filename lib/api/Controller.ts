@@ -1,4 +1,5 @@
 import UserManager from '../users/UserManager';
+import { History } from '../history/HistoryManager';
 
 class Controller {
 
@@ -7,6 +8,39 @@ class Controller {
   public addUser = async (_req, res) => {
     const user = await this.userManager.addUser();
     res.json({ user });
+  }
+
+  public getCurrency = async (req, res) => {
+    const { user, currency } = req.body;
+    try {
+      const balance = await this.userManager.getBalance(user, currency);
+      const history = this.userManager.getHistory(currency);
+      res.json({
+        balance,
+        history,
+      });
+    } catch (exception) {
+      this.handleException(exception, res);
+    }
+  }
+
+  public getCurrencies = async (req, res) => {
+    const { user } = req.body;
+    try {
+      const response: { [ currency: string ]: { balance: number, history: History } } = {};
+
+      const balances = await this.userManager.getBalances(user);
+      Object.keys(balances).forEach((currency) => {
+        response[currency] = {
+          balance: balances[currency],
+          history: this.userManager.getBasicHistory(currency),
+        };
+      });
+
+      res.json(response);
+    } catch (exception) {
+      this.handleException(exception, res);
+    }
   }
 
   public getInvoice = async (req, res) => {
@@ -44,26 +78,6 @@ class Controller {
     try {
       await this.userManager.sendToken(user, currency, targetAddress, amount, identifier);
       res.json({ error: '' });
-    } catch (exception) {
-      this.handleException(exception, res);
-    }
-  }
-
-  public getBalance = async (req, res) => {
-    const { user, currency } = req.body;
-    try {
-      const balance = await this.userManager.getBalance(user, currency);
-      res.json({ balance });
-    } catch (exception) {
-      this.handleException(exception, res);
-    }
-  }
-
-  public getBalances = async (req, res) => {
-    const { user } = req.body;
-    try {
-      const balances = await this.userManager.getBalances(user);
-      res.json({ balances });
     } catch (exception) {
       this.handleException(exception, res);
     }

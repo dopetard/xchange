@@ -47,27 +47,51 @@ The API provided by `walli-server` is a REST API. All arguments must encoded in 
   * Reponse:
     * string `error`: contains either a walli-server or Raiden error (can be ignored if empty)
 
-* `/balance`: get the balance of a user for a single currency
+* `/currency`: get historical data and the balance of a user of a single currency
   * Method: `POST`
   * Arguments:
     * string `user`: ID of the user
     * string `currency`: currency to query
   * Reponse:
     * number `balance`: balance of the user in the smallets unit of the currency (Satoshi, Litoshi, ...)
+    * object `history`: an object containing historical data
+      * number `price`: price of the currency
+      * number `change`: price change since 24 hours in percent
+      * array `hour`: price history of the last 60 minutes
+      * array `day`: price history of the last 24 hours
+      * array `week`: price history of the last 7 days
+      * array `month`: price history of the last 30 days
+      * array `threeMonths`: price history of the last 90 days
+      * array `year`: price history of the last 12 months
+      * array `twoYears`: price history of the last 24 months
 
-* `/balances`: get the balances of a user for all currencies
+* `/currencies`: get basic historical data and the balances of a user of all currencies
   * Method: `POST`
   * Arguments:
     * string `user`: ID of the user
   * Reponse:
-    * object `balances`: every key in the object is a currency and every value the according balance of the user
+    * object `${currency}`: the ticker symbol of the the currency
+      * number `balance`: balance of the user in the smallets unit of the currency (Satoshi, Litoshi, ...)
+      * object `history`: an object containing historical data
+        * number `price`: price of the currency
+        * number `change`: price change since 24 hours in percent
   * Example response:
     ```JSON
     {
-      "balances": {
-        "BTC": 58,
-        "LTC": 1864
-      }
+        "XUC": {
+            "balance": 10000,
+            "history": {
+                "price": 4.31,
+                "change": 1.62
+            }
+        },
+        "BTC": {
+            "balance": 123,
+            "history": {
+                "price": 8196.72,
+                "change": -0.22
+            }
+        }
     }
     ```
 
