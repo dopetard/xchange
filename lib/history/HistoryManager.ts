@@ -1,8 +1,10 @@
 import Sequelize from 'sequelize';
+import schedule from 'node-schedule';
 import CryptoCompareClient, { HistoryEntry, HistoryType } from './CryptoCompareClient';
 import HistoryManagerRepository from './HistoryManagerRepository';
-import { getPairId } from '../Utils';
+import { getPairId, splitPairId } from '../Utils';
 import * as db from '../types/DB';
+import Logger from '../Logger';
 
 type History = {
   price: number,
@@ -47,7 +49,7 @@ class HistoryManager {
   private cryptoCompare = new CryptoCompareClient();
   private historyRepo: HistoryManagerRepository;
 
-  constructor(models: Sequelize.Models) {
+  constructor(models: Sequelize.Models, private logger: Logger) {
     this.historyRepo = new HistoryManagerRepository(models);
   }
 
@@ -71,6 +73,8 @@ class HistoryManager {
         this.history[history.id][interval] = JSON.parse(history[interval]);
       });
     });
+
+    this.updateRegularly();
   }
 
   public initHistory = async (base: string, quote: string) => {
@@ -79,14 +83,14 @@ class HistoryManager {
     this.history[getPairId(base, quote)] = {};
 
     await Promise.all([
-      this.updatePrice([base], quote),
+      this.updatePrices([base], quote),
       this.updateMinutelyHistory(base, quote),
       this.updateHourlyHistory(base, quote),
       this.updateDailyHistory(base, quote),
     ]);
   }
 
-  public updatePrice = async (base: string[], quote: string) => {
+  public updatePrices = async (base: string[], quote: string) => {
     const prices = await this.cryptoCompare.getPrices(quote, base);
     Object.keys(prices).forEach((key) => {
       const price = this.roundTwoDecimals(prices[key]);
@@ -116,6 +120,40 @@ class HistoryManager {
       HistoryInterval.ThreeMonths,
       HistoryInterval.Year, HistoryInterval.TwoYears,
     ]);
+  }
+
+  private updateRegularly = () => {
+    // When the second is 0
+    schedule.scheduleJob('0 * * * * *', () => {
+      this.logger.warn(`Minutely update: ${new Date().toLocaleString()}`);
+
+      const bases: string[] = [];
+      Object.keys(this.history).forEach((pairId: string) => {
+        const { base, quote } = splitPairId(pairId);
+        this.updateMinutelyHistory(base, quote);
+        bases.push(base);
+      });
+      // TODO: support more than USD
+      this.updatePrices(bases, 'USD');
+    });
+
+    // When the minute 0
+    schedule.scheduleJob('* 0 * * * *', () => {
+      this.logger.warn(`Hourly update: ${new Date().toLocaleString()}`);
+      Object.keys(this.history).forEach((pairId: string) => {
+        const { base, quote } = splitPairId(pairId);
+        this.updateHourlyHistory(base, quote);
+      });
+    });
+
+    // When the hour is 0
+    schedule.scheduleJob('* * 0 * * *', () => {
+      this.logger.warn(`Daily update: ${new Date().toLocaleString()}`);
+      Object.keys(this.history).forEach((pairId: string) => {
+        const { base, quote } = splitPairId(pairId);
+        this.updateDailyHistory(base, quote);
+      });
+    });
   }
 
   // Works only if all intervals have the same HistoryType

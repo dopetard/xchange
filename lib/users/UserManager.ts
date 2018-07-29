@@ -9,10 +9,10 @@ import HistoryManager, { History } from '../history/HistoryManager';
 import { getPairId } from '../Utils';
 
 type UserManagerComponents = {
-  logger: Logger;
   db: DB,
   xudClient: XudClient,
   historyManager: HistoryManager,
+  logger: Logger;
 };
 
 // TODO: store balances in RAM?

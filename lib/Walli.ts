@@ -26,7 +26,7 @@ class Walli {
 
     const xudClient = new XudClient(this.config.xud, this.logger);
 
-    const historyManager = new HistoryManager(db.models);
+    const historyManager = new HistoryManager(db.models, this.logger);
     await historyManager.init();
 
     const userManager = new UserManager({
