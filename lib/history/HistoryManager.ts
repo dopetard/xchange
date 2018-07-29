@@ -147,7 +147,9 @@ class HistoryManager {
     });
 
     // When the hour is 0
-    schedule.scheduleJob('* * 0 * * *', () => {
+    // The daily data gets updated on 00:00 GMT (+00:00)
+    const offset = - (new Date().getTimezoneOffset() / 60);
+    schedule.scheduleJob(`* * ${offset} * * *`, () => {
       this.logger.warn(`Daily update: ${new Date().toLocaleString()}`);
       Object.keys(this.history).forEach((pairId: string) => {
         const { base, quote } = splitPairId(pairId);
