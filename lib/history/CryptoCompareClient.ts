@@ -33,7 +33,6 @@ enum HistoryType {
 }
 
 // TODO: error handling
-// TODO: add web socket for live prices?
 class CryptoCompareClient {
 
   private api = 'https://min-api.cryptocompare.com/data/';
