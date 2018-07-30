@@ -63,7 +63,7 @@ delete argv.version;
 delete argv.help;
 delete argv.$0;
 
-const config = {}
+const config = {};
 
 deepMerge(config, argv);
 

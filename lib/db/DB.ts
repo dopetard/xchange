@@ -17,6 +17,7 @@ type Models = {
   Currency: Sequelize.Model<db.CurrencyInstance, db.CurrencyAttributes>,
   Balance: Sequelize.Model<db.BalanceInstance, db.BalanceAttributes>,
   Invoice: Sequelize.Model<db.InvoiceInstance, db.InvoiceAttributes>,
+  History: Sequelize.Model<db.HistoryInstance, db.HistoryAttributes>,
 };
 
 class DB {
@@ -64,7 +65,7 @@ class DB {
     try {
       await this.sequelize.authenticate();
       const { host, port, database } = this.config;
-      this.logger.info(`Connected to database. host:${host} port:${port} database:${database}`);
+      this.logger.info(`Connected to database. host: ${host} port: ${port} database: ${database}`);
     } catch (err) {
       if (DB.isDbDoesNotExistError(err)) {
         await this.createDatabase();
@@ -73,16 +74,16 @@ class DB {
         throw err;
       }
     }
-    const { User, Currency, Balance, Invoice } = this.models;
-    const options = { logging: this.logger.info };
+    const { User, Currency, Balance, Invoice, History } = this.models;
 
     await Promise.all([
-      User.sync(options),
-      Currency.sync(options),
+      User.sync(),
+      Currency.sync(),
     ]);
     await Promise.all([
-      Balance.sync(options),
-      Invoice.sync(options),
+      Balance.sync(),
+      Invoice.sync(),
+      History.sync(),
     ]);
   }
 

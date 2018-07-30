@@ -5,19 +5,36 @@ import UserManagerRepository from './UserManagerRepository';
 import XudClient from '../xudclient/XudClient';
 import errors from './Errors';
 import Logger from '../Logger';
+import HistoryManager, { History } from '../history/HistoryManager';
+import { getPairId } from '../Utils';
+
+type UserManagerComponents = {
+  db: DB,
+  xudClient: XudClient,
+  historyManager: HistoryManager,
+  logger: Logger;
+};
 
 // TODO: store balances in RAM?
+// TODO: support more fiat currencies than USD
 class UserManager {
+
+  private logger: Logger;
+  private xudClient: XudClient;
+  private historyManager: HistoryManager;
 
   private userRepo: UserManagerRepository;
 
-  private currencies: { [id: string]: db.CurrencyInstance } = {};
+  private currencies: Map<String, db.CurrencyInstance> = new Map<String, db.CurrencyInstance>();
 
   private lndPubKey!: string;
   private raidenAddress!: string;
 
-  constructor(db: DB, private xudClient: XudClient, private logger: Logger) {
-    this.userRepo = new UserManagerRepository(db);
+  constructor(components: UserManagerComponents) {
+    this.userRepo = new UserManagerRepository(components.db);
+    this.logger = components.logger;
+    this.xudClient = components.xudClient;
+    this.historyManager = components.historyManager;
   }
 
   public init = async () => {
@@ -26,14 +43,17 @@ class UserManager {
       this.currencies[currency.id] = currency;
     });
 
-    const infoResponse = await this.xudClient.getInfo();
-    this.lndPubKey = infoResponse.lnd!.identityPubkey;
+    try {
+      const infoResponse = await this.xudClient.getInfo();
 
-    const { address } = await this.xudClient.getRaidenAddress();
-    this.raidenAddress = address;
+      this.lndPubKey = infoResponse.lnd!.identityPubkey;
+      this.raidenAddress = infoResponse.raiden!.address;
 
-    await this.subscribeInvoices();
-    await this.subscribeChannelEvents();
+      await this.subscribeInvoices();
+      await this.subscribeChannelEvents();
+    } catch (exception) {
+      XudClient.lostXudConnection(this.logger, exception);
+    }
   }
 
   public addUser = async (): Promise<string> => {
@@ -42,7 +62,9 @@ class UserManager {
   }
 
   public addCurrency = async (currency: string, tokenAddress: string | null = null) => {
+    this.logger.info(`Adding currency ${currency}`);
     const response = await this.userRepo.addCurrencies([{ tokenAddress, id: currency }]);
+    await this.historyManager.initHistory(currency, 'USD');
     this.currencies[response[0].id] = response[0];
   }
 
@@ -161,9 +183,6 @@ class UserManager {
   public getBalance = async (user: string, currency: string): Promise<number> => {
     this.checkCurrencySupport(currency);
 
-    // TODO: support for more currencies
-    assert(currency === 'BTC');
-
     const result = await this.userRepo.getBalance(user, currency);
 
     if (result) {
@@ -181,10 +200,22 @@ class UserManager {
     const result: { [ currency: string ]: number } = {};
     dbResults.forEach((dbResult) => {
       const { currency, balance } = dbResult;
-      dbResult[currency] = balance as number;
+      result[currency] = balance as number;
     });
 
     return result;
+  }
+
+  public getHistory = (currency: string): History => {
+    return this.historyManager.history[getPairId(currency, 'USD')];
+  }
+
+  public getBasicHistory = (currency: string): { price: number, change: number } => {
+    const { price, change } = this.historyManager.history[getPairId(currency, 'USD')];
+    return {
+      price,
+      change,
+    };
   }
 
   private subscribeInvoices = async () => {
