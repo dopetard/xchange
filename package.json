@@ -30,6 +30,7 @@
       "win32": "protoc --js_out=\"import_style=commonjs,binary:lib\\proto\" --ts_out=\"import_style=commonjs,binary:lib\\proto\"  --grpc_out=\"lib\\proto\" --plugin=\"protoc-gen-grpc=node_modules\\.bin\\grpc_tools_node_protoc_plugin.cmd\" --plugin=\"protoc-gen-ts=node_modules\\.bin\\protoc-gen-ts.cmd\" -I=\"proto\" proto\\*.proto proto\\google\\api\\*.proto proto\\google\\protobuf\\*.proto"
     }
   },
+  "license": "AGPL-3.0",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/dopetard/walli-server.git"
