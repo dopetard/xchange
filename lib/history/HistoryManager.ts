@@ -91,7 +91,15 @@ class HistoryManager {
   }
 
   public updatePrices = async (base: string[], quote: string) => {
-    const prices = await this.cryptoCompare.getPrices(quote, base);
+    let prices: { [ currency: string ]: number };
+
+    try {
+      prices = await this.cryptoCompare.getPrices(quote, base);
+    } catch (exception) {
+      this.logger.warn(`Failed to update prices: ${exception}`);
+      return;
+    }
+
     Object.keys(prices).forEach((key) => {
       const price = this.roundTwoDecimals(prices[key]);
       this.history[getPairId(key, quote)].price = price;
@@ -125,7 +133,7 @@ class HistoryManager {
   private updateRegularly = () => {
     // When the second is 0
     schedule.scheduleJob('0 * * * * *', () => {
-      this.logger.warn(`Minutely update: ${new Date().toLocaleString()}`);
+      this.logger.info(`Minutely update: ${new Date().toLocaleString()}`);
 
       const bases: string[] = [];
       Object.keys(this.history).forEach((pairId: string) => {
@@ -139,7 +147,7 @@ class HistoryManager {
 
     // When the minute 0
     schedule.scheduleJob('0 0 * * * *', () => {
-      this.logger.warn(`Hourly update: ${new Date().toLocaleString()}`);
+      this.logger.info(`Hourly update: ${new Date().toLocaleString()}`);
       Object.keys(this.history).forEach((pairId: string) => {
         const { base, quote } = splitPairId(pairId);
         this.updateHourlyHistory(base, quote);
@@ -150,7 +158,7 @@ class HistoryManager {
     // The daily data gets updated on 00:00 GMT (+00:00)
     const offset = - (new Date().getTimezoneOffset() / 60);
     schedule.scheduleJob(`0 0 ${offset} * * *`, () => {
-      this.logger.warn(`Daily update: ${new Date().toLocaleString()}`);
+      this.logger.info(`Daily update: ${new Date().toLocaleString()}`);
       Object.keys(this.history).forEach((pairId: string) => {
         const { base, quote } = splitPairId(pairId);
         this.updateDailyHistory(base, quote);
@@ -165,12 +173,21 @@ class HistoryManager {
     const historyFactory: db.HistoryFactory = { base, quote };
 
     const { type, limit } = HistoryIntervalValues[intervals[intervals.length - 1]];
-    const { Data } = await this.cryptoCompare.getHistory(type, base, quote, limit);
+
+    let data: HistoryEntry[];
+
+    try {
+      const response = await this.cryptoCompare.getHistory(type, base, quote, limit);
+      data = response.Data;
+    } catch (exception) {
+      this.logger.warn(`Failed to update intevals: ${exception}`);
+      return;
+    }
 
     // Set 'change' value if relevant data is updated
     if (intervals.includes(HistoryInterval.Day)) {
-      const yesterday = this.calculateHistoryEntry(Data[0]);
-      const today = this.calculateHistoryEntry(Data[HistoryIntervalValues[HistoryInterval.Day].limit - 1]);
+      const yesterday = this.calculateHistoryEntry(data[0]);
+      const today = this.calculateHistoryEntry(data[HistoryIntervalValues[HistoryInterval.Day].limit - 1]);
 
       const change = this.roundTwoDecimals(((today - yesterday) / today) * 100);
       this.history[pairId].change = change;
@@ -178,7 +195,7 @@ class HistoryManager {
     }
 
     intervals.forEach((interval) => {
-      const dataClone = Object.assign([], Data);
+      const dataClone = Object.assign([], data);
       const intervalValues = HistoryIntervalValues[interval];
 
       const value = this.parseData(dataClone.splice(limit - intervalValues.limit));

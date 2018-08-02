@@ -90,7 +90,11 @@ class CryptoCompareClient {
         });
 
         res.on('end', () => {
-          resolve(JSON.parse(body));
+          try {
+            resolve(JSON.parse(body));
+          } catch (exception) {
+            reject(exception);
+          }
         });
 
         res.on('error', (error) => {
