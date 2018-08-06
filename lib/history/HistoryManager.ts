@@ -40,7 +40,6 @@ const HistoryIntervalValues: { [ interval: string ]: { name: string, type: Histo
   [HistoryInterval.TwoYears]: { name: 'twoYears', type: HistoryType.Daily, limit: 730 },
 };
 
-// TODO: update regularly
 // TODO: is storing historical data in the database necessary?
 class HistoryManager {
 
@@ -101,7 +100,7 @@ class HistoryManager {
     }
 
     Object.keys(prices).forEach((key) => {
-      const price = this.roundTwoDecimals(prices[key]);
+      const price = HistoryManager.roundTwoDecimals(prices[key]);
       this.history[getPairId(key, quote)].price = price;
       this.historyRepo.updateHistory({
         price,
@@ -186,10 +185,10 @@ class HistoryManager {
 
     // Set 'change' value if relevant data is updated
     if (intervals.includes(HistoryInterval.Day)) {
-      const yesterday = this.calculateHistoryEntry(data[0]);
-      const today = this.calculateHistoryEntry(data[HistoryIntervalValues[HistoryInterval.Day].limit - 1]);
+      const yesterday = HistoryManager.calculateHistoryEntry(data[0]);
+      const today = HistoryManager.calculateHistoryEntry(data[HistoryIntervalValues[HistoryInterval.Day].limit - 1]);
 
-      const change = this.roundTwoDecimals(((today - yesterday) / today) * 100);
+      const change = HistoryManager.roundTwoDecimals(((today - yesterday) / today) * 100);
       this.history[pairId].change = change;
       historyFactory.change = change;
     }
@@ -198,7 +197,7 @@ class HistoryManager {
       const dataClone = Object.assign([], data);
       const intervalValues = HistoryIntervalValues[interval];
 
-      const value = this.parseData(dataClone.splice(limit - intervalValues.limit));
+      const value = HistoryManager.parseData(dataClone.splice(limit - intervalValues.limit));
 
       this.history[pairId][intervalValues.name] = value;
       historyFactory[intervalValues.name] = JSON.stringify(value);
@@ -207,31 +206,31 @@ class HistoryManager {
     await this.historyRepo.updateHistory(historyFactory);
   }
 
-  private parseData = (data: HistoryEntry[]): number[] => {
+  public static parseData = (data: HistoryEntry[]): number[] => {
     const result: number[] = [];
     const resultAmount = 20;
 
     const spliceEntries = Math.floor(data.length / resultAmount);
-    const divider = this.calculateDivider(data, resultAmount);
+    const divider = HistoryManager.calculateDivider(data, resultAmount);
 
     for (let i = 0; i < resultAmount; i = i + 1) {
       const temp: number[] = [];
 
-      const spliceAmount = this.calculateSpliceAmount(i, divider, spliceEntries);
+      const spliceAmount = HistoryManager.calculateSpliceAmount(i, divider, spliceEntries);
       const splice = data.splice(0, spliceAmount);
 
       splice.forEach((value) => {
-        temp.push(this.calculateHistoryEntry(value));
+        temp.push(HistoryManager.calculateHistoryEntry(value));
       });
 
-      const value = this.calculateMedian(temp);
-      result.push(this.roundTwoDecimals(value));
+      const value = HistoryManager.calculateMedian(temp);
+      result.push(HistoryManager.roundTwoDecimals(value));
     }
 
     return result;
   }
 
-  private calculateDivider = (data: HistoryEntry[], resultAmount: number): number => {
+  private static calculateDivider = (data: HistoryEntry[], resultAmount: number): number => {
     const spliceEntries = data.length / resultAmount;
     const decimal = spliceEntries % 1;
 
@@ -248,7 +247,7 @@ class HistoryManager {
     }
   }
 
-  private calculateSpliceAmount = (index: number, divider: number, spliceEntries: number): number => {
+  private static calculateSpliceAmount = (index: number, divider: number, spliceEntries: number): number => {
     if (divider !== 0) {
       return (index + 1) % divider === 0 ? (spliceEntries + 1) : spliceEntries;
     } else {
@@ -256,11 +255,11 @@ class HistoryManager {
     }
   }
 
-  private calculateHistoryEntry = (data: HistoryEntry): number => {
+  private static calculateHistoryEntry = (data: HistoryEntry): number => {
     return (data.open + data.close) / 2;
   }
 
-  private calculateMedian = (values: number[]): number => {
+  private static calculateMedian = (values: number[]): number => {
     values.sort();
 
     const { length } = values;
@@ -277,7 +276,7 @@ class HistoryManager {
     }
   }
 
-  private roundTwoDecimals = (number: number): number => {
+  private static roundTwoDecimals = (number: number): number => {
     return Math.round(number * 100) / 100;
   }
 }
