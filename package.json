@@ -9,7 +9,7 @@
     "start": "node bin/walli",
     "dev": "npm run compile && npm run start",
     "lint": "tslint --project tsconfig.json && tslint 'bin/*' 'test/**/*.ts'",
-    "test": "mocha -r ts-node/register test/unit/*"
+    "test:unit": "mocha -r ts-node/register test/unit/*"
   },
   "bin": {
     "walli": "./bin/walli"
