@@ -5,6 +5,10 @@ const deepMerge = require('../dist/Utils').deepMerge;
 
 const { argv } = require('yargs')
   .options({
+    config: {
+      type: 'string',
+      default: 'walli.json',
+    },
     logfile: {
       describe: 'Path to the logfile',
       type: 'string',
