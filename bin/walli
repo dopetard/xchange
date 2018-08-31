@@ -2,8 +2,18 @@
 
 const Walli = require('../dist/Walli').default;
 const deepMerge = require('../dist/Utils').deepMerge;
-const CoreClient = require('../dist/CoreClient').default;
+const coreClient = require('../dist/CoreClient').default;
+
 const { argv } = require('yargs')
+.usage('$0 <cmd> [args]')
+.command('broadcasttransaction [rawTx]', 'Broadcast a raw transaction', (yargs) => {
+  yargs.positional('rawTx', {
+    type: 'string',
+    describe: 'Broadcast a raw transaction',
+  });
+}, (argv) => {
+    
+})
   .options({
     config: {
       type: 'string',
@@ -71,11 +81,12 @@ const { argv } = require('yargs')
     'rpc.username': {
       describe: 'User name for RPC',
       type: 'string',
-      default: 'uesr',
+      default: 'user',
     },
     'rpc.password': {
       describe: 'Password for RPC',
       type: 'string',
+      default: 'user',
     },
   }).config();
 
@@ -89,4 +100,5 @@ const config = {};
 
 deepMerge(config, argv);
 const walli = new Walli(config);
+console.log('hello');
 walli.start();
