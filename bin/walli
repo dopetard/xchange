@@ -2,7 +2,7 @@
 
 const Walli = require('../dist/Walli').default;
 const deepMerge = require('../dist/Utils').deepMerge;
-
+const CoreClient = require('../dist/CoreClient').default;
 const { argv } = require('yargs')
   .options({
     config: {
@@ -58,6 +58,25 @@ const { argv } = require('yargs')
       type: 'number',
       default: 8887,
     },
+    'rpc.host': {
+      describe: 'Host of the RPC',
+      type: 'string',
+      default: '127.0.0.1',
+    },
+    'rpc.port': {
+      describe: 'Port of the RPC',
+      type: 'string',
+      default: '18334',
+    },
+    'rpc.username': {
+      describe: 'User name for RPC',
+      type: 'string',
+      default: 'uesr',
+    },
+    'rpc.password': {
+      describe: 'Password for RPC',
+      type: 'string',
+    },
   }).config();
 
 // Delete non-config keys from argv
@@ -69,6 +88,5 @@ delete argv.$0;
 const config = {};
 
 deepMerge(config, argv);
-
 const walli = new Walli(config);
 walli.start();

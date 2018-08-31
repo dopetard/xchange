@@ -19,7 +19,7 @@ class CoreClient extends EventEmitter{
       'Authorization': 'Basic ' + new Buffer(this.user + ':' + this.password).toString('base64'),
       },
     });
-    this.ws.on('open', () => this.emit('ws:open'));
+    this.ws.on('open', info => this.emit('ws:open', info));
     this.ws.on('close', () => (code, msg) => this.emit('ws:close', code, msg));
     this.ws.on('error', err => this.emit('ws:error', err));
     this.ws.on('message', data => this.handel_message(data));
@@ -48,12 +48,12 @@ class CoreClient extends EventEmitter{
       this.emit('error', new Error(`Invalid message: ${data}`));
     }
   }
-  private rpcMethod(command: string, params = [], callback: Function): void {
+  private rpcCallback(command: string, params = [], callback: Function): void {
     this.call(command, params, callback);
   }
   public rpcMethodPromise(method: string, ...params: never[]) {
     return new Promise((resolve, reject) => {
-      this.rpcMethod(method, params, (data) => {
+      this.rpcCallback(method, params, (data) => {
         data.result ? resolve(data) : reject(data);
       });
     });
