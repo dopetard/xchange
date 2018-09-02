@@ -1,7 +1,7 @@
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
 
-class CoreClient extends EventEmitter{
+class RPCClient extends EventEmitter{
   private url: string;
   private ws: any;
   private counter: number;
@@ -38,8 +38,11 @@ class CoreClient extends EventEmitter{
   private handel_message(data: string): void {
     const { result, error, id, method, params } = JSON.parse(data);
     if (id) {
-      if (error) { this.emit(`res:${id}`, error); }
-      else { this.emit(`res:${id}`, JSON.parse(data)); }
+      if (error) {
+        this.emit(`res:${id}`, error);
+      } else {
+        this.emit(`res:${id}`, JSON.parse(data));
+      }
     } else if (error) {
       this.emit(`error`, error);
     } else if (method) {
@@ -63,4 +66,4 @@ class CoreClient extends EventEmitter{
   }
 }
 
-export default CoreClient;
+export default RPCClient;

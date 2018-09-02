@@ -1,19 +1,102 @@
 #!/usr/bin/env node
 
+require('yargs')
+  .options({
+    config: {
+      type: 'string',
+      default: 'walli.json',
+    },
+    logfile: {
+      describe: 'Path to the logfile',
+      type: 'string',
+      default: 'walli.log',
+    },
+    db: {
+      hidden: true,
+    },
+    'db.database': {
+      describe: 'SQL database name',
+      type: 'string',
+      default: 'walli',
+    },
+    'db.host': {
+      describe: 'Hostname for SQL database',
+      type: 'string',
+      default: 'localhost',
+    },
+    'db.port': {
+      describe: 'Port for SQL database',
+      type: 'number',
+      default: 3306,
+    },
+    'db.username': {
+      describe: 'User for SQL database ',
+      type: 'string',
+      default: 'walli',
+    },
+    'db.password': {
+      describe: 'Password for SQL database ',
+      type: 'string',
+    },
+    xud: {
+      hidden: true,
+    },
+    'xud.host': {
+      describe: 'Host of the xud gRPC interface',
+      type: 'string',
+      default: 'localhost',
+    },
+    'xud.port': {
+      describe: 'Port of the xud gRPC interface',
+      type: 'number',
+      default: 8886,
+    },
+    api: {
+      hidden: true,
+    },
+    'api.host': {
+      describe: 'Host of the API',
+      type: 'string',
+      default: '0.0.0.0',
+    },
+    'api.port': {
+      describe: 'Port of the API',
+      type: 'number',
+      default: 8887,
+    },
+    rpc: {
+      hidden: true,
+    },
+    'rpc.host': {
+      describe: 'Host of the RPC',
+      type: 'string',
+      default: '127.0.0.1',
+    },
+    'rpc.port': {
+      describe: 'Port of the RPC',
+      type: 'string',
+      default: '18334',
+    },
+    'rpc.username': {
+      describe: 'User name for RPC',
+      type: 'string',
+      default: 'user',
+    },
+    'rpc.password': {
+      describe: 'Password for RPC',
+      type: 'string',
+      default: 'user',
+    },
+  })
+  .commandDir('../dist/cli/commands/', { recurse: true })
+  .demandCommand(1, '')
+  .strict()
+  .argv;
+/*
 const Walli = require('../dist/Walli').default;
 const deepMerge = require('../dist/Utils').deepMerge;
-const coreClient = require('../dist/CoreClient').default;
 
 const { argv } = require('yargs')
-.usage('$0 <cmd> [args]')
-.command('broadcasttransaction [rawTx]', 'Broadcast a raw transaction', (yargs) => {
-  yargs.positional('rawTx', {
-    type: 'string',
-    describe: 'Broadcast a raw transaction',
-  });
-}, (argv) => {
-    
-})
   .options({
     config: {
       type: 'string',
@@ -88,7 +171,8 @@ const { argv } = require('yargs')
       type: 'string',
       default: 'user',
     },
-  }).config();
+  })
+  .config();
 
 // Delete non-config keys from argv
 delete argv._;
@@ -100,5 +184,5 @@ const config = {};
 
 deepMerge(config, argv);
 const walli = new Walli(config);
-console.log('hello');
 walli.start();
+*/
