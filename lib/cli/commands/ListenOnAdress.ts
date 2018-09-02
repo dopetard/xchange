@@ -14,4 +14,19 @@ export const builder = {
 
 export const handler = (argv: Arguments) => {
   const client = loadRPCClient(argv);
+  client.on('ws:open', (info) => {
+    client.rpcMethodPromise('notifyreceived',[argv.address]).then((data) => {
+      console.log(data);
+    })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+  client.on('recvtx', (data) => {
+    console.log(data);
+  });
 };
+
+/*
+
+*/
