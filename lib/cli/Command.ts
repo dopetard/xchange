@@ -8,9 +8,8 @@ export const loadRPCClient = (argv: Arguments): RPCClient => {
   return rpcClient;
 };
 
-
 export const startWalli = (argv: Arguments): Walli => {
   const config = deepMergeArgv(argv);
   const walli = new Walli(config);
   return walli;
-}
+};
