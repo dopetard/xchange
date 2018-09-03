@@ -15,7 +15,7 @@ export const builder = {
 export const handler = (argv: Arguments) => {
   const client = loadRPCClient(argv);
   client.on('ws:open', () => {
-    client.rpcMethodPromise('sendrawtransaction', argv.raw_tx)
+    client.rpcMethod('sendrawtransaction', argv.raw_tx)
     .then((data) => {
       console.log(data);
       client.close();

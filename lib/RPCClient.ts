@@ -54,7 +54,7 @@ class RPCClient extends EventEmitter{
   private rpcCallback(command: string, params: any[] = [], callback: Function): void {
     this.call(command, params, callback);
   }
-  public rpcMethodPromise(method: string, ...params: any[]) {
+  public rpcMethod(method: string, ...params: any[]) {
     return new Promise((resolve, reject) => {
       this.rpcCallback(method, params, (data) => {
         data.result ? resolve(data) : reject(data);
