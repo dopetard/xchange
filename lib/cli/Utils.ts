@@ -1,7 +1,7 @@
 import { Arguments } from 'yargs';
 import { deepMerge } from '../Utils';
 
-export const deepMergeArgv = (argv: Arguments): object => {
+export const deepMergeArgv = (argv: Arguments) => {
   delete argv._;
   delete argv.version;
   delete argv.help;
@@ -9,5 +9,6 @@ export const deepMergeArgv = (argv: Arguments): object => {
 
   const config = {};
   deepMerge(config, argv);
-  return config;
+  const json = JSON.stringify(config);
+  return JSON.parse(json);
 };

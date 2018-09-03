@@ -14,7 +14,7 @@ export const builder = {
 
 export const handler = (argv: Arguments) => {
   const client = loadRPCClient(argv);
-  client.on('ws:open', (info) => {
+  client.on('ws:open', () => {
     client.rpcMethodPromise('notifyreceived',[argv.address]).then((data) => {
       console.log(data);
     })
@@ -26,7 +26,3 @@ export const handler = (argv: Arguments) => {
     console.log(data);
   });
 };
-
-/*
-
-*/

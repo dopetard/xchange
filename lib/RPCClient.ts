@@ -51,10 +51,10 @@ class RPCClient extends EventEmitter{
       this.emit('error', new Error(`Invalid message: ${data}`));
     }
   }
-  private rpcCallback(command: string, params = [], callback: Function): void {
+  private rpcCallback(command: string, params: any[] = [], callback: Function): void {
     this.call(command, params, callback);
   }
-  public rpcMethodPromise(method: string, ...params: never[]) {
+  public rpcMethodPromise(method: string, ...params: any[]) {
     return new Promise((resolve, reject) => {
       this.rpcCallback(method, params, (data) => {
         data.result ? resolve(data) : reject(data);
