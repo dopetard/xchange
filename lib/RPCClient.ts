@@ -16,7 +16,7 @@ class RPCClient extends EventEmitter{
   private connect(): void {
     this.ws = new WebSocket(this.url, {
       headers: {
-      'Authorization': 'Basic ' + new Buffer(this.user + ':' + this.password).toString('base64'),
+        Authorization: 'Basic ' + new Buffer(this.user + ':' + this.password).toString('base64'),
       },
     });
     this.ws.on('open', info => this.emit('ws:open', info));
@@ -25,8 +25,8 @@ class RPCClient extends EventEmitter{
     this.ws.on('message', data => this.handel_message(data));
   }
   private call(command: string, params: string[], callback: Function): void {
-    const id = ++this.counter;
-    const msg = JSON.stringify({ jsonrpc: '1.0', id, method: command, params});
+    const id = this.counter + 1;
+    const msg = JSON.stringify({ params, id, jsonrpc: '1.0', method: command });
     this.ws.send(msg, (err) => {
       if (err) {
         return callback(err);

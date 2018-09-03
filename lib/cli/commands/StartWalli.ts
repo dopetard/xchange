@@ -7,5 +7,6 @@ export const describe = 'Start Walli server';
 
 export const handler = (argv: Arguments): void => {
   const walli = startWalli(argv);
-  walli.start();
+  walli.start()
+  .catch(err => console.log(err));
 };
