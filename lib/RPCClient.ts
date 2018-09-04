@@ -19,10 +19,22 @@ class RPCClient extends EventEmitter{
         Authorization: 'Basic ' + new Buffer(this.user + ':' + this.password).toString('base64'),
       },
     });
-    this.ws.on('open', info => this.emit('ws:open', info));
-    this.ws.on('close', () => (code, msg) => this.emit('ws:close', code, msg));
-    this.ws.on('error', err => this.emit('ws:error', err));
-    this.ws.on('message', data => this.handle_message(data));
+
+    this.ws.on('open', (info) => {
+      this.emit('ws:open', info);
+    });
+
+    this.ws.on('close', () => {
+      (code, msg) => this.emit('ws:close', code, msg);
+    });
+
+    this.ws.on('error', (err) => {
+      this.emit('ws:error', err);
+    });
+
+    this.ws.on('message', (data) => {
+      this.handle_message(data);
+    });
   }
   private call(command: string, params: string[], callback: Function): void {
     const id = this.counter + 1;
@@ -36,7 +48,7 @@ class RPCClient extends EventEmitter{
     });
   }
   private handle_message(data: string): void {
-    const { result, error, id, method, params } = JSON.parse(data);
+    const { error, id, method, params } = JSON.parse(data);
     if (id) {
       if (error) {
         this.emit(`res:${id}`, error);
@@ -61,7 +73,7 @@ class RPCClient extends EventEmitter{
       });
     });
   }
-  public close() {
+  public close = () => {
     this.ws.close();
   }
 }
