@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+
+require('yargs')
+  .options({
+    rpc: {
+      hidden: true,
+    },
+    'rpc.host': {
+      describe: 'Host of the RPC',
+      type: 'string',
+      default: '127.0.0.1',
+    },
+    'rpc.port': {
+      describe: 'Port of the RPC',
+      type: 'number',
+      default: 18334,
+    },
+    'rpc.username': {
+      describe: 'User name for RPC',
+      type: 'string',
+      default: 'user',
+    },
+    'rpc.password': {
+      describe: 'Password for RPC',
+      type: 'string',
+      default: 'user',
+    },
+  })
+  .commandDir('../dist/cli/commands/', { recurse: true })
+  .demandCommand(1, '')
+  .strict()
+  .argv;

@@ -69,6 +69,5 @@ delete argv.$0;
 const config = {};
 
 deepMerge(config, argv);
-
 const walli = new Walli(config);
 walli.start();
