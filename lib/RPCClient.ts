@@ -1,22 +1,28 @@
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
 
+interface RPC {
+  host: string;
+  port: number;
+  username: string;
+  password: string;
+}
+
 class RPCClient extends EventEmitter{
   private url: string;
-  private ws: any;
+  private ws!: WebSocket;
   private counter: number;
-  constructor(private user: string, private password: string, private host?: string, private port?: string) {
+  // private user: string, private password: string, private host?: string, private port?: string
+  constructor(private rpc: RPC) {
     super();
-    this.host = host || '127.0.0.1';
-    this.port = port || '18334';
     this.counter = 0;
-    this.url = `ws://${this.host}:${this.port}/ws`;
+    this.url = `ws://${this.rpc.host}:${this.rpc.port}/ws`;
     (() => this.connect())();
   }
   private connect(): void {
     this.ws = new WebSocket(this.url, {
       headers: {
-        Authorization: 'Basic ' + new Buffer(this.user + ':' + this.password).toString('base64'),
+        Authorization: 'Basic ' + new Buffer(this.rpc.username + ':' + this.rpc.password).toString('base64'),
       },
     });
 
@@ -33,7 +39,7 @@ class RPCClient extends EventEmitter{
     });
 
     this.ws.on('message', (data) => {
-      this.handle_message(data);
+      this.handle_message(data.toString());
     });
   }
   private call(command: string, params: string[], callback: Function): void {
