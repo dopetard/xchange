@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 
-require('yargs')
+const Walli = require('../dist/Walli').default;
+const deepMerge = require('../dist/Utils').deepMerge;
+
+const { argv } = require('yargs')
   .options({
     config: {
       type: 'string',
@@ -10,9 +13,6 @@ require('yargs')
       describe: 'Path to the logfile',
       type: 'string',
       default: 'walli.log',
-    },
-    db: {
-      hidden: true,
     },
     'db.database': {
       describe: 'SQL database name',
@@ -38,9 +38,6 @@ require('yargs')
       describe: 'Password for SQL database ',
       type: 'string',
     },
-    xud: {
-      hidden: true,
-    },
     'xud.host': {
       describe: 'Host of the xud gRPC interface',
       type: 'string',
@@ -50,9 +47,6 @@ require('yargs')
       describe: 'Port of the xud gRPC interface',
       type: 'number',
       default: 8886,
-    },
-    api: {
-      hidden: true,
     },
     'api.host': {
       describe: 'Host of the API',
@@ -64,31 +58,17 @@ require('yargs')
       type: 'number',
       default: 8887,
     },
-    rpc: {
-      hidden: true,
-    },
-    'rpc.host': {
-      describe: 'Host of the RPC',
-      type: 'string',
-      default: '127.0.0.1',
-    },
-    'rpc.port': {
-      describe: 'Port of the RPC',
-      type: 'string',
-      default: '18334',
-    },
-    'rpc.username': {
-      describe: 'User name for RPC',
-      type: 'string',
-      default: 'user',
-    },
-    'rpc.password': {
-      describe: 'Password for RPC',
-      type: 'string',
-      default: 'user',
-    },
-  })
-  .commandDir('../dist/cli/commands/', { recurse: true })
-  .demandCommand(1, '')
-  .strict()
-  .argv;
+  }).config();
+
+// Delete non-config keys from argv
+delete argv._;
+delete argv.version;
+delete argv.help;
+delete argv.$0;
+
+const config = {};
+
+deepMerge(config, argv);
+console.log(argv);
+const walli = new Walli(config);
+walli.start();
