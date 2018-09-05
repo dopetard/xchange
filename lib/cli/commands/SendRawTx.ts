@@ -16,7 +16,7 @@ export const handler = (argv: Arguments) => {
   const client = loadRPCClient(argv);
   
   client.connect()
-  .then(() => console.log('made it'))
+  .then(() => console.log('Connected'))
   .catch(err => console.log(err));
 
   client.on('ws:open', () => {
