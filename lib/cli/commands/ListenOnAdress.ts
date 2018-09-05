@@ -14,7 +14,11 @@ export const builder = {
 
 export const handler = (argv: Arguments) => {
   const client = loadRPCClient(argv);
-  client.connect().then(() => console.log('Connected')).catch(err => console.log(err));
+
+  client.connect()
+  .then(() => console.log('Connected'))
+  .catch(err => console.log(err));
+  
   client.on('ws:open', () => {
     client.rpcMethod('notifyreceived', [argv.address]).then((data) => {
       console.log(data);
