@@ -14,50 +14,6 @@ const { argv } = require('yargs')
       type: 'string',
       default: 'walli.log',
     },
-    'db.database': {
-      describe: 'SQL database name',
-      type: 'string',
-      default: 'walli',
-    },
-    'db.host': {
-      describe: 'Hostname for SQL database',
-      type: 'string',
-      default: 'localhost',
-    },
-    'db.port': {
-      describe: 'Port for SQL database',
-      type: 'number',
-      default: 3306,
-    },
-    'db.username': {
-      describe: 'User for SQL database ',
-      type: 'string',
-      default: 'walli',
-    },
-    'db.password': {
-      describe: 'Password for SQL database ',
-      type: 'string',
-    },
-    'xud.host': {
-      describe: 'Host of the xud gRPC interface',
-      type: 'string',
-      default: 'localhost',
-    },
-    'xud.port': {
-      describe: 'Port of the xud gRPC interface',
-      type: 'number',
-      default: 8886,
-    },
-    'api.host': {
-      describe: 'Host of the API',
-      type: 'string',
-      default: '0.0.0.0',
-    },
-    'api.port': {
-      describe: 'Port of the API',
-      type: 'number',
-      default: 8887,
-    },
   }).config();
 
 // Delete non-config keys from argv

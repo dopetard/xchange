@@ -17,20 +17,15 @@ class RPCClient extends EventEmitter{
     super();
     this.counter = 0;
     this.url = `ws://${this.rpc.host}:${this.rpc.port}/ws`;
-    // (() => this.connect())();
+    (() => this.connect())();
   }
-
-  public connect(): void {
-    try {
-      this.ws = new WebSocket(this.url, {
-        headers: {
-          Authorization: 'Basic ' + new Buffer(this.rpc.username + ':' + this.rpc.password).toString('base64'),
-        },
-      });
-      this.ws.ping();
-    } catch (error) {
-      console.log();
-    }
+  private connect(): void {
+    const credentials = new Buffer(`${this.rpc.username}:${this.rpc.password}`);
+    this.ws = new WebSocket(this.url, {
+      headers: {
+        Authorization: `Basic ${credentials.toString('base64')}`,
+      },
+    });
 
     this.ws.on('open', (info) => {
       this.emit('ws:open', info);
@@ -68,7 +63,7 @@ class RPCClient extends EventEmitter{
         this.emit(`res:${id}`, JSON.parse(data));
       }
     } else if (error) {
-      this.emit(`error`, error);
+      this.emit('error', error);
     } else if (method) {
       this.emit(method, ...params);
     } else {
