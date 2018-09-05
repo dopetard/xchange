@@ -1,5 +1,7 @@
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
+import { resolve } from 'dns';
+import { rejects } from 'assert';
 
 interface RPC {
   host: string;
@@ -17,16 +19,25 @@ class RPCClient extends EventEmitter{
     super();
     this.counter = 0;
     this.url = `ws://${this.rpc.host}:${this.rpc.port}/ws`;
-    (() => this.connect())();
   }
-  private connect(): void {
-    const credentials = new Buffer(`${this.rpc.username}:${this.rpc.password}`);
+
+  public connect() {
+    return new Promise((resolve,reject) => {
+      const credentials = new Buffer(`${this.rpc.username}:${this.rpc.password}`);
     this.ws = new WebSocket(this.url, {
       headers: {
         Authorization: `Basic ${credentials.toString('base64')}`,
       },
     });
 
+    this.ws.onerror = err => reject(err);
+
+    this.ws.onopen = (data) => {
+      resolve(data);
+    };
+    this.ws.on('connecting',() => {
+      console.log('asds');
+    });
     this.ws.on('open', (info) => {
       this.emit('ws:open', info);
     });
@@ -41,6 +52,8 @@ class RPCClient extends EventEmitter{
 
     this.ws.on('message', (data) => {
       this.handle_message(data.toString());
+    });
+
     });
   }
   private call(command: string, params: string[], callback: Function): void {
