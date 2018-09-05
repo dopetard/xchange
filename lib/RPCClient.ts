@@ -33,7 +33,7 @@ class RPCClient extends EventEmitter{
       this.ws.onopen = (data) => {
         resolve(data);
       };
-      this.ws.on('connecting',() => {
+      this.ws.on('connecting', () => {
         console.log('asds');
       });
       this.ws.on('open', (info) => {

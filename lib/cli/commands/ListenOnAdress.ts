@@ -26,7 +26,8 @@ export const handler = (argv: Arguments) => {
       .catch((err) => {
         client.close()
         .then(() => console.log(err))
-        .then(() => console.log('Connection Closed'));
+        .then(() => console.log('Connection Closed'))
+        .catch();
       });
   });
   client.on('recvtx', (data) => {
