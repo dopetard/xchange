@@ -1,7 +1,6 @@
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
 
-
 interface RPC {
   host: string;
   port: number;
@@ -21,37 +20,37 @@ class RPCClient extends EventEmitter{
   }
 
   public connect() {
-    return new Promise((resolve,reject) => {
+    return new Promise((resolve, reject) => {
       const credentials = new Buffer(`${this.rpc.username}:${this.rpc.password}`);
-    this.ws = new WebSocket(this.url, {
-      headers: {
-        Authorization: `Basic ${credentials.toString('base64')}`,
-      },
-    });
+      this.ws = new WebSocket(this.url, {
+        headers: {
+          Authorization: `Basic ${credentials.toString('base64')}`,
+        },
+      });
 
-    this.ws.onerror = err => reject(err);
+      this.ws.onerror = err => reject(err);
 
-    this.ws.onopen = (data) => {
-      resolve(data);
-    };
-    this.ws.on('connecting',() => {
-      console.log('asds');
-    });
-    this.ws.on('open', (info) => {
-      this.emit('ws:open', info);
-    });
+      this.ws.onopen = (data) => {
+        resolve(data);
+      };
+      this.ws.on('connecting',() => {
+        console.log('asds');
+      });
+      this.ws.on('open', (info) => {
+        this.emit('ws:open', info);
+      });
 
-    this.ws.on('close', () => {
-      (code, msg) => this.emit('ws:close', code, msg);
-    });
+      this.ws.on('close', () => {
+        (code, msg) => this.emit('ws:close', code, msg);
+      });
 
-    this.ws.on('error', (err) => {
-      this.emit('ws:error', err);
-    });
+      this.ws.on('error', (err) => {
+        this.emit('ws:error', err);
+      });
 
-    this.ws.on('message', (data) => {
-      this.handle_message(data.toString());
-    });
+      this.ws.on('message', (data) => {
+        this.handle_message(data.toString());
+      });
 
     });
   }
