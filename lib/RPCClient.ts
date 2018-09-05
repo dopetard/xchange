@@ -1,7 +1,6 @@
 import WebSocket from 'ws';
 import { EventEmitter } from 'events';
-import { resolve } from 'dns';
-import { rejects } from 'assert';
+
 
 interface RPC {
   host: string;
