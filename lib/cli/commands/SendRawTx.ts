@@ -14,15 +14,22 @@ export const builder = {
 
 export const handler = (argv: Arguments) => {
   const client = loadRPCClient(argv);
+  
+  client.connect()
+  .then(() => console.log('made it'))
+  .catch(err => console.log(err));
+
   client.on('ws:open', () => {
     client.rpcMethod('sendrawtransaction', argv.raw_tx)
     .then((data) => {
-      console.log(data);
-      client.close();
+      client.close()
+      .then(() => console.log(data))
+      .then(() => console.log('Connection Closed'));
     })
     .catch((err) => {
-      console.log(err);
-      client.close();
+      client.close()
+      .then(() => console.log(err))
+      .then(() => console.log('Connection Closed'));
     });
   });
 };
