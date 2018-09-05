@@ -20,9 +20,10 @@ class RPCClient extends EventEmitter{
     (() => this.connect())();
   }
   private connect(): void {
+    const credentials = new Buffer(`${this.rpc.username}:${this.rpc.password}`);
     this.ws = new WebSocket(this.url, {
       headers: {
-        Authorization: 'Basic ' + new Buffer(this.rpc.username + ':' + this.rpc.password).toString('base64'),
+        Authorization: `Basic ${credentials.toString('base64')}`,
       },
     });
 
@@ -62,7 +63,7 @@ class RPCClient extends EventEmitter{
         this.emit(`res:${id}`, JSON.parse(data));
       }
     } else if (error) {
-      this.emit(`error`, error);
+      this.emit('error', error);
     } else if (method) {
       this.emit(method, ...params);
     } else {
