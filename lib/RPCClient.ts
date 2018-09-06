@@ -12,35 +12,46 @@ class RPCClient extends EventEmitter{
   private url: string;
   private ws!: WebSocket;
   private counter: number;
-  // private user: string, private password: string, private host?: string, private port?: string
+
   constructor(private rpc: RPC) {
     super();
     this.counter = 0;
     this.url = `ws://${this.rpc.host}:${this.rpc.port}/ws`;
-    (() => this.connect())();
   }
-  private connect(): void {
-    const credentials = new Buffer(`${this.rpc.username}:${this.rpc.password}`);
-    this.ws = new WebSocket(this.url, {
-      headers: {
-        Authorization: `Basic ${credentials.toString('base64')}`,
-      },
-    });
 
-    this.ws.on('open', (info) => {
-      this.emit('ws:open', info);
-    });
+  public connect() {
+    return new Promise((resolve, reject) => {
+      const credentials = new Buffer(`${this.rpc.username}:${this.rpc.password}`);
+      this.ws = new WebSocket(this.url, {
+        headers: {
+          Authorization: `Basic ${credentials.toString('base64')}`,
+        },
+      });
 
-    this.ws.on('close', () => {
-      (code, msg) => this.emit('ws:close', code, msg);
-    });
+      this.ws.onerror = err => reject(err);
 
-    this.ws.on('error', (err) => {
-      this.emit('ws:error', err);
-    });
+      this.ws.onopen = (data) => {
+        resolve(data);
+      };
+      this.ws.on('connecting', () => {
+        console.log('asds');
+      });
+      this.ws.on('open', (info) => {
+        this.emit('ws:open', info);
+      });
 
-    this.ws.on('message', (data) => {
-      this.handle_message(data.toString());
+      this.ws.on('close', () => {
+        (code, msg) => this.emit('ws:close', code, msg);
+      });
+
+      this.ws.on('error', (err) => {
+        this.emit('ws:error', err);
+      });
+
+      this.ws.on('message', (data) => {
+        this.handle_message(data.toString());
+      });
+
     });
   }
   private call(command: string, params: string[], callback: Function): void {
@@ -80,7 +91,7 @@ class RPCClient extends EventEmitter{
       });
     });
   }
-  public close = () => {
+  public close = async () => {
     this.ws.close();
   }
 }
