@@ -4,10 +4,12 @@
   "description": "Backend for the walli prototype",
   "main": "bin/walli",
   "scripts": {
+    "postinstall": "npm run compile",
     "compile": "cross-os precompile && tsc",
     "start": "node bin/walli",
     "dev": "npm run compile && npm run start",
     "lint": "tslint --project tsconfig.json && tslint --config tslint-alt.json 'bin/*' 'test/**/*.ts'",
+    "test": "npm run test:unit",
     "test:unit": "mocha -r ts-node/register test/unit/*"
   },
   "bin": {
