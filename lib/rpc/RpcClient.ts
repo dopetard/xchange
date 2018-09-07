@@ -10,7 +10,7 @@ type RpcConfig = {
   password: string;
 };
 
-/** A hack to make promise handleable from the other functions */
+/** A hack to make promises handleable from other functions */
 type PromiseFunctions = {
   resolve: Function;
   reject: Function;
