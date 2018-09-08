@@ -20,7 +20,10 @@ class Walli {
   public start = async () => {
     try {
       await this.btcdClient.connect();
-      this.logger.verbose('connected to BTCD');
+      this.logger.info('connected to BTCD');
+
+      const info = await this.btcdClient.getInfo();
+      this.logger.verbose(`BTCD status: ${info.blocks} blocks on ${info.testnet ? 'testnet' : 'mainnet'}`);
     } catch (error) {
       this.logger.error(`could not connect to BTCD: ${JSON.stringify(error)}`);
     }

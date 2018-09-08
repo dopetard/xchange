@@ -51,7 +51,7 @@ class RpcClient extends EventEmitter {
     this.ws.close();
   }
 
-  public call = async (method: string, ...params: any[]): Promise<any> => {
+  public call = async <T>(method: string, ...params: any[]): Promise<T> => {
     const id = uuidv1();
     const promise = new Promise<any>((resolve, reject) => {
       const message = {
@@ -90,7 +90,7 @@ class RpcClient extends EventEmitter {
       if (promise) {
         this.pendingRequests.delete(data.id);
 
-        if (data.result && !data.error) {
+        if (!data.error) {
           promise.resolve(data.result);
         } else {
           promise.reject(data.error);
@@ -103,7 +103,6 @@ class RpcClient extends EventEmitter {
   private emitError = (error: { message: string }) => {
     this.emit('error', error.message);
   }
-
 }
 
 export default RpcClient;

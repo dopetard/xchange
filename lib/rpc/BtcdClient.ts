@@ -1,6 +1,17 @@
 import RpcClient, { RpcConfig } from './RpcClient';
 
-// TODO: add broadcasting of raw transaction
+type Info = {
+  version: number;
+  protocolversion: number;
+  blocks: number;
+  timeoffset: number;
+  connections: number;
+  proxy: string;
+  difficulty: number;
+  testnet: boolean;
+  relayfee: number;
+};
+
 // TODO: listen to transactions sent to specifc addresses
 class BtcdClient {
 
@@ -10,14 +21,17 @@ class BtcdClient {
     this.rpcClient = new RpcClient(config);
   }
 
-  public connect = async () => {
-    await this.rpcClient.connect();
+  public connect = () => {
+    return this.rpcClient.connect();
   }
 
-  public getInfo = () => {
-    return this.rpcClient.call('getinfo');
+  public getInfo = (): Promise<Info> => {
+    return this.rpcClient.call<Info>('getinfo');
   }
 
+  public sendRawTransaction = (rawTransaction: string, allowHighFees = true): Promise<string> => {
+    return this.rpcClient.call<string>('sendrawtransaction', rawTransaction, allowHighFees);
+  }
 }
 
 export default BtcdClient;
