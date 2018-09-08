@@ -1,39 +1,64 @@
 import winston from 'winston';
+import colors from 'colors/safe';
+import { getTsString } from './Utils';
 
-// TODO: add time to log format
-// TODO: configurable log level
 class Logger {
 
-  constructor(logFile: string) {
-    const { format } = winston;
+  constructor(filename: string, level: string) {
     winston.configure({
-      level: 'verbose',
+      level,
       transports: [
         new winston.transports.Console({
-          format: format.combine(format.colorize(), format.simple()),
+          format: this.getLogFormat(true),
         }),
         new winston.transports.File({
-          format: format.simple(),
-          filename: logFile,
+          filename,
+          format: this.getLogFormat(false),
         }),
       ],
     });
   }
 
-  public verbose = (message: string) => {
-    winston.verbose(message);
+  private getLogFormat = (colorize: boolean) => {
+    return winston.format.printf(info => `${getTsString()} ${this.getLevel(info.level, colorize)}: ${info.message}`);
   }
 
-  public info = (message: string) => {
-    winston.info(message);
+  private getLevel = (level: string, colorize: boolean) => {
+    if (colorize) {
+      switch (level) {
+        case 'error': return colors.red(level);
+        case 'warn': return colors.yellow(level);
+        case 'info': return colors.green(level);
+        case 'verbose': return colors.cyan(level);
+        case 'debug': return colors.blue(level);
+        case 'silly': return colors.magenta(level);
+      }
+    }
+    return level;
+  }
+
+  public error = (message: string) => {
+    winston.error(message);
   }
 
   public warn = (message: string) => {
     winston.warn(message);
   }
 
-  public error = (message: string) => {
-    winston.error(message);
+  public info = (message: string) => {
+    winston.info(message);
+  }
+
+  public verbose = (message: string) => {
+    winston.verbose(message);
+  }
+
+  public debug = (message: string) => {
+    winston.verbose(message);
+  }
+
+  public silly = (message: string) => {
+    winston.silly(message);
   }
 }
 

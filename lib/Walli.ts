@@ -4,6 +4,7 @@ import { RpcConfig } from './rpc/RpcClient';
 
 type Config = {
   logfile: string;
+  loglevel: string;
   rpc: RpcConfig;
 };
 
@@ -13,7 +14,7 @@ class Walli {
   private btcdClient: BtcdClient;
 
   constructor(config: Config) {
-    this.logger = new Logger(config.logfile);
+    this.logger = new Logger(config.logfile, config.loglevel);
     this.btcdClient = new BtcdClient(config.rpc);
   }
 
@@ -23,7 +24,7 @@ class Walli {
       this.logger.info('connected to BTCD');
 
       const info = await this.btcdClient.getInfo();
-      this.logger.verbose(`BTCD status: ${info.blocks} blocks on ${info.testnet ? 'testnet' : 'mainnet'}`);
+      this.logger.debug(`BTCD status: ${info.blocks} blocks on ${info.testnet ? 'testnet' : 'mainnet'}`);
     } catch (error) {
       this.logger.error(`could not connect to BTCD: ${JSON.stringify(error)}`);
     }

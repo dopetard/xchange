@@ -14,6 +14,13 @@ const { argv } = require('yargs')
       type: 'string',
       default: 'walli.log',
     },
+    loglevel: {
+      describe: 'Verbosity of the logger',
+      alias: 'l',
+      type: 'string',
+      choices: ['error', 'warn', 'info', 'verbose', 'debug', 'silly'],
+      default: 'verbose',
+    },
     'rpc.host': {
       describe: 'Host of the BTCD RPC interface',
       type: 'string',

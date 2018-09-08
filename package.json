@@ -13,7 +13,8 @@
     "test:unit": "mocha -r ts-node/register test/unit/*"
   },
   "bin": {
-    "walli": "./bin/walli"
+    "wallid": "./bin/wallid",
+    "walli-cli": "./bin/walli-cli"
   },
   "cross-os": {
     "precompile": {
