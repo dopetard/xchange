@@ -14,6 +14,26 @@ const { argv } = require('yargs')
       type: 'string',
       default: 'walli.log',
     },
+    'rpc.host': {
+      describe: 'Host of the BTCD RPC interface',
+      type: 'string',
+      default: '127.0.0.1',
+    },
+    'rpc.port': {
+      describe: 'Port of the BTCD RPC interface',
+      type: 'number',
+      default: 18334,
+    },
+    'rpc.user': {
+      describe: 'User for the BTCD RPC interface',
+      type: 'string',
+      default: 'user',
+    },
+    'rpc.password': {
+      describe: 'Password for the BTCD RPC interface',
+      type: 'string',
+      default: 'user',
+    },
   }).config();
 
 // Delete non-config keys from argv
@@ -23,7 +43,7 @@ delete argv.help;
 delete argv.$0;
 
 const config = {};
-
 deepMerge(config, argv);
+
 const walli = new Walli(config);
 walli.start();

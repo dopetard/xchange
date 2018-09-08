@@ -1,10 +1,13 @@
 import winston from 'winston';
 
+// TODO: add time to log format
+// TODO: configurable log level
 class Logger {
 
   constructor(logFile: string) {
     const { format } = winston;
     winston.configure({
+      level: 'verbose',
       transports: [
         new winston.transports.Console({
           format: format.combine(format.colorize(), format.simple()),
@@ -17,16 +20,20 @@ class Logger {
     });
   }
 
+  public verbose = (message: string) => {
+    winston.verbose(message);
+  }
+
   public info = (message: string) => {
-    winston.log('info', message);
+    winston.info(message);
   }
 
   public warn = (message: string) => {
-    winston.log('warn', message);
+    winston.warn(message);
   }
 
   public error = (message: string) => {
-    winston.log('error', message);
+    winston.error(message);
   }
 }
 
