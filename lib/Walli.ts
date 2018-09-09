@@ -1,8 +1,9 @@
 import Logger from './Logger';
+import Config from './Config';
 import BtcdClient from './rpc/BtcdClient';
 import { RpcConfig } from './rpc/RpcClient';
 
-type Config = {
+type ConfigType = {
   logfile: string;
   loglevel: string;
   rpc: RpcConfig;
@@ -12,8 +13,10 @@ class Walli {
 
   private logger: Logger;
   private btcdClient: BtcdClient;
+  private config: Config;
 
-  constructor(config: Config) {
+  constructor(config: ConfigType) {
+    this.config = new Config().load(config);
     this.logger = new Logger(config.logfile, config.loglevel);
     this.btcdClient = new BtcdClient(config.rpc);
   }
@@ -29,6 +32,7 @@ class Walli {
       this.logger.error(`could not connect to BTCD: ${JSON.stringify(error)}`);
     }
   }
+
 }
 
 export default Walli;

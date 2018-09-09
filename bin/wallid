@@ -6,41 +6,37 @@ const deepMerge = require('../dist/Utils').deepMerge;
 
 const { argv } = require('yargs')
   .options({
-    config: {
+    walliDir: {
       type: 'string',
-      default: 'walli.json',
+    },
+    btcdDir: {
+      type: String,
     },
     logfile: {
       describe: 'Path to the logfile',
       type: 'string',
-      default: 'walli.log',
     },
     loglevel: {
       describe: 'Verbosity of the logger',
       alias: 'l',
       type: 'string',
       choices: ['error', 'warn', 'info', 'verbose', 'debug', 'silly'],
-      default: 'verbose',
     },
     'rpc.host': {
       describe: 'Host of the BTCD RPC interface',
       type: 'string',
-      default: '127.0.0.1',
     },
     'rpc.port': {
       describe: 'Port of the BTCD RPC interface',
       type: 'number',
-      default: 18334,
     },
-    'rpc.user': {
+    'rpc.rpcuser': {
       describe: 'User for the BTCD RPC interface',
       type: 'string',
-      default: 'user',
     },
-    'rpc.password': {
+    'rpc.rpcpassword': {
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
-      default: 'user',
     },
   }).config();
 
@@ -53,7 +49,5 @@ delete argv.$0;
 const config = {};
 deepMerge(config, argv);
 
-// const walli = new Walli(config);
+const walli = new Walli(argv);
 // walli.start();
-const configg = new Config();
-configg.info();
