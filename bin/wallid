@@ -9,7 +9,7 @@ const { argv } = require('yargs')
       type: 'string',
     },
     btcdDir: {
-      type: String,
+      type: 'string',
     },
     logfile: {
       describe: 'Path to the logfile',
@@ -29,11 +29,11 @@ const { argv } = require('yargs')
       describe: 'Port of the BTCD RPC interface',
       type: 'number',
     },
-    'rpc.rpcuser': {
+    'rpc.user': {
       describe: 'User for the BTCD RPC interface',
       type: 'string',
     },
-    'rpc.rpcpassword': {
+    'rpc.password': {
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
     },
