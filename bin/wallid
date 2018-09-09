@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const Walli = require('../dist/Walli').default;
-const Config = require('../dist/Config').default;
 const deepMerge = require('../dist/Utils').deepMerge;
 
 const { argv } = require('yargs')
@@ -50,4 +49,4 @@ const config = {};
 deepMerge(config, argv);
 
 const walli = new Walli(argv);
-// walli.start();
+walli.start();

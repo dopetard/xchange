@@ -12,14 +12,15 @@ class Config {
   public rpc: {
     port: number,
     host: string,
-    user?: string,
-    password?: string,
+    user: string,
+    password: string,
   };
 
   constructor() {
     const platform = os.platform();
 
     switch (platform){
+      // TODO: Check if the btcd.conf file directory is proper for linux and mac
       case 'linux': {
         const localDir = process.env.HOME;
         this.walliDir = `${localDir}/.walli/`;
@@ -44,6 +45,8 @@ class Config {
     this.rpc = {
       port: 18334,
       host: '127.0.0.1',
+      user: 'user',
+      password: 'user',
     };
 
     this.logfile = 'walli.log';
