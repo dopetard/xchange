@@ -5,10 +5,10 @@ const deepMerge = require('../dist/Utils').deepMerge;
 
 const { argv } = require('yargs')
   .options({
-    walliDir: {
+    config: {
       type: 'string',
     },
-    btcdDir: {
+    btcdconfig: {
       type: 'string',
     },
     logfile: {
@@ -37,7 +37,7 @@ const { argv } = require('yargs')
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
     },
-  }).config();
+  });
 
 // Delete non-config keys from argv
 delete argv._;
@@ -48,5 +48,5 @@ delete argv.$0;
 const config = {};
 deepMerge(config, argv);
 
-const walli = new Walli(argv);
+const walli = new Walli(config);
 walli.start();
