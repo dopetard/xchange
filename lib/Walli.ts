@@ -32,7 +32,6 @@ class Walli {
       this.logger.error(`could not connect to BTCD: ${JSON.stringify(error)}`);
     }
   }
-
 }
 
 export default Walli;

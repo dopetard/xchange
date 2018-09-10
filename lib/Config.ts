@@ -26,12 +26,12 @@ class Config {
       }
       case 'darwin': {
         const localDir = process.env.HOME;
-        this.btcdDir = `${localDir}/Btcd/`;
+        this.btcdDir = `${localDir}/Library/Application Support/Btcd`;
         break;
       }
-      default: /* WIN32 */ {
+      default: {
         const localDir = process.env.HOME;
-        this.btcdDir = `${localDir}/Btcd/`;
+        this.btcdDir = `${localDir}/.btcd/`;
         break;
       }
     }
@@ -51,10 +51,19 @@ class Config {
   }
 
   public load(args?: { [argName: string]: any }) {
-    const walliPath = path.join(__dirname, '../', this.config);
-    const btcdPath = path.join(this.btcdDir, this.btcdconfig);
+    let btcdPath;
+    let walliPath;
 
-    if (fs.existsSync(this.btcdDir)) {
+    if (args) {
+      const config = args;
+      btcdPath =  config.btcdconfig ? path.join(args.btcdconfig) : path.join(this.btcdDir, this.btcdconfig);
+      walliPath = config.config ? path.join(args.config) : path.join(__dirname, '../', this.config);
+    } else {
+      btcdPath = path.join(this.btcdDir, this.btcdconfig);
+      walliPath = path.join(__dirname, '../', this.config);
+    }
+
+    if (fs.existsSync(btcdPath)) {
       deepMerge(this.rpc, this.loadBtcdRpcConfig(btcdPath));
     }
 
@@ -65,10 +74,8 @@ class Config {
         const confFile = toml.parse(walliTOML);
         deepMerge(this, confFile);
       } catch (e) {
-        throw new Error(`Error on line ${e.line}, cloumn ${e.cloumn}: ${e.message}`);
+        throw new Error('Could not parse BTCD config. Using default values');
       }
-    } else {
-      fs.writeFileSync(this.config, '');
     }
 
     if (args) {
@@ -78,15 +85,19 @@ class Config {
     return this;
   }
 
-  private loadBtcdRpcConfig (path: string): object {
+  private loadBtcdRpcConfig (path: string): RpcConfig {
     const config = ini.parse(fs.readFileSync(path, 'utf-8'));
-
+    const listen = config['Application Options'].listen ?
+      config['Application Options'].listen.split(':')
+      :
+      ['127.0.0.1', 18334];
     return ({
+      port: listen[1],
+      host: listen[0],
       user: config['Application Options'].rpcuser,
       password: config['Application Options'].rpcpass,
     });
   }
-
 }
 
 export default Config;
