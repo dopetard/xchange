@@ -1,3 +1,4 @@
+import { EventEmitter } from 'events';
 import RpcClient, { RpcConfig } from './RpcClient';
 
 type Info = {
@@ -12,13 +13,21 @@ type Info = {
   relayfee: number;
 };
 
+interface BtcdClient {
+  on(event: 'error', listener: (error: string) => void): this;
+  emit(event: 'error', error: string): boolean;
+}
+
 // TODO: listen to transactions sent to specifc addresses
-class BtcdClient {
+class BtcdClient extends EventEmitter {
 
   private rpcClient: RpcClient;
 
   constructor(config: RpcConfig) {
+    super();
+
     this.rpcClient = new RpcClient(config);
+    this.rpcClient.on('error', error => this.emit('error', error));
   }
 
   public connect = () => {

@@ -33,7 +33,7 @@ class RpcClient extends EventEmitter {
   }
 
   public connect = async () => {
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
       const credentials = new Buffer(`${this.config.user}:${this.config.password}`);
       this.ws = new WebSocket(`ws://${this.config.host}:${this.config.port}/ws`, {
         headers: {
@@ -41,9 +41,13 @@ class RpcClient extends EventEmitter {
         },
       });
 
-      this.bindWebSocket();
+      this.ws.onopen = () => {
+        this.bindWebSocket();
+        resolve();
+      };
 
-      this.ws.onopen = () => resolve();
+      this.ws.onerror = error => reject(error.message);
+      this.ws.on('error', error => reject(error.message));
     });
   }
 
@@ -78,9 +82,7 @@ class RpcClient extends EventEmitter {
 
   private bindWebSocket = () => {
     this.ws.onerror = error => this.emitError(error);
-    this.ws.on('error', (error) => {
-      this.emitError(error);
-    });
+    this.ws.on('error', error => this.emitError(error));
 
     this.ws.on('message', (rawData) => {
       const data = JSON.parse(rawData.toString());

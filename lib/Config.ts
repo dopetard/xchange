@@ -18,7 +18,6 @@ class Config {
     const platform = os.platform();
 
     switch (platform){
-      // TODO: Check if the btcd.conf file directory is proper for linux and mac
       case 'win32': {
         const localDir = process.env.LOCALAPPDATA;
         this.btcdDir = `${localDir}/Btcd/`;
@@ -50,14 +49,13 @@ class Config {
     this.loglevel = 'verbose';
   }
 
-  public load(args?: { [argName: string]: any }) {
+  public load = (args?: { [argName: string]: any }) => {
     let btcdPath;
     let walliPath;
 
     if (args) {
-      const config = args;
-      btcdPath =  config.btcdconfig ? path.join(args.btcdconfig) : path.join(this.btcdDir, this.btcdconfig);
-      walliPath = config.config ? path.join(args.config) : path.join(__dirname, '../', this.config);
+      btcdPath = args.btcdconfig ? path.join(args.btcdconfig) : path.join(this.btcdDir, this.btcdconfig);
+      walliPath = args.config ? path.join(args.config) : path.join(__dirname, '../', this.config);
     } else {
       btcdPath = path.join(this.btcdDir, this.btcdconfig);
       walliPath = path.join(__dirname, '../', this.config);
@@ -85,12 +83,12 @@ class Config {
     return this;
   }
 
-  private loadBtcdRpcConfig (path: string): RpcConfig {
+  private loadBtcdRpcConfig = (path: string): RpcConfig => {
     const config = ini.parse(fs.readFileSync(path, 'utf-8'))['Application Options'];
     const listen = config.listen ? config.listen.split(':') : [this.rpc.host, this.rpc.port];
     return ({
-      port: listen[1],
       host: listen[0],
+      port: listen[1],
       user: config.rpcuser,
       password: config.rpcpass,
     });
