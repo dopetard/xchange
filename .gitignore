@@ -64,4 +64,4 @@ dist/
 typedoc/
 
 # Config file
-walli.json
+walli.conf

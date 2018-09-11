@@ -7,41 +7,37 @@ const { argv } = require('yargs')
   .options({
     config: {
       type: 'string',
-      default: 'walli.json',
+    },
+    btcdconfig: {
+      type: 'string',
     },
     logfile: {
       describe: 'Path to the logfile',
       type: 'string',
-      default: 'walli.log',
     },
     loglevel: {
       describe: 'Verbosity of the logger',
       alias: 'l',
       type: 'string',
       choices: ['error', 'warn', 'info', 'verbose', 'debug', 'silly'],
-      default: 'verbose',
     },
     'rpc.host': {
       describe: 'Host of the BTCD RPC interface',
       type: 'string',
-      default: '127.0.0.1',
     },
     'rpc.port': {
       describe: 'Port of the BTCD RPC interface',
       type: 'number',
-      default: 18334,
     },
     'rpc.user': {
       describe: 'User for the BTCD RPC interface',
       type: 'string',
-      default: 'user',
     },
     'rpc.password': {
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
-      default: 'user',
     },
-  }).config();
+  });
 
 // Delete non-config keys from argv
 delete argv._;
