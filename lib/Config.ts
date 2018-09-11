@@ -88,7 +88,6 @@ class Config {
   private loadBtcdRpcConfig (path: string): RpcConfig {
     const config = ini.parse(fs.readFileSync(path, 'utf-8'))['Application Options'];
     const listen = config.listen ? config.listen.split(':') : [this.rpc.host, this.rpc.port];
-    console.log(listen);
     return ({
       port: listen[1],
       host: listen[0],
