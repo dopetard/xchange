@@ -86,16 +86,14 @@ class Config {
   }
 
   private loadBtcdRpcConfig (path: string): RpcConfig {
-    const config = ini.parse(fs.readFileSync(path, 'utf-8'));
-    const listen = config['Application Options'].listen ?
-      config['Application Options'].listen.split(':')
-      :
-      ['127.0.0.1', 18334];
+    const config = ini.parse(fs.readFileSync(path, 'utf-8'))['Application Options'];
+    const listen = config.listen ? config.listen.split(':') : [this.rpc.host, this.rpc.port];
+    console.log(listen);
     return ({
       port: listen[1],
       host: listen[0],
-      user: config['Application Options'].rpcuser,
-      password: config['Application Options'].rpcpass,
+      user: config.rpcuser,
+      password: config.rpcpass,
     });
   }
 }
