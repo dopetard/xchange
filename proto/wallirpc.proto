@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+
+package wallirpc;
+
+service Walli {
+  rpc SayHi (Message) returns (Message);
+}
+
+message Message {
+  string hello = 1;
+}
