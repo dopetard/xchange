@@ -1,5 +1,6 @@
 import Logger from './Logger';
 import Config from './Config';
+import GrpcServer from './grpc/GrpcServer';
 import BtcdClient from './rpc/BtcdClient';
 import { RpcConfig } from './rpc/RpcClient';
 
@@ -14,12 +15,13 @@ class Walli {
   private logger: Logger;
   private btcdClient: BtcdClient;
   private config: Config;
+  private grpcServer: GrpcServer;
 
   constructor(config: ConfigType) {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logfile, this.config.loglevel);
-    console.log(this.config);
     this.btcdClient = new BtcdClient(this.config.rpc);
+    this.grpcServer = new GrpcServer(this.logger);
   }
 
   public start = async () => {
