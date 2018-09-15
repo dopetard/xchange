@@ -3,96 +3,148 @@ import path from 'path';
 import fs from 'fs';
 import toml from 'toml';
 import ini from 'ini';
-import { deepMerge } from './Utils';
-import { RpcConfig } from './rpc/RpcClient';
+import { Arguments } from 'yargs';
+import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
+import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
+import LndClient, { LndConfig } from './lightning/LndClient';
+import errors from './consts/errors';
+
+type SerivceConfigOption = {
+  configPath: string;
+};
+
+type ConfigType = {
+  configPath: string;
+  logPath: string;
+  logLevel: string;
+  btcd: BtcdConfig & SerivceConfigOption;
+  lnd: LndConfig & SerivceConfigOption;
+};
 
 class Config {
-  public config: string;
-  public btcdconfig: string;
-  public logfile: string;
-  public loglevel: string;
-  public rpc: RpcConfig;
+  private config: ConfigType;
+
+  private walliDir: string;
   private btcdDir: string;
+  private lndDir: string;
 
+  /**
+   * The constructor sets the default values
+   */
   constructor() {
-    const platform = os.platform();
+    this.walliDir = this.getServiceDataDir('walli');
+    this.btcdDir = this.getServiceDataDir('btcd');
+    this.lndDir = this.getServiceDataDir('lnd');
 
-    switch (platform){
-      case 'win32': {
-        const localDir = process.env.LOCALAPPDATA;
-        this.btcdDir = `${localDir}/Btcd/`;
-        break;
-      }
-      case 'darwin': {
-        const localDir = process.env.HOME;
-        this.btcdDir = `${localDir}/Library/Application Support/Btcd`;
-        break;
-      }
-      default: {
-        const localDir = process.env.HOME;
-        this.btcdDir = `${localDir}/.btcd/`;
-        break;
-      }
-    }
-
-    /* btcd rpc info */
-    this.rpc = {
-      port: 18334,
-      host: '127.0.0.1',
-      user: 'user',
-      password: 'usr',
+    this.config = {
+      configPath: path.join(this.walliDir, 'walli.conf'),
+      logPath: path.join(this.walliDir, 'walli.log'),
+      logLevel: this.getDefaultLogLevel(),
+      btcd: {
+        host: '127.0.0.1',
+        port: 18334,
+        user: '',
+        password: '',
+        configPath: path.join(this.btcdDir, 'btcd.conf'),
+      },
+      lnd: {
+        host: '127.0.0.1',
+        port: 10009,
+        certPath: path.join(this.lndDir, 'tls.cert'),
+        // The macaroon for the Bitcoin testnet is hardcoded for now
+        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
+        configPath: path.join(this.lndDir, 'lnd.conf'),
+      },
     };
-
-    this.logfile = 'walli.log';
-    this.btcdconfig = 'btcd.conf';
-    this.config = 'walli.conf';
-    this.loglevel = 'verbose';
   }
 
-  public load = (args?: { [argName: string]: any }) => {
-    let btcdPath;
-    let walliPath;
+  // TODO: verify logLevel exists; depends on Logger.ts:8
+  /**
+   * This loads arguments specified by the user either from a TOML config file or from command line arguments
+   */
+  public load = (args: Arguments): ConfigType => {
+    const walliConfigFile = this.resolveConfigPath(args.configPath, this.config.configPath);
 
-    if (args) {
-      btcdPath = args.btcdconfig ? path.join(args.btcdconfig) : path.join(this.btcdDir, this.btcdconfig);
-      walliPath = args.config ? path.join(args.config) : path.join(__dirname, '../', this.config);
-    } else {
-      btcdPath = path.join(this.btcdDir, this.btcdconfig);
-      walliPath = path.join(__dirname, '../', this.config);
-    }
-
-    if (fs.existsSync(btcdPath)) {
-      deepMerge(this.rpc, this.loadBtcdRpcConfig(btcdPath));
-    }
-
-    if (fs.existsSync(walliPath)) {
-      const walliTOML = fs.readFileSync(walliPath, 'utf-8');
-
+    if (fs.existsSync(walliConfigFile)) {
       try {
-        const confFile = toml.parse(walliTOML);
-        deepMerge(this, confFile);
-      } catch (e) {
-        throw new Error('Could not parse BTCD config. Using default values');
+        const walliToml = fs.readFileSync(walliConfigFile, 'utf-8');
+        const walliConfig = toml.parse(walliToml);
+        deepMerge(this.config, walliConfig);
+      } catch (error) {
+        throw errors.COULD_NOT_PARSE_CONFIG('walli', error);
       }
     }
+
+    const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configPath, this.config.btcd.configPath) : this.config.btcd.configPath;
+    const lndConfigFile = args.lnd ? this.resolveConfigPath(args.lnd.configPath, this.config.lnd.configPath) : this.config.lnd.configPath;
+
+    this.parseIniConfig(
+      btcdConfigFile,
+      this.config.btcd,
+      BtcdClient.serviceName,
+    );
+
+    this.parseIniConfig(
+      lndConfigFile,
+      this.config.lnd,
+      LndClient.serviceName,
+    );
 
     if (args) {
       deepMerge(this, args);
     }
 
-    return this;
+    return this.config;
   }
 
-  private loadBtcdRpcConfig = (path: string): RpcConfig => {
-    const config = ini.parse(fs.readFileSync(path, 'utf-8'))['Application Options'];
-    const listen = config.listen ? config.listen.split(':') : [this.rpc.host, this.rpc.port];
-    return ({
-      host: listen[0],
-      port: listen[1],
-      user: config.rpcuser,
-      password: config.rpcpass,
-    });
+  private parseIniConfig = (filename: string, mergeTarget: any, configType: string) => {
+    if (fs.existsSync(filename)) {
+      try {
+        const config = ini.parse(filename);
+        deepMerge(mergeTarget, config);
+
+        if (config.listen) {
+          const split = config.listen.split(':');
+
+          mergeTarget.host = split[0];
+          mergeTarget.port = split[1];
+        }
+      } catch (error) {
+        throw errors.COULD_NOT_PARSE_CONFIG(configType, error);
+      }
+    }
+  }
+
+  private resolveConfigPath = (configPath: string, fallback: string) => {
+    return configPath ? resolveHome(configPath) : fallback;
+  }
+
+  // TODO: support for Geth/Parity and Raiden
+  private getServiceDataDir = (service: string) => {
+    const homeDir = this.getSystemHomeDir();
+    const serviceDir = service.toLowerCase();
+
+    switch (os.platform()) {
+      case 'win32':
+      case 'darwin':
+        return path.join(homeDir, capitalizeFirstLetter(serviceDir));
+
+      default: return path.join(homeDir, `.${serviceDir}`);
+    }
+  }
+
+  private getSystemHomeDir = (): string => {
+    switch (os.platform()) {
+      case 'win32': return process.env.LOCALAPPDATA!;
+      case 'darwin': return path.join(process.env.HOME!, 'Library', 'Application Support');
+      default: return process.env.HOME!;
+    }
+  }
+
+  private getDefaultLogLevel = (): string => {
+    return process.env.NODE_ENV === 'production' ? 'info' : 'debug';
   }
 }
 
 export default Config;
+export { ConfigType };

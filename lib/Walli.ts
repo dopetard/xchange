@@ -1,28 +1,34 @@
 import Logger from './Logger';
-import Config from './Config';
-import BtcdClient from './rpc/BtcdClient';
-import { RpcConfig } from './rpc/RpcClient';
-
-type ConfigType = {
-  logfile: string;
-  loglevel: string;
-  rpc: RpcConfig;
-};
+import Config, { ConfigType } from './Config';
+import BtcdClient from './chain/BtcdClient';
+import LndClient from './lightning/LndClient';
+import { Arguments } from 'yargs';
 
 class Walli {
-
+  private config: ConfigType;
   private logger: Logger;
+
   private btcdClient: BtcdClient;
-  private config: Config;
+  private lndClient: LndClient;
 
-  constructor(config: ConfigType) {
+  constructor(config: Arguments) {
     this.config = new Config().load(config);
-    this.logger = new Logger(this.config.logfile, this.config.loglevel);
+    this.logger = new Logger(this.config.logPath, this.config.logLevel);
 
-    this.btcdClient = new BtcdClient(this.config.rpc);
+    this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
+    this.lndClient = new LndClient(this.logger, this.config.lnd);
   }
 
   public start = async () => {
+    const connectPromises = [
+      this.connectBtcd(),
+      this.connectLnd(),
+    ];
+
+    await Promise.all(connectPromises);
+  }
+
+  private connectBtcd = async () => {
     try {
       await this.btcdClient.connect();
       this.logger.info('connected to BTCD');
@@ -30,8 +36,26 @@ class Walli {
       const info = await this.btcdClient.getInfo();
       this.logger.debug(`BTCD status: ${info.blocks} blocks on ${info.testnet ? 'testnet' : 'mainnet'}`);
     } catch (error) {
-      this.logger.error(`could not connect to BTCD: ${JSON.stringify(error)}`);
+      this.logCouldNotConnect(BtcdClient.serviceName, error);
     }
+  }
+
+  private connectLnd = async () => {
+    try {
+      await this.lndClient.connect();
+
+      this.lndClient.on('invoice.settled', (rHash) => {
+        this.logger.info(`invoice settled: ${rHash}`);
+      });
+
+      this.logger.debug(`LND status: ${JSON.stringify(await this.lndClient.getInfo(), undefined, 2)}`);
+    } catch (error) {
+      this.logCouldNotConnect(LndClient.serviceName, error);
+    }
+  }
+
+  private logCouldNotConnect = (service: string, error: any) => {
+    this.logger.error(`could not connect to ${service}: ${JSON.stringify(error)}`);
   }
 }
 
