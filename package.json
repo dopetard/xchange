@@ -5,10 +5,10 @@
   "main": "bin/walli",
   "scripts": {
     "postinstall": "npm run compile",
-    "compile": "cross-os precompile && tsc",
+    "compile": "cross-os precompile && tsc && cross-os postcompile",
     "proto": "cross-os proto",
     "start": "node bin/wallid",
-    "dev": "npm run proto && npm run compile && npm run start",
+    "dev": "npm run compile && npm run start",
     "lint": "tslint --project tsconfig.json && tslint --config tslint-alt.json 'bin/*' 'test/**/*.ts'",
     "test": "npm run test:unit",
     "test:unit": "mocha -r ts-node/register test/unit/*"
@@ -18,6 +18,11 @@
     "walli-cli": "./bin/walli-cli"
   },
   "cross-os": {
+    "postcompile": {
+      "linux": "rsync -am --include '*/' --include '*.js*' --exclude '*' lib/proto/ dist/proto",
+      "darwin": "rsync -am --include '*/' --include '*.js*' --exclude '*' lib/proto/ dist/proto",
+      "win32": "xcopy /s lib\\proto\\*.js* dist\\proto\\* >nul"
+    },
     "precompile": {
       "linux": "rm -rf ./dist",
       "darwin": "rm -rf ./dist",

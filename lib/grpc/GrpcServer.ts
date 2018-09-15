@@ -19,19 +19,21 @@ class GrpcServer {
     });
   }
 
-  public listen = (port: number, host: string): boolean => {
-    assert(Number.isInteger(port) && port > 1023 && port < 65536, 'port must be an integer between 1024 and 65536');
-    const bindCode = this.server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
+  public listen = async (port: number, host: string) => {
+    return new Promise((resolve, reject) => {
+      assert(Number.isInteger(port) && port > 1023 && port < 65536, 'port must be an integer between 1024 and 65536');
+      const bindCode = this.server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
 
-    if (bindCode !== port) {
-      const error = errors.COULD_NOT_BIND(port.toString());
-      this.logger.error(error.message);
-      return false;
-    }
+      if (bindCode !== port) {
+        const error = errors.COULD_NOT_BIND(port.toString());
+        this.logger.error(error.message);
+        reject(false);
+      }
 
-    this.server.start();
-    this.logger.info(`gRPC server listening on ${host}:${port}`);
-    return true;
+      this.server.start();
+      this.logger.info(`gRPC server listening on ${host}:${port}`);
+      resolve(true);
+    });
   }
 
   public close = (): Promise<void> => {

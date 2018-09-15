@@ -31,6 +31,7 @@ class Walli {
 
       const info = await this.btcdClient.getInfo();
       this.logger.debug(`BTCD status: ${info.blocks} blocks on ${info.testnet ? 'testnet' : 'mainnet'}`);
+      await this.grpcServer.listen(9000, '127.0.0.1');
     } catch (error) {
       this.logger.error(`could not connect to BTCD: ${JSON.stringify(error)}`);
     }
