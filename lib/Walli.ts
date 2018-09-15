@@ -18,7 +18,7 @@ class Walli {
   constructor(config: ConfigType) {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logfile, this.config.loglevel);
-
+    console.log(this.config);
     this.btcdClient = new BtcdClient(this.config.rpc);
   }
 
