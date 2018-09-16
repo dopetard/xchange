@@ -26,11 +26,29 @@ export class GetInfoResponse extends jspb.Message {
     getVersion(): number;
     setVersion(value: number): void;
 
-    getTestnet(): boolean;
-    setTestnet(value: boolean): void;
+    getProtocolversion(): number;
+    setProtocolversion(value: number): void;
+
+    getBlocks(): number;
+    setBlocks(value: number): void;
+
+    getTimeoffset(): number;
+    setTimeoffset(value: number): void;
 
     getConnections(): number;
     setConnections(value: number): void;
+
+    getProxy(): string;
+    setProxy(value: string): void;
+
+    getDifficulty(): string;
+    setDifficulty(value: string): void;
+
+    getTestnet(): boolean;
+    setTestnet(value: boolean): void;
+
+    getRelayfee(): number;
+    setRelayfee(value: number): void;
 
 
     serializeBinary(): Uint8Array;
@@ -46,7 +64,13 @@ export class GetInfoResponse extends jspb.Message {
 export namespace GetInfoResponse {
     export type AsObject = {
         version: number,
-        testnet: boolean,
+        protocolversion: number,
+        blocks: number,
+        timeoffset: number,
         connections: number,
+        proxy: string,
+        difficulty: string,
+        testnet: boolean,
+        relayfee: number,
     }
 }

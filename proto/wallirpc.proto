@@ -10,7 +10,13 @@ service Walli {
 
 message GetInfoRequest {}
 message GetInfoResponse {
-  int32 version = 1;
-  bool testnet = 2;
-  int32 connections = 3;
+   int32 version = 1;
+   int32 protocolversion = 2;
+   int32 blocks = 3;
+   int32 timeoffset = 4;
+   int32 connections = 5;
+   string proxy = 6;
+   string difficulty = 7;
+   bool testnet = 8;
+   float relayfee = 9;
 }

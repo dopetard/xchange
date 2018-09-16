@@ -18,9 +18,17 @@ class GrpcService {
       const getInfoResponse = await this.service.getInfo();
       const response = new wallirpc.GetInfoResponse();
       response.setVersion(getInfoResponse['version']);
-      response.setTestnet(getInfoResponse['testnet']);
+      response.setProtocolversion(getInfoResponse['protocolversion']);
+      response.setBlocks(getInfoResponse['blocks']);
+      response.setTimeoffset(getInfoResponse['timeoffset']);
       response.setConnections(getInfoResponse['connections']);
+      response.setProxy(getInfoResponse['proxy']);
+      response.setDifficulty(getInfoResponse['difficulty']);
+      response.setTestnet(getInfoResponse['testnet']);
+      response.setRelayfee(getInfoResponse['relayfee']);
+
       callback(null, response);
+
     } catch (error) {
       callback(error, null);
     }

@@ -12,10 +12,25 @@ class Service{
 
   public getInfo = async (): Promise<object> => {
     const info = await this.btcdClient.getInfo();
+    const {version,
+          protocolversion,
+          blocks,
+          timeoffset,
+          connections,
+          proxy,
+          difficulty,
+          testnet,
+          relayfee } = info;
     return {
-      version: info.version,
-      testnet: info.testnet,
-      connections: info.connections,
+      version,
+      protocolversion,
+      blocks,
+      timeoffset,
+      connections,
+      proxy,
+      testnet,
+      relayfee,
+      difficulty: difficulty.toString(),
     };
   }
 }
