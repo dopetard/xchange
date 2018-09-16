@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 const Walli = require('../dist/Walli').default;
-const deepMerge = require('../dist/Utils').deepMerge;
 
 const { argv } = require('yargs')
   .options({
@@ -45,8 +44,5 @@ delete argv.version;
 delete argv.help;
 delete argv.$0;
 
-const config = {};
-deepMerge(config, argv);
-
-const walli = new Walli(config);
+const walli = new Walli(argv);
 walli.start();

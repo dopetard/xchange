@@ -26,7 +26,6 @@ require('yargs')
       default: 'user',
     },
   })
-  .commandDir('../dist/cli/commands/')
   .demandCommand(1, '')
   .strict()
   .argv;
