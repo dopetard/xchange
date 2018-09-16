@@ -43,8 +43,8 @@ class Config {
       btcd: {
         host: '127.0.0.1',
         port: 18334,
-        user: '',
-        password: '',
+        user: 'user',
+        password: 'user',
         configPath: path.join(this.btcdDir, 'btcd.conf'),
       },
       lnd: {

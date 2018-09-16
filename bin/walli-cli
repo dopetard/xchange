@@ -18,6 +18,7 @@ require('yargs')
       type: 'number',
     },
   })
+  .commandDir('../dist/cli/commands/')
   .demandCommand(1, '')
   .strict()
   .argv;
