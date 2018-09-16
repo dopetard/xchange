@@ -4,7 +4,7 @@ import { Message } from '../../proto/wallirpc_pb';
 
 export const command = 'connect';
 
-export const describe = 'connect to an xu node';
+export const describe = 'connect to walli node';
 
 export const handler = (argv: Arguments) => {
   const msg = new Message();
