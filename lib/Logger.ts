@@ -4,6 +4,8 @@ import { getTsString } from './Utils';
 
 class Logger {
 
+  // TODO: multiple loggeres for different scopes
+  // TODO: 'trace' level instead of 'silly'
   constructor(filename: string, level: string) {
     winston.configure({
       level,

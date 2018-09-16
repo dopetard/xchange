@@ -1,3 +1,6 @@
+import os from 'os';
+import path from 'path';
+
 /**
  * Get pair id of base and quote asset
  */
@@ -15,6 +18,34 @@ export const splitPairId = (pairId: string): { base: string, quote: string } => 
     base: split[0],
     quote: split[1],
   };
+};
+
+/**
+ * Concat an error code and its prefix
+ */
+export const concatErrorCode = (prefix: number, code: number) => {
+  return `${prefix}.${code}`;
+};
+
+/**
+ * Capitalize the first letter of a string
+ */
+export const capitalizeFirstLetter = (input: string) => {
+  return input.charAt(0).toUpperCase() + input.slice(1);
+};
+
+/**
+ * Resolve '~' on Linux and Unix-Like systems
+ * @returns the resolved path if the path starts with '~'
+ */
+export const resolveHome = (filename: string) => {
+  if (os.platform() !== 'win32') {
+    if (filename.charAt(0) === '~') {
+      return path.join(process.env.HOME!, filename.slice(1));
+    }
+  }
+
+  return filename;
 };
 
 /**
