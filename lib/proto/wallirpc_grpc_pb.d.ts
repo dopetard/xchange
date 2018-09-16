@@ -7,34 +7,34 @@ import * as grpc from "grpc";
 import * as wallirpc_pb from "./wallirpc_pb";
 
 interface IWalliService extends grpc.ServiceDefinition<grpc.UntypedServiceImplementation> {
-    sayHi: IWalliService_ISayHi;
+    getInfo: IWalliService_IgetInfo;
 }
 
-interface IWalliService_ISayHi extends grpc.MethodDefinition<wallirpc_pb.Message, wallirpc_pb.Message> {
-    path: string; // "/wallirpc.Walli/SayHi"
+interface IWalliService_IgetInfo extends grpc.MethodDefinition<wallirpc_pb.GetInfoRequest, wallirpc_pb.GetInfoResponse> {
+    path: string; // "/wallirpc.Walli/getInfo"
     requestStream: boolean; // false
     responseStream: boolean; // false
-    requestSerialize: grpc.serialize<wallirpc_pb.Message>;
-    requestDeserialize: grpc.deserialize<wallirpc_pb.Message>;
-    responseSerialize: grpc.serialize<wallirpc_pb.Message>;
-    responseDeserialize: grpc.deserialize<wallirpc_pb.Message>;
+    requestSerialize: grpc.serialize<wallirpc_pb.GetInfoRequest>;
+    requestDeserialize: grpc.deserialize<wallirpc_pb.GetInfoRequest>;
+    responseSerialize: grpc.serialize<wallirpc_pb.GetInfoResponse>;
+    responseDeserialize: grpc.deserialize<wallirpc_pb.GetInfoResponse>;
 }
 
 export const WalliService: IWalliService;
 
 export interface IWalliServer {
-    sayHi: grpc.handleUnaryCall<wallirpc_pb.Message, wallirpc_pb.Message>;
+    getInfo: grpc.handleUnaryCall<wallirpc_pb.GetInfoRequest, wallirpc_pb.GetInfoResponse>;
 }
 
 export interface IWalliClient {
-    sayHi(request: wallirpc_pb.Message, callback: (error: Error | null, response: wallirpc_pb.Message) => void): grpc.ClientUnaryCall;
-    sayHi(request: wallirpc_pb.Message, metadata: grpc.Metadata, callback: (error: Error | null, response: wallirpc_pb.Message) => void): grpc.ClientUnaryCall;
-    sayHi(request: wallirpc_pb.Message, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: wallirpc_pb.Message) => void): grpc.ClientUnaryCall;
+    getInfo(request: wallirpc_pb.GetInfoRequest, callback: (error: Error | null, response: wallirpc_pb.GetInfoResponse) => void): grpc.ClientUnaryCall;
+    getInfo(request: wallirpc_pb.GetInfoRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: wallirpc_pb.GetInfoResponse) => void): grpc.ClientUnaryCall;
+    getInfo(request: wallirpc_pb.GetInfoRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: wallirpc_pb.GetInfoResponse) => void): grpc.ClientUnaryCall;
 }
 
 export class WalliClient extends grpc.Client implements IWalliClient {
     constructor(address: string, credentials: grpc.ChannelCredentials, options?: object);
-    public sayHi(request: wallirpc_pb.Message, callback: (error: Error | null, response: wallirpc_pb.Message) => void): grpc.ClientUnaryCall;
-    public sayHi(request: wallirpc_pb.Message, metadata: grpc.Metadata, callback: (error: Error | null, response: wallirpc_pb.Message) => void): grpc.ClientUnaryCall;
-    public sayHi(request: wallirpc_pb.Message, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: wallirpc_pb.Message) => void): grpc.ClientUnaryCall;
+    public getInfo(request: wallirpc_pb.GetInfoRequest, callback: (error: Error | null, response: wallirpc_pb.GetInfoResponse) => void): grpc.ClientUnaryCall;
+    public getInfo(request: wallirpc_pb.GetInfoRequest, metadata: grpc.Metadata, callback: (error: Error | null, response: wallirpc_pb.GetInfoResponse) => void): grpc.ClientUnaryCall;
+    public getInfo(request: wallirpc_pb.GetInfoRequest, metadata: grpc.Metadata, options: Partial<grpc.CallOptions>, callback: (error: Error | null, response: wallirpc_pb.GetInfoResponse) => void): grpc.ClientUnaryCall;
 }

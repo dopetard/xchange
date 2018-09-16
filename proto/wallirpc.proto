@@ -5,9 +5,12 @@ import "google/api/annotations.proto";
 package wallirpc;
 
 service Walli {
-  rpc SayHi (Message) returns (Message);
+  rpc getInfo (GetInfoRequest) returns (GetInfoResponse);
 }
 
-message Message {
-  string hello = 1;
+message GetInfoRequest {}
+message GetInfoResponse {
+  int32 version = 1;
+  bool testnet = 2;
+  int32 connections = 3;
 }

@@ -1,6 +1,8 @@
 import grpc, { Server } from 'grpc';
 import Logger from '../Logger';
 import errors from './errors';
+import GrpcService from './GrpcService';
+import Service from '../service/Service';
 import { WalliService } from '../proto/wallirpc_grpc_pb';
 import assert from 'assert';
 
@@ -8,14 +10,13 @@ class GrpcServer {
   private server: Server;
   private logger: Logger;
 
-  constructor(logger: Logger) {
+  constructor(logger: Logger, service: Service) {
     this.server = new grpc.Server();
     this.logger = logger;
 
+    const grpcService = new GrpcService(logger, service);
     this.server.addService(WalliService, {
-      sayHi: (call, callback) => {
-        callback(undefined, { message: `Hello user! ${call}` });
-      },
+      getInfo: grpcService.getInfo,
     });
   }
 
@@ -25,14 +26,13 @@ class GrpcServer {
       const bindCode = this.server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
 
       if (bindCode !== port) {
-        const error = errors.COULD_NOT_BIND(port.toString());
-        this.logger.error(error.message);
-        reject(false);
+        const error = errors.COULD_NOT_BIND(host , port.toString());
+        reject(error.message);
+      } else {
+        this.server.start();
+        this.logger.info(`gRPC server listening on ${host}:${port}`);
+        resolve(true);
       }
-
-      this.server.start();
-      this.logger.info(`gRPC server listening on ${host}:${port}`);
-      resolve(true);
     });
   }
 
