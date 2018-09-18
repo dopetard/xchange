@@ -30,13 +30,13 @@ Submarine Swaps between on-chain LTC to off-chain BTC haven been successfully te
 
 In conclusion Submarine Swaps allow users to swap funds on-chain to off-chain, off-chain to on-chain, and tangled together on-chain to on-chain. Users would not need a second layer wallet. Submarine Swaps can make any permutations of on-chain and off-chain swaps possible. The following picture depicts our proposed architecture
 
-![](ScreenShot2018-09-14at9-a45b73b0-d390-4a91-a1ca-f3e8d3c90e83.07.25AM.png)
+![](https://github.com/dopetard/walli-server/blob/master/docs/Walli-Server%20Network.png)
 
 XChange has a centralised matching engine order book, it is running a XUD full node and connecting to all other XUDs through it.
 
 The picture below depicts one specific case of tangled submarine swap that allows off-chain to on-chain exchange of assets. Consider a scenario where Alice is using walli, but she only has Ethereum in her off-chain wallet. She intends to buy 2000 XUC for her 1 ETH. Alice sends her 1 ETH to Xchange via her off-chain wallet. Xchange puts on the order to exchange Alice's Ether for XUC via XUD instance. After a successful completion of an atomic swap, Xchange has 2000 XUC in it's second layer wallet which should be sent to Alice, but here's a catch - Alice doesn't have inbound channel balance or wants her XUC in the on-chain walli wallet, so Xchange uses a Submarine Swap to transfer her XUC on-chain to her walli-vault - all this while maintaining the trustlessness of the system. In the case of Xchange not being able to liquidate those 1 Ether, it initiates a refund. The business model made possible by this architecture is also pretty straightforward - Xchange is essentially a submarine swap provider and makes money via swapping and routing fees. The problem of stale orders can be mitigated by constant pruning of order book.
 
-![](ScreenShot2018-09-14at9-4fb6aed9-5594-4c24-8db6-e36379c2a773.08.39AM.png)
+![](https://github.com/dopetard/walli-server/blob/master/docs/Submarine%20Swap.png)
 
 The GIF below depicts the flow of the preimage in case of a swap in which the user receives funds on-chain (which will probably be used most of the time):
 
@@ -48,7 +48,7 @@ Consider a scenario in which the user wants to trade 1 BTC for 10 LTC:
 4. Once that XUD order is filled Xchange claims the funds locked up by the user (1 BTC)
 5. Because claiming locked up funds reveals the preimage the user is now able to claim their funds too (10 LTC)  
 
-![](animation-2960690d-8a44-4ced-821d-3bdff69baaf3.gif)
+![](https://github.com/dopetard/walli-server/blob/master/docs/Preimage%20Flow.gif)
 
 In one special case of the user wanting to receive off-chain, the preimage is controlled by the user, resulting in a different preimage flow:
 
