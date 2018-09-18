@@ -7,7 +7,7 @@ import { Arguments } from 'yargs';
 import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
 import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
 import LndClient, { LndConfig } from './lightning/LndClient';
-import errors from './consts/errors';
+import { errors } from './consts/errors';
 
 type SerivceConfigOption = {
   configPath: string;
@@ -43,8 +43,8 @@ class Config {
       btcd: {
         host: '127.0.0.1',
         port: 18334,
-        user: 'user',
-        password: 'user',
+        user: '',
+        password: '',
         configPath: path.join(this.btcdDir, 'btcd.conf'),
       },
       lnd: {

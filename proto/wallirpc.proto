@@ -16,7 +16,7 @@ message GetInfoResponse {
    int32 timeoffset = 4;
    int32 connections = 5;
    string proxy = 6;
-   string difficulty = 7;
+   int64 difficulty = 7;
    bool testnet = 8;
    float relayfee = 9;
 }

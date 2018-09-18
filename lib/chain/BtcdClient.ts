@@ -2,7 +2,7 @@ import Logger from '../Logger';
 import RpcClient, { RpcConfig } from '../RpcClient';
 import { BaseClientClass, ClientStatus } from '../BaseClient';
 import ChainClient from './ChainClient';
-import errors from '../consts/errors';
+import { errors } from '../consts/errors';
 
 type BtcdConfig = RpcConfig;
 

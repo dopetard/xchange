@@ -41,8 +41,8 @@ export class GetInfoResponse extends jspb.Message {
     getProxy(): string;
     setProxy(value: string): void;
 
-    getDifficulty(): string;
-    setDifficulty(value: string): void;
+    getDifficulty(): number;
+    setDifficulty(value: number): void;
 
     getTestnet(): boolean;
     setTestnet(value: boolean): void;
@@ -69,7 +69,7 @@ export namespace GetInfoResponse {
         timeoffset: number,
         connections: number,
         proxy: string,
-        difficulty: string,
+        difficulty: number,
         testnet: boolean,
         relayfee: number,
     }

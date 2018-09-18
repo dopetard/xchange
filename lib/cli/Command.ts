@@ -2,14 +2,14 @@ import { Arguments } from 'yargs';
 import grpc from 'grpc';
 import { WalliClient } from '../proto/wallirpc_grpc_pb';
 
+interface GrpcResponse {
+  toObject: Function;
+}
+
 export const loadWalliClient = (argv: Arguments): WalliClient => {
   const credentials = grpc.credentials.createInsecure();
   return new WalliClient(`${argv.rpc.host}:${argv.rpc.port}`, credentials);
 };
-
-interface GrpcResponse {
-  toObject: Function;
-}
 
 export const callback = (error: Error | null, response: GrpcResponse) => {
   if (error) {

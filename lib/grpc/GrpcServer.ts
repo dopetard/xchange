@@ -1,6 +1,6 @@
 import grpc, { Server } from 'grpc';
 import Logger from '../Logger';
-import errors from './errors';
+import { walliErrors } from '../consts/errors';
 import GrpcService from './GrpcService';
 import Service from '../service/Service';
 import { WalliService } from '../proto/wallirpc_grpc_pb';
@@ -21,19 +21,17 @@ class GrpcServer {
   }
 
   public listen = async (port: number, host: string) => {
-    return new Promise((resolve, reject) => {
-      assert(Number.isInteger(port) && port > 1023 && port < 65536, 'port must be an integer between 1024 and 65536');
-      const bindCode = this.server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
+    assert(Number.isInteger(port) && port > 1023 && port < 65536, 'port must be an integer between 1024 and 65536');
+    const bindCode = this.server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
 
-      if (bindCode !== port) {
-        const error = errors.COULD_NOT_BIND(host , port.toString());
-        reject(error.message);
-      } else {
-        this.server.start();
-        this.logger.info(`gRPC server listening on ${host}:${port}`);
-        resolve(true);
-      }
-    });
+    if (bindCode !== port) {
+      const error = walliErrors.COULD_NOT_BIND(host , port.toString());
+      throw(error.message);
+    } else {
+      this.server.start();
+      this.logger.info(`gRPC server listening on ${host}:${port}`);
+      return true;
+    }
   }
 
   public close = async () => {
