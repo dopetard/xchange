@@ -1,4 +1,5 @@
 import WebSocket from 'ws';
+import fs from 'fs';
 import uuidv1 from 'uuid/v1';
 import { EventEmitter } from 'events';
 
@@ -8,6 +9,7 @@ type RpcConfig = {
   port: number;
   user: string;
   password: string;
+  certPath: string;
 };
 
 /** A hack to make promises handleable from other functions */
@@ -34,11 +36,14 @@ class RpcClient extends EventEmitter {
 
   public connect = async () => {
     return new Promise((resolve, reject) => {
+      const rpccert = fs.readFileSync(this.config.certPath,  { encoding: 'utf-8' });
       const credentials = Buffer.from(`${this.config.user}:${this.config.password}`);
-      this.ws = new WebSocket(`ws://${this.config.host}:${this.config.port}/ws`, {
+      this.ws = new WebSocket(`wss://${this.config.host}:${this.config.port}/ws`, {
         headers: {
           Authorization: `Basic ${credentials.toString('base64')}`,
         },
+        cert: rpccert,
+        ca: [rpccert],
       });
 
       this.ws.onopen = () => {

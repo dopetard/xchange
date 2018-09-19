@@ -10,6 +10,9 @@ const { argv } = require('yargs')
     btcdconfig: {
       type: 'string',
     },
+    btcdcert: {
+      type: 'string',
+    },
     logfile: {
       describe: 'Path to the logfile',
       type: 'string',
