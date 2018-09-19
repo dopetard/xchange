@@ -106,12 +106,14 @@ class Config {
   private parseIniConfig = (filename: string, mergeTarget: any, configType: string) => {
     if (fs.existsSync(filename)) {
       try {
-        const config = ini.parse(filename);
-        deepMerge(mergeTarget, config);
+        const config = ini.parse(fs.readFileSync(filename, 'utf-8'));
+        const { rpcuser, rpcpass, listen } = config['Application Options'];
 
-        if (config.listen) {
-          const split = config.listen.split(':');
+        rpcuser ? mergeTarget.user = rpcuser : undefined;
+        rpcpass ? mergeTarget.password = rpcpass : undefined;
 
+        if (listen) {
+          const split = listen.split(':');
           mergeTarget.host = split[0];
           mergeTarget.port = split[1];
         }
