@@ -33,7 +33,6 @@ class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
 
   constructor(logger: Logger, config: RpcConfig) {
     super(logger, BtcdClient.serviceName);
-
     this.rpcClient = new RpcClient(config);
     this.rpcClient.on('error', error => this.emit('error', error));
   }
