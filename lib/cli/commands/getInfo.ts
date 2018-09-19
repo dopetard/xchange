@@ -1,5 +1,5 @@
 import { Arguments } from 'yargs';
-import { callback, loadWalliClient } from '../command';
+import { callback, loadWalliClient } from '../Command';
 import { GetInfoRequest } from '../../proto/wallirpc_pb';
 
 export const command = 'getinfo';
