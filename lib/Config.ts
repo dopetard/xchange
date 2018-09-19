@@ -12,7 +12,6 @@ import { errors } from './consts/errors';
 
 type SerivceConfigOption = {
   configPath: string;
-  certPath: string;
 };
 
 type ConfigType = {
