@@ -1,10 +1,6 @@
 import { concatErrorCode } from '../Utils';
 import errorCodePrefix from './errorCodePrefix';
-
-export type Error = {
-  message: string,
-  code: string,
-};
+import { Error } from './types';
 
 /**
  * Errors that are that generic or used in multiple places

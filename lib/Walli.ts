@@ -20,7 +20,7 @@ class Walli {
     this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
     this.service = new Service(this.logger, this.btcdClient);
-    this.grpcServer = new GrpcServer(this.logger, this.service);
+    this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);
   }
 
   public start = async () => {
@@ -47,7 +47,7 @@ class Walli {
 
   private startGrpcServer = async () => {
     try {
-      await this.grpcServer.listen(9000, '127.0.0.1');
+      await this.grpcServer.listen();
     } catch (error) {
       this.logger.error(error);
     }

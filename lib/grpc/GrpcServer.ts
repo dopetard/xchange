@@ -6,13 +6,20 @@ import Service from '../service/Service';
 import { WalliService } from '../proto/wallirpc_grpc_pb';
 import assert from 'assert';
 
+type GrpcConfig = {
+  host: string,
+  port: number,
+};
+
 class GrpcServer {
   private server: Server;
   private logger: Logger;
+  private grpcConfig: GrpcConfig;
 
-  constructor(logger: Logger, service: Service) {
+  constructor(logger: Logger, service: Service, grpcConfig: GrpcConfig) {
     this.server = new grpc.Server();
     this.logger = logger;
+    this.grpcConfig = grpcConfig;
 
     const grpcService = new GrpcService(logger, service);
     this.server.addService(WalliService, {
@@ -20,13 +27,14 @@ class GrpcServer {
     });
   }
 
-  public listen = async (port: number, host: string) => {
+  public listen = async () => {
+    const { port, host } = this.grpcConfig;
     assert(Number.isInteger(port) && port > 1023 && port < 65536, 'port must be an integer between 1024 and 65536');
     const bindCode = this.server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
 
     if (bindCode !== port) {
       const error = errors.COULD_NOT_BIND(host , port.toString());
-      throw(error.message);
+      throw(error);
     } else {
       this.server.start();
       this.logger.info(`gRPC server listening on ${host}:${port}`);
@@ -45,3 +53,4 @@ class GrpcServer {
 }
 
 export default GrpcServer;
+export { GrpcConfig };
