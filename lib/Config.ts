@@ -7,7 +7,8 @@ import { Arguments } from 'yargs';
 import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
 import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
 import LndClient, { LndConfig } from './lightning/LndClient';
-import errors from './consts/errors';
+import { GrpcConfig } from './grpc/GrpcServer';
+import { errors } from './consts/errors';
 
 type SerivceConfigOption = {
   configPath: string;
@@ -17,6 +18,7 @@ type ConfigType = {
   configPath: string;
   logPath: string;
   logLevel: string;
+  grpc: GrpcConfig;
   btcd: BtcdConfig & SerivceConfigOption;
   lnd: LndConfig & SerivceConfigOption;
 };
@@ -40,6 +42,10 @@ class Config {
       configPath: path.join(this.walliDir, 'walli.conf'),
       logPath: path.join(this.walliDir, 'walli.log'),
       logLevel: this.getDefaultLogLevel(),
+      grpc: {
+        host: '127.0.0.1',
+        port: 9000,
+      },
       btcd: {
         host: '127.0.0.1',
         port: 18334,

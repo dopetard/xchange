@@ -2,7 +2,7 @@ import fs from 'fs';
 import grpc, { ClientReadableStream } from 'grpc';
 import Logger from '../Logger';
 import { BaseClientClass, ClientStatus } from '../BaseClient';
-import errors from '../consts/errors';
+import { errors } from '../consts/errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import errorCodePrefix from '../consts/errorCodePrefix';

@@ -6,26 +6,19 @@ require('yargs')
       hidden: true,
     },
     'rpc.host': {
-      describe: 'Host of the RPC',
-      type: 'string',
+      describe: 'RPC service host',
+      alias: 'h',
       default: '127.0.0.1',
+      type: 'string',
     },
     'rpc.port': {
-      describe: 'Port of the RPC',
+      describe: 'RPC service port',
+      alias: 'p',
+      default: 9000,
       type: 'number',
-      default: 18334,
-    },
-    'rpc.username': {
-      describe: 'User name for RPC',
-      type: 'string',
-      default: 'user',
-    },
-    'rpc.password': {
-      describe: 'Password for RPC',
-      type: 'string',
-      default: 'user',
     },
   })
+  .commandDir('../dist/cli/commands/')
   .demandCommand(1, '')
   .strict()
   .argv;

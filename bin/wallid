@@ -20,6 +20,14 @@ const { argv } = require('yargs')
       type: 'string',
       choices: ['error', 'warn', 'info', 'verbose', 'debug', 'silly'],
     },
+    'grpc.host': {
+      describe: 'Host for the Walli gRPC interface',
+      type: 'string',
+    },
+    'grpc.port': {
+      describe: 'Port for the Walli gRPC interface',
+      type: 'number',
+    },
     'rpc.host': {
       describe: 'Host of the BTCD RPC interface',
       type: 'string',
