@@ -100,7 +100,7 @@ class Config {
     if (args) {
       deepMerge(this.config, args);
     }
-    console.log(this.config);
+
     return this.config;
   }
 
