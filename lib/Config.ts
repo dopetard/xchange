@@ -49,8 +49,8 @@ class Config {
       btcd: {
         host: '127.0.0.1',
         port: 18334,
-        user: '',
-        password: '',
+        rpcuser: '',
+        rpcpass: '',
         configPath: path.join(this.btcdDir, 'btcd.conf'),
         certPath: path.join(this.btcdDir, 'rpc.cert'),
       },
@@ -98,9 +98,9 @@ class Config {
     );
 
     if (args) {
-      deepMerge(this, args);
+      deepMerge(this.config, args);
     }
-
+    console.log(this.config);
     return this.config;
   }
 
@@ -108,16 +108,24 @@ class Config {
     if (fs.existsSync(filename)) {
       try {
         const config = ini.parse(fs.readFileSync(filename, 'utf-8'));
-        const { rpcuser, rpcpass, listen } = config['Application Options'];
 
-        rpcuser ? mergeTarget.user = rpcuser : undefined;
-        rpcpass ? mergeTarget.password = rpcpass : undefined;
+        switch (configType) {
+          case 'LND':
+            const configLND: LndConfig = config;
+            deepMerge(mergeTarget, configLND);
+            break;
+          default:
+            const configBTCD: BtcdConfig = config;
+            deepMerge(mergeTarget, configBTCD);
 
-        if (listen) {
-          const split = listen.split(':');
-          mergeTarget.host = split[0];
-          mergeTarget.port = split[1];
+            if (config.listen) {
+              const split = config.listen.split(':');
+              mergeTarget.host = split[0];
+              mergeTarget.port = split[1];
+            }
+            break;
         }
+
       } catch (error) {
         throw errors.COULD_NOT_PARSE_CONFIG(configType, error);
       }

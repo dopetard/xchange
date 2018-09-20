@@ -1,7 +1,7 @@
 import Logger from './Logger';
 import Config, { ConfigType } from './Config';
 import BtcdClient from './chain/BtcdClient';
-import LndClient from './lightning/LndClient';
+// import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
 import { Arguments } from 'yargs';
@@ -12,13 +12,13 @@ class Walli {
   private logger: Logger;
   private grpcServer: GrpcServer;
   private btcdClient: BtcdClient;
-  private lndClient: LndClient;
+  // private lndClient: LndClient;
 
   constructor(config: Arguments) {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
     this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
-    this.lndClient = new LndClient(this.logger, this.config.lnd);
+    // this.lndClient = new LndClient(this.logger, this.config.lnd);
     this.service = new Service(this.logger, this.btcdClient);
     this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);
   }
@@ -26,7 +26,7 @@ class Walli {
   public start = async () => {
     const connectPromises = [
       this.connectBtcd(),
-      this.connectLnd(),
+      // this.connectLnd(),
       this.startGrpcServer(),
     ];
 
@@ -52,7 +52,7 @@ class Walli {
       this.logger.error(error);
     }
   }
-
+/*
   private connectLnd = async () => {
     try {
       await this.lndClient.connect();
@@ -66,7 +66,7 @@ class Walli {
       this.logCouldNotConnect(LndClient.serviceName, error);
     }
   }
-
+*/
   private logCouldNotConnect = (service: string, error: any) => {
     this.logger.error(`could not connect to ${service}: ${JSON.stringify(error)}`);
   }

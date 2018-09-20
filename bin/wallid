@@ -28,19 +28,19 @@ const { argv } = require('yargs')
       describe: 'Port for the Walli gRPC interface',
       type: 'number',
     },
-    'rpc.host': {
+    'btcd.host': {
       describe: 'Host of the BTCD RPC interface',
       type: 'string',
     },
-    'rpc.port': {
+    'btcd.port': {
       describe: 'Port of the BTCD RPC interface',
       type: 'number',
     },
-    'rpc.user': {
+    'btcd.rpcuser': {
       describe: 'User for the BTCD RPC interface',
       type: 'string',
     },
-    'rpc.password': {
+    'btcd.rpcpass': {
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
     },
