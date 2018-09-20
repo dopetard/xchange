@@ -52,6 +52,7 @@ class Config {
         user: '',
         password: '',
         configPath: path.join(this.btcdDir, 'btcd.conf'),
+        certPath: path.join(this.btcdDir, 'rpc.cert'),
       },
       lnd: {
         host: '127.0.0.1',
