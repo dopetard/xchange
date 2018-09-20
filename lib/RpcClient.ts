@@ -37,7 +37,7 @@ class RpcClient extends EventEmitter {
   public connect = async () => {
     return new Promise((resolve, reject) => {
       const rpcCert = fs.readFileSync(this.config.certPath,  { encoding: 'utf-8' });
-      const credentials = new Buffer.from(`${this.config.user}:${this.config.password}`);
+      const credentials = Buffer.from(`${this.config.user}:${this.config.password}`);
       this.ws = new WebSocket(`wss://${this.config.host}:${this.config.port}/ws`, {
         headers: {
           Authorization: `Basic ${credentials.toString('base64')}`,
