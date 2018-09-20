@@ -118,3 +118,12 @@ export const groupBy = (arr: object[], keyGetter: (item: any) => string | number
 export const ms = (): number => {
   return Date.now();
 };
+
+/**
+ * Split listen string from config files.
+ */
+export const splitListen = (mergeTarget: any, listen: string) =>  {
+  const split = listen.split(':');
+  mergeTarget.host = split[0];
+  mergeTarget.port = split[1];
+};

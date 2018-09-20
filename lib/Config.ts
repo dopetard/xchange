@@ -4,7 +4,7 @@ import fs from 'fs';
 import toml from 'toml';
 import ini from 'ini';
 import { Arguments } from 'yargs';
-import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
+import { deepMerge, capitalizeFirstLetter, resolveHome, splitListen } from './Utils';
 import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
 import LndClient, { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
@@ -107,22 +107,18 @@ class Config {
   private parseIniConfig = (filename: string, mergeTarget: any, configType: string) => {
     if (fs.existsSync(filename)) {
       try {
-        const config = ini.parse(fs.readFileSync(filename, 'utf-8'));
+        const config = ini.parse(fs.readFileSync(filename, 'utf-8'))['Application Options'];
 
         switch (configType) {
           case 'LND':
             const configLND: LndConfig = config;
             deepMerge(mergeTarget, configLND);
+            config.listen ? splitListen(mergeTarget, config.listen) : undefined;
             break;
           default:
             const configBTCD: BtcdConfig = config;
             deepMerge(mergeTarget, configBTCD);
-
-            if (config.listen) {
-              const split = config.listen.split(':');
-              mergeTarget.host = split[0];
-              mergeTarget.port = split[1];
-            }
+            config.listen ? splitListen(mergeTarget, config.listen) : undefined;
             break;
         }
 
