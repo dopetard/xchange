@@ -2,6 +2,7 @@ import { expect, assert } from 'chai';
 import { argv } from 'yargs';
 import Config from '../../lib/Config';
 import { deepMerge } from '../../lib/Utils';
+
 delete argv._;
 delete argv.version;
 delete argv.help;
