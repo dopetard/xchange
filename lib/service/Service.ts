@@ -9,15 +9,8 @@ type walliInfo = {
 };
 
 class Service{
-  private logger: Logger;
-  private btcdClient: BtcdClient;
-  private lndClient: LndClient;
 
-  constructor(logger: Logger, btcdClient: BtcdClient, lndClient: LndClient) {
-    this.logger = logger;
-    this.btcdClient = btcdClient;
-    this.lndClient = lndClient;
-  }
+  constructor(private logger: Logger, private btcdClient: BtcdClient, private lndClient: LndClient) {}
 
   public getInfo = async (): Promise<any> => {
     const version = '1.0.0'; // TODO: get acctual version

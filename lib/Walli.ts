@@ -8,15 +8,19 @@ import { Arguments } from 'yargs';
 
 class Walli {
   public service: Service;
+
   private config: ConfigType;
   private logger: Logger;
-  private grpcServer: GrpcServer;
+
   private btcdClient: BtcdClient;
   private lndClient: LndClient;
+
+  private grpcServer: GrpcServer;
 
   constructor(config: Arguments) {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
+
     this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
     this.service = new Service(this.logger, this.btcdClient, this.lndClient);
@@ -24,19 +28,17 @@ class Walli {
   }
 
   public start = async () => {
-    const connectPromises = [
+    await Promise.all([
       this.connectBtcd(),
       this.connectLnd(),
-      this.startGrpcServer(),
-    ];
+    ]);
 
-    await Promise.all(connectPromises);
+    await this.startGrpcServer();
   }
 
   private connectBtcd = async () => {
     try {
       await this.btcdClient.connect();
-      this.logger.info('connected to BTCD');
 
       const info = await this.btcdClient.getInfo();
       this.logger.debug(`BTCD status: ${info.blocks} blocks on ${info.testnet ? 'testnet' : 'mainnet'}`);
