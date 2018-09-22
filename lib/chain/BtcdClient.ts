@@ -41,9 +41,9 @@ class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
   public connect = async () => {
     try {
       await this.rpcClient.connect();
-      this.setStatus(ClientStatus.CONNECTED);
+      this.setStatus(ClientStatus.Connected);
     } catch (error) {
-      this.setStatus(ClientStatus.DISCONNECTED);
+      this.setStatus(ClientStatus.Disconnected);
       throw error;
     }
   }
@@ -62,8 +62,8 @@ class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
 
   private verifyConnected = () => {
     switch (this.clientStatus) {
-      case ClientStatus.DISABLED: throw(this.disabledError);
-      case ClientStatus.DISCONNECTED: throw(this.disconnectedError);
+      case ClientStatus.Disabled: throw(this.disabledError);
+      case ClientStatus.Disconnected: throw(this.disconnectedError);
     }
   }
 }

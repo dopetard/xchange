@@ -37,7 +37,7 @@ class GrpcServer {
       throw(error);
     } else {
       this.server.start();
-      this.logger.info(`gRPC server listening on ${host}:${port}`);
+      this.logger.info(`gRPC server listening on: ${host}:${port}`);
       return true;
     }
   }

@@ -2,9 +2,9 @@ import { EventEmitter } from 'events';
 import Logger from './Logger';
 
 enum ClientStatus {
-  DISABLED,
-  DISCONNECTED,
-  CONNECTED,
+  Disabled,
+  Disconnected,
+  Connected,
 }
 
 interface BaseClient {
@@ -15,7 +15,7 @@ interface BaseClient {
  * A base class to represent a client for a external serivce such as LND or BTCD
  */
 abstract class BaseClientClass extends EventEmitter {
-  protected status = ClientStatus.DISABLED;
+  protected status = ClientStatus.Disabled;
 
   constructor(protected logger: Logger, private serviceName: string) {
     super();
@@ -27,7 +27,7 @@ abstract class BaseClientClass extends EventEmitter {
 
   protected setStatus(status: ClientStatus) {
     this.status = status;
-    this.logger.info(`${this.serviceName} status ${ClientStatus[status]}`);
+    this.logger.info(`${this.serviceName} status: ${ClientStatus[status].toLowerCase()}`);
   }
 }
 
