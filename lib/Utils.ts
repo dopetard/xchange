@@ -21,6 +21,25 @@ export const splitPairId = (pairId: string): { base: string, quote: string } => 
 };
 
 /**
+ * Splits a derivation path into multiple parts
+ */
+export const splitDerivationPath = (path: string): { master: string, sub: number[] } => {
+  const split = path.split('/');
+  const master = split.shift()!;
+
+  const sub: number[] = [];
+
+  split.forEach((part) => {
+    sub.push(Number(part));
+  });
+
+  return {
+    master,
+    sub,
+  };
+};
+
+/**
  * Concat an error code and its prefix
  */
 export const concatErrorCode = (prefix: number, code: number) => {

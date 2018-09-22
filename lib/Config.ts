@@ -8,7 +8,7 @@ import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
 import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
 import LndClient, { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
-import { errors } from './consts/errors';
+import Errors from './consts/Errors';
 
 type SerivceConfigOption = {
   configPath: string;
@@ -78,7 +78,7 @@ class Config {
         const walliConfig = toml.parse(walliToml);
         deepMerge(this.config, walliConfig);
       } catch (error) {
-        throw errors.COULD_NOT_PARSE_CONFIG('walli', error);
+        throw Errors.COULD_NOT_PARSE_CONFIG('walli', error);
       }
     }
 
@@ -119,7 +119,7 @@ class Config {
           mergeTarget.port = split[1];
         }
       } catch (error) {
-        throw errors.COULD_NOT_PARSE_CONFIG(configType, error);
+        throw Errors.COULD_NOT_PARSE_CONFIG(configType, error);
       }
     }
   }

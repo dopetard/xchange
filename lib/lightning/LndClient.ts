@@ -2,7 +2,7 @@ import fs from 'fs';
 import grpc, { ClientReadableStream } from 'grpc';
 import Logger from '../Logger';
 import { BaseClientClass, ClientStatus } from '../BaseClient';
-import { errors } from '../consts/errors';
+import Errors from '../consts/Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
@@ -50,8 +50,8 @@ interface LndClient {
 class LndClient extends BaseClientClass implements LightningClient {
   public static readonly serviceName = 'LND';
 
-  private readonly disabledError = errors.IS_DISABLED(LndClient.serviceName);
-  private readonly disconnectedError = errors.IS_DISCONNECTED(LndClient.serviceName);
+  private readonly disabledError = Errors.IS_DISABLED(LndClient.serviceName);
+  private readonly disconnectedError = Errors.IS_DISCONNECTED(LndClient.serviceName);
 
   private lightning!: GrpcClient | LightningMethodIndex;
   private meta!: grpc.Metadata;

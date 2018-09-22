@@ -62,3 +62,6 @@ typedoc/
 
 # Config file
 walli.conf
+
+# Wallet information file
+wallets.dat

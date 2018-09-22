@@ -7,14 +7,13 @@ import Service from './service/Service';
 import { Arguments } from 'yargs';
 
 class Walli {
-  public service: Service;
-
   private config: ConfigType;
   private logger: Logger;
 
   private btcdClient: BtcdClient;
   private lndClient: LndClient;
 
+  private service: Service;
   private grpcServer: GrpcServer;
 
   constructor(config: Arguments) {
@@ -23,8 +22,8 @@ class Walli {
 
     this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
-    this.service = new Service(this.btcdClient);
 
+    this.service = new Service(this.btcdClient);
     this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);
   }
 
