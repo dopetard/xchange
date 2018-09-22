@@ -12,32 +12,39 @@ type WalletInfo = {
   highestUsedIndex: number;
 };
 
+type WalletFile = {
+  // Base58 encoded master node
+  master: string;
+  wallets: Map<string, WalletInfo>;
+};
+
+// TODO: recovery with existing mnemonic
 class WalletManager {
   public wallets = new Map<string, Wallet>();
 
   private walletsInfo: Map<string, WalletInfo>;
   private masterNode: BIP32;
 
+  // TODO: support for BIP44
   private static readonly derivationPath = 'm/0';
 
   /**
    * WalletManager initiates multiple HD wallets and takes care of writing them to and reading them from the disk when exiting
    *
-   * @param mnemonic master seed from which wallets are derived
    * @param coins for which UTXO based coins a wallet should be generated
-   * @param walletsFile where information about the wallets should be stored; not defining results in no file being written and read
+   * @param walletPath where information about the wallets should be stored
+   * @param writeOnExit whether the wallet should be written to the disk when exiting
    */
-  constructor(mnemonic: string, coins: string[], walletsFile?: string) {
-    if (!bip39.validateMnemonic(mnemonic)) throw(Errors.INVALID_MNEMONIC(mnemonic));
+  constructor(coins: string[], walletPath: string, writeOnExit = true) {
+    const walletFile = this.loadWallet(walletPath);
 
-    this.masterNode = bip32.fromSeed(bip39.mnemonicToSeed(mnemonic));
-
-    this.walletsInfo = this.loadWallets(walletsFile);
+    this.walletsInfo = walletFile.wallets;
+    this.masterNode = bip32.fromBase58(walletFile.master);
 
     coins.forEach((coin) => {
       let walletInfo = this.walletsInfo.get(coin);
 
-      // Generate new wallet information if it doesn't exist
+      // Generate new sub wallet information if it doesn't exist
       if (!walletInfo) {
         walletInfo = {
           coin,
@@ -51,24 +58,55 @@ class WalletManager {
       this.wallets.set(coin, new Wallet(this.masterNode, walletInfo.derivationPath, walletInfo.highestUsedIndex));
     });
 
-    if (walletsFile) {
+    if (writeOnExit) {
       exitHook(() => {
-        this.writeWallets(walletsFile);
+        this.writeWallet(walletPath);
       });
     }
   }
 
-  private writeWallets = (filename: string) => {
-    fs.writeFileSync(filename, JSON.stringify(Array.from(this.walletsInfo.entries())));
-  }
-
-  private loadWallets = (filename?: string): Map<string, WalletInfo> => {
-    if (filename && fs.existsSync(filename)) {
-      const rawWallets = fs.readFileSync(filename, 'utf-8');
-      return new Map<string, WalletInfo>(JSON.parse(rawWallets));
+  /**
+   * Initiates a new WalletManager with a mnemonic
+   */
+  public static fromMnemonic = (mnemonic: string, coins: string[], walletPath: string, writeOnExit = true) => {
+    if (!bip39.validateMnemonic(mnemonic)) {
+      throw(Errors.INVALID_MNEMONIC(mnemonic));
     }
 
-    return new Map<string, WalletInfo>();
+    WalletManager.writeWalletFile(walletPath, {
+      master: bip32.fromSeed(bip39.mnemonicToSeed(mnemonic)).toBase58(),
+      wallets: new Map<string, WalletInfo>(),
+    });
+
+    return new WalletManager(coins, walletPath, writeOnExit);
+  }
+
+  private static writeWalletFile = (filename: string, walletFile: WalletFile) => {
+    fs.writeFileSync(filename, JSON.stringify({
+      master: walletFile.master,
+      wallets: Array.from(walletFile.wallets.entries()),
+    }));
+  }
+
+  private writeWallet = (filename: string) => {
+    WalletManager.writeWalletFile(filename, {
+      master: this.masterNode.toBase58(),
+      wallets: this.walletsInfo,
+    });
+  }
+
+  private loadWallet = (filename: string): WalletFile => {
+    if (fs.existsSync(filename)) {
+      const rawWalletFile = fs.readFileSync(filename, 'utf-8');
+      const walletFile = JSON.parse(rawWalletFile);
+
+      return {
+        master: walletFile.master,
+        wallets: new Map<string, WalletInfo>(walletFile.wallets),
+      };
+    }
+
+    throw(Errors.NOT_INITIALIZED());
   }
 
   private getHighestDepthIndex = (depth: number): number => {

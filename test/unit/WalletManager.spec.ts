@@ -1,5 +1,6 @@
 import fs from 'fs';
 import { expect } from 'chai';
+import bip32 from 'bip32';
 import bip39 from 'bip39';
 import WalletManager from '../../lib/wallet/WalletManager';
 import WalletErrors from '../../lib/wallet/Errors';
@@ -11,27 +12,27 @@ describe('WalletManager', () => {
     'LTC',
     'DOGE',
   ];
-  const walletsFile = 'wallets.dat';
+  const walletPath = 'wallet.dat';
 
   let walletManager: WalletManager;
 
-  function removeWalletsFile() {
-    if (fs.existsSync(walletsFile)) {
-      fs.unlinkSync(walletsFile);
+  function removeWalletFile() {
+    if (fs.existsSync(walletPath)) {
+      fs.unlinkSync(walletPath);
     }
   }
 
-  function newWalletManager() {
-    return new WalletManager(mnemonic, coins);
-  }
-
   before(() => {
-    removeWalletsFile();
+    removeWalletFile();
+  });
 
-    walletManager = newWalletManager();
+  it('shoule not initiate without wallet file', () => {
+    expect(() => new WalletManager(coins, walletPath, false)).to.throw(WalletErrors.NOT_INITIALIZED().message);
   });
 
   it('should initiate a new wallet for each coin', () => {
+    walletManager = WalletManager.fromMnemonic(mnemonic, coins, walletPath, false);
+
     coins.forEach((coin, index) => {
       const wallet = walletManager.wallets.get(coin);
 
@@ -44,16 +45,19 @@ describe('WalletManager', () => {
     });
   });
 
-  it('should write wallets to the disk', () => {
-    walletManager['writeWallets'](walletsFile);
+  it('should write wallet to the disk', () => {
+    walletManager['writeWallet'](walletPath);
 
-    expect(fs.existsSync(walletsFile)).to.be.true;
-    expect(walletManager['loadWallets'](walletsFile)).to.be.deep.equal(walletManager['walletsInfo']);
+    expect(fs.existsSync(walletPath)).to.be.true;
+
+    const walletInfo = walletManager['loadWallet'](walletPath);
+    expect(walletInfo.master).to.be.equal(bip32.fromSeed(bip39.mnemonicToSeed(mnemonic)).toBase58());
+    expect(walletInfo.wallets).to.be.deep.equal(walletManager['walletsInfo']);
   });
 
   it('should read wallet from the disk', () => {
-    const compare = newWalletManager();
-    compare['loadWallets'](walletsFile);
+    const compare = new WalletManager(coins, walletPath, false);
+    compare['loadWallet'](walletPath);
 
     expect(compare['walletsInfo']).to.be.deep.equal(walletManager['walletsInfo']);
   });
@@ -61,10 +65,10 @@ describe('WalletManager', () => {
   it('should not accept invalid mnemonics', () => {
     const invalidMnemonic = 'invalid';
 
-    expect(() => new WalletManager(invalidMnemonic, [], '')).to.throw(WalletErrors.INVALID_MNEMONIC(invalidMnemonic).message);
+    expect(() => WalletManager.fromMnemonic(invalidMnemonic, [], '')).to.throw(WalletErrors.INVALID_MNEMONIC(invalidMnemonic).message);
   });
 
   after(() => {
-    removeWalletsFile();
+    removeWalletFile();
   });
 });
