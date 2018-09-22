@@ -5,7 +5,6 @@ import { BaseClientClass, ClientStatus } from '../BaseClient';
 import { errors } from '../consts/errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
-import errorCodePrefix from '../consts/errorCodePrefix';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
 
 // TODO: error handling
@@ -81,13 +80,13 @@ class LndClient extends BaseClientClass implements LightningClient {
     } else {
       this.logger.error('could not find required files for LND');
 
-      this.setStatus(ClientStatus.DISABLED);
+      this.setStatus(ClientStatus.Disabled);
       throw(this.disabledError);
     }
   }
 
   public connect = async () => {
-    this.setStatus(ClientStatus.CONNECTED);
+    this.setStatus(ClientStatus.Connected);
     this.subscribeInvoices();
   }
 
@@ -155,8 +154,8 @@ class LndClient extends BaseClientClass implements LightningClient {
 
   private verifyConnected = () => {
     switch (this.clientStatus) {
-      case ClientStatus.DISABLED: throw(this.disabledError);
-      case ClientStatus.DISCONNECTED: throw(this.disconnectedError);
+      case ClientStatus.Disabled: throw(this.disabledError);
+      case ClientStatus.Disconnected: throw(this.disconnectedError);
     }
   }
 }
