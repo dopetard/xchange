@@ -5,7 +5,7 @@
   "main": "bin/walli",
   "scripts": {
     "postinstall": "npm run compile",
-    "proto": "cross-os proto",
+    "proto": "cross-os proto && cross-os protoFixDeprecation",
     "compile": "cross-os precompile && tsc && cross-os postcompile",
     "start": "node bin/wallid",
     "dev": "npm run compile && npm run start",
@@ -27,6 +27,10 @@
       "linux": "rsync -am --include '*/' --include '*.js*' --exclude '*' lib/proto/ dist/proto",
       "darwin": "rsync -am --include '*/' --include '*.js*' --exclude '*' lib/proto/ dist/proto",
       "win32": "xcopy /s lib\\proto\\*.js* dist\\proto\\* >nul"
+    },
+    "protoFixDeprecation": {
+      "linux": "sed -i -- 's/new Buffer(/Buffer.from(/g' lib/proto/*.js",
+      "darwin": "sed -i '' 's/new Buffer(/Buffer.from(/g' lib/proto/*.js"
     },
     "proto": {
       "linux": "./node_modules/grpc-tools/bin/protoc --js_out='import_style=commonjs,binary:lib/proto' --ts_out='lib/proto' --grpc_out='lib/proto' --plugin='protoc-gen-grpc=node_modules/.bin/grpc_tools_node_protoc_plugin' --plugin='protoc-gen-ts=node_modules/grpc_tools_node_protoc_ts/bin/protoc-gen-ts' -I='proto' proto/*.proto proto/google/api/*.proto proto/google/protobuf/*.proto",
