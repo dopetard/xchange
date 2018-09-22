@@ -1,6 +1,12 @@
 import Logger from '../Logger';
-import BtcdClient from '../chain/BtcdClient';
-import LndClient from '../lightning/LndClient';
+import BtcdClient, { BtcdInfo } from '../chain/BtcdClient';
+import LndClient, { LndInfo } from '../lightning/LndClient';
+
+type walliInfo = {
+  version: string,
+  btcdInfo: BtcdInfo,
+  lndInfo: LndInfo,
+};
 
 class Service{
   private logger: Logger;
@@ -13,10 +19,15 @@ class Service{
     this.lndClient = lndClient;
   }
 
-  public getInfo = async (): Promise<object> => {
+  public getInfo = async (): Promise<any> => {
+    const version = '1.0.0'; // TODO: get acctual version
     const btcdInfo = await this.btcdClient.getInfo();
     const lndInfo = await this.lndClient.getInfo();
-    return btcdInfo;
+    return {
+      version,
+      btcdInfo,
+      lndInfo,
+    };
   }
 }
 

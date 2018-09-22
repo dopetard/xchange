@@ -20,12 +20,11 @@ type LndConfig = {
 
 /** General information about the state of this lnd client. */
 type Info = {
+  version: string;
+  chainsList: string[];
+  blockheight: number;
+  uris: string[];
   error?: string;
-  channels?: ChannelCount;
-  chains?: string[];
-  blockheight?: number;
-  uris?: string[];
-  version?: string;
 };
 
 type ChannelCount = {
@@ -162,4 +161,4 @@ class LndClient extends BaseClientClass implements LightningClient {
 }
 
 export default LndClient;
-export { LndConfig };
+export { LndConfig, Info as LndInfo };

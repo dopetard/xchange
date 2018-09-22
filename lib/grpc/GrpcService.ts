@@ -2,7 +2,9 @@
 import grpc from 'grpc';
 import Service from '../service/Service';
 import Logger from '../Logger';
+import { LndInfo } from '../lightning/LndClient';
 import * as wallirpc from '../proto/wallirpc_pb';
+import { BtcdInfo } from '../chain/BtcdClient';
 
 class GrpcService {
   private logger: Logger;
@@ -17,15 +19,38 @@ class GrpcService {
     try {
       const getInfoResponse = await this.service.getInfo();
       const response = new wallirpc.GetInfoResponse();
-      response.setVersion(getInfoResponse['version']);
-      response.setProtocolversion(getInfoResponse['protocolversion']);
-      response.setBlocks(getInfoResponse['blocks']);
-      response.setTimeoffset(getInfoResponse['timeoffset']);
-      response.setConnections(getInfoResponse['connections']);
-      response.setProxy(getInfoResponse['proxy']);
-      response.setDifficulty(getInfoResponse['difficulty']);
-      response.setTestnet(getInfoResponse['testnet']);
-      response.setRelayfee(getInfoResponse['relayfee']);
+      response.setVersion(getInfoResponse.version);
+
+      const getLndInfo = ((lndInfo: LndInfo): wallirpc.LndInfo => {
+        const lnd = new wallirpc.LndInfo();
+
+        const { version, chainsList, blockheight, uris, error } = lndInfo;
+        lnd.setVersion(version);
+        lnd.setChainsList(chainsList);
+        lnd.setBlockheight(blockheight);
+        lnd.setUrisList(uris);
+        lnd.setError(error ? error : 'null');
+
+        return lnd;
+      });
+
+      const getBtcdInfo = ((btcdInfo: BtcdInfo): wallirpc.BtcdInfo => {
+        const btcd = new wallirpc.BtcdInfo;
+
+        const { version, protocolversion, blocks, timeoffset, connections, proxy, difficulty, testnet, relayfee } = btcdInfo;
+        btcd.setVersion(version);
+        btcd.setProtocolversion(protocolversion);
+        btcd.setBlocks(blocks);
+        btcd.setTimeoffset(timeoffset);
+        btcd.setConnections(connections);
+        btcd.setProxy(proxy);
+        btcd.setTestnet(testnet);
+        btcd.setRelayfee(relayfee);
+        return btcd;
+      });
+
+      response.setLndinfo(getLndInfo(getInfoResponse.lndInfo));
+      response.setBtcdinfo(getBtcdInfo(getInfoResponse.btcdInfo));
 
       callback(null, response);
 
