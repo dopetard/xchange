@@ -2,15 +2,54 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Debug",
       "type": "node",
       "request": "launch",
-      "args": ["bin/wallid"],
-      "runtimeArgs": ["--nolazy", "-r", "ts-node/register"],
+      "name": "Debug",
+      "args": [
+        "bin/wallid"
+      ],
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register"
+      ],
       "sourceMaps": true,
       "cwd": "${workspaceRoot}",
-      "stopOnEntry": true,
-      "outputCapture": "std"
-    }
+      "console": "integratedTerminal",
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Mocha All",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+          "--timeout",
+          "999999",
+          "'${workspaceFolder}/{,!(node_modules)/}*/*.spec.ts'"
+      ],
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register"
+      ],
+      "console": "integratedTerminal",
+    },
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Mocha Current File",
+      "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+      "args": [
+          "--timeout",
+          "999999",
+          "${file}"
+      ],
+      "runtimeArgs": [
+        "--nolazy",
+        "-r",
+        "ts-node/register"
+      ],
+      "console": "integratedTerminal",
+    },
   ]
 }
