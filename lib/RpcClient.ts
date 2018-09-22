@@ -7,13 +7,8 @@ import { EventEmitter } from 'events';
 type RpcConfig = {
   host: string;
   port: number;
-<<<<<<< HEAD
   rpcuser: string;
   rpcpass: string;
-=======
-  user: string;
-  password: string;
->>>>>>> d10e536730efb9d5f8ddaa2a706ad99762d6dc93
   certPath: string;
 };
 

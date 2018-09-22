@@ -33,7 +33,7 @@ describe('Input over ride order', () => {
     grpc: { host: '128.0.0.1', port: 2000 },
   });
 
-  it('Cli input overrides all input', () => {
+  it('Cli input overrides all options', () => {
     expect(config.load(cliInput)).to.deep.include({ grpc: { host: '128.0.0.1', port: 2000 } });
   });
 });
