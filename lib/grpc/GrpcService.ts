@@ -23,14 +23,21 @@ class GrpcService {
 
       const getLndInfo = ((lndInfo: LndInfo): wallirpc.LndInfo => {
         const lnd = new wallirpc.LndInfo();
-
         const { version, chainsList, blockheight, uris, error } = lndInfo;
-        lnd.setVersion(version);
-        lnd.setChainsList(chainsList);
-        lnd.setBlockheight(blockheight);
-        lnd.setUrisList(uris);
-        lnd.setError(error ? error : 'null');
 
+        if (lndInfo.channels) {
+          const channels = new wallirpc.LndChannels();
+          channels.setActive(lndInfo.channels.active);
+          channels.setPending(lndInfo.channels.pending);
+          lndInfo.channels.inactive ? channels.setInactive(lndInfo.channels.inactive) : undefined;
+          lnd.setLndchannels(channels);
+        }
+
+        version ? lnd.setVersion(version) : undefined;
+        chainsList ? lnd.setChainsList(chainsList) : undefined;
+        blockheight ? lnd.setBlockheight(blockheight) : undefined;
+        uris ? lnd.setUrisList(uris) : undefined;
+        lnd.setError(error ? error : 'null');
         return lnd;
       });
 

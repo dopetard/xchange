@@ -61,6 +61,11 @@ export class LndInfo extends jspb.Message {
   setChainsList(value: Array<string>): void;
   addChains(value: string, index?: number): string;
 
+  hasLndchannels(): boolean;
+  clearLndchannels(): void;
+  getLndchannels(): LndChannels | undefined;
+  setLndchannels(value?: LndChannels): void;
+
   getBlockheight(): number;
   setBlockheight(value: number): void;
 
@@ -86,6 +91,7 @@ export namespace LndInfo {
   export type AsObject = {
     version: string,
     chainsList: Array<string>,
+    lndchannels?: LndChannels.AsObject,
     blockheight: number,
     urisList: Array<string>,
     error: string,
@@ -141,6 +147,34 @@ export namespace BtcdInfo {
     difficulty: number,
     testnet: boolean,
     relayfee: number,
+  }
+}
+
+export class LndChannels extends jspb.Message {
+  getActive(): number;
+  setActive(value: number): void;
+
+  getInactive(): number;
+  setInactive(value: number): void;
+
+  getPending(): number;
+  setPending(value: number): void;
+
+  serializeBinary(): Uint8Array;
+  toObject(includeInstance?: boolean): LndChannels.AsObject;
+  static toObject(includeInstance: boolean, msg: LndChannels): LndChannels.AsObject;
+  static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+  static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+  static serializeBinaryToWriter(message: LndChannels, writer: jspb.BinaryWriter): void;
+  static deserializeBinary(bytes: Uint8Array): LndChannels;
+  static deserializeBinaryFromReader(message: LndChannels, reader: jspb.BinaryReader): LndChannels;
+}
+
+export namespace LndChannels {
+  export type AsObject = {
+    active: number,
+    inactive: number,
+    pending: number,
   }
 }
 

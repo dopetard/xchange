@@ -19,10 +19,11 @@ type LndConfig = {
 
 /** General information about the state of this lnd client. */
 type Info = {
-  version: string;
-  chainsList: string[];
-  blockheight: number;
-  uris: string[];
+  version?: string;
+  chainsList?: string[];
+  channels?: ChannelCount;
+  blockheight?: number;
+  uris?: string[];
   error?: string;
 };
 
@@ -116,6 +117,42 @@ class LndClient extends BaseClientClass implements LightningClient {
    */
   public getInfo = (): Promise<lndrpc.GetInfoResponse.AsObject> => {
     return this.unaryCall<lndrpc.GetInfoRequest, lndrpc.GetInfoResponse.AsObject>('getInfo', new lndrpc.GetInfoRequest());
+  }
+
+  public getLndInfo = async (): Promise<Info> => {
+    let channels: ChannelCount | undefined;
+    let chainsList: string[] | undefined;
+    let blockheight: number | undefined;
+    let uris: string[] | undefined;
+    let version: string | undefined;
+    try {
+      const lnd = await this.getInfo();
+      channels = {
+        active: lnd.numActiveChannels,
+        pending: lnd.numPendingChannels,
+      };
+      chainsList = lnd.chainsList,
+      blockheight = lnd.blockHeight,
+      uris = lnd.urisList,
+      version = lnd.version;
+      return {
+        version,
+        chainsList,
+        channels,
+        blockheight,
+        uris,
+      };
+    } catch (err) {
+      this.logger.error(`LND error: ${err}`);
+      return {
+        version,
+        chainsList,
+        channels,
+        blockheight,
+        uris,
+        error: err,
+      };
+    }
   }
 
   /**
