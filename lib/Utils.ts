@@ -68,6 +68,23 @@ export const resolveHome = (filename: string) => {
 };
 
 /**
+ * Get a hex encoded Buffer from a string
+ * @returns a hex encoded Buffer
+ */
+export const getHexBuffer = (input: string) => {
+  return Buffer.from(input, 'hex');
+};
+
+/**
+ * Get a hex encoded string from a Buffer
+ *
+ * @returns a hex encoded string
+ */
+export const getHexString = (input: Buffer) => {
+  return input.toString('hex');
+};
+
+/**
  * Check whether a variable is a non-array object
  */
 export const isObject = (val: any): boolean => {
@@ -77,7 +94,7 @@ export const isObject = (val: any): boolean => {
 /**
  * Get the current date in the LocaleString format.
  */
-export const getTsString = (): string => (new Date()).toLocaleString();
+export const getTsString = (): string => (new Date()).toLocaleString('en-US', { hour12: false });
 
 /**
  * Recursively merge properties from different sources into a target object, overriding any
