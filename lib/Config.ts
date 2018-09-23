@@ -8,19 +8,21 @@ import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
 import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
 import LndClient, { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
-import { errors } from './consts/errors';
+import Errors from './consts/Errors';
 
-type SerivceConfigOption = {
+type ServiceConfigOption = {
   configPath: string;
 };
 
 type ConfigType = {
+  walliDir: string;
   configPath: string;
   logPath: string;
   logLevel: string;
+  walletPath: string;
   grpc: GrpcConfig;
-  btcd: BtcdConfig & SerivceConfigOption;
-  lnd: LndConfig & SerivceConfigOption;
+  btcd: BtcdConfig & ServiceConfigOption;
+  lnd: LndConfig & ServiceConfigOption;
 };
 
 class Config {
@@ -38,9 +40,13 @@ class Config {
     this.btcdDir = this.getServiceDataDir('btcd');
     this.lndDir = this.getServiceDataDir('lnd');
 
+    const { configPath, walletPath, logPath } = this.getWalliDirPaths(this.walliDir);
+
     this.config = {
-      configPath: path.join(this.walliDir, 'walli.conf'),
-      logPath: path.join(this.walliDir, 'walli.log'),
+      configPath,
+      walletPath,
+      logPath,
+      walliDir: this.walliDir,
       logLevel: this.getDefaultLogLevel(),
       grpc: {
         host: '127.0.0.1',
@@ -70,6 +76,11 @@ class Config {
    * This loads arguments specified by the user either from a TOML config file or from command line arguments
    */
   public load = (args: Arguments): ConfigType => {
+    if (args && args.walliDir) {
+      this.config.walliDir = resolveHome(args.walliDir);
+      deepMerge(this.config, this.getWalliDirPaths(this.config.walliDir));
+    }
+
     const walliConfigFile = this.resolveConfigPath(args.configPath, this.config.configPath);
 
     if (fs.existsSync(walliConfigFile)) {
@@ -78,8 +89,12 @@ class Config {
         const walliConfig = toml.parse(walliToml);
         deepMerge(this.config, walliConfig);
       } catch (error) {
-        throw errors.COULD_NOT_PARSE_CONFIG('walli', error);
+        throw Errors.COULD_NOT_PARSE_CONFIG('walli', error);
       }
+    }
+
+    if (!fs.existsSync(this.config.walliDir)) {
+      fs.mkdirSync(this.config.walliDir);
     }
 
     const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configPath, this.config.btcd.configPath) : this.config.btcd.configPath;
@@ -119,9 +134,17 @@ class Config {
           mergeTarget.port = split[1];
         }
       } catch (error) {
-        throw errors.COULD_NOT_PARSE_CONFIG(configType, error);
+        throw Errors.COULD_NOT_PARSE_CONFIG(configType, error);
       }
     }
+  }
+
+  private getWalliDirPaths = (walliDir: string): { configPath: string, walletPath: string, logPath: string } => {
+    return {
+      configPath: path.join(walliDir, 'walli.conf'),
+      walletPath: path.join(walliDir, 'wallet.dat'),
+      logPath: path.join(walliDir, 'walli.log'),
+    };
   }
 
   private resolveConfigPath = (configPath: string, fallback: string) => {
