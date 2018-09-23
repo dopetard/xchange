@@ -25,13 +25,13 @@ class Walli {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
 
-    if (!fs.existsSync(this.config.walletPath)) {
+    if (fs.existsSync(this.config.walletPath)) {
+      this.walletManager = new WalletManager(['BTC'], this.config.walletPath);
+    } else {
       const mnemonic = generateMnemonic();
       this.logger.warn(`generated new mnemonic: ${mnemonic}`);
 
       this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletPath);
-    } else {
-      this.walletManager = new WalletManager(['BTC'], this.config.walletPath);
     }
 
     this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
