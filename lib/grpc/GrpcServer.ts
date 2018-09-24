@@ -1,6 +1,6 @@
 import grpc, { Server } from 'grpc';
 import Logger from '../Logger';
-import { errors } from './errors';
+import Errors from './Errors';
 import GrpcService from './GrpcService';
 import Service from '../service/Service';
 import { WalliService } from '../proto/wallirpc_grpc_pb';
@@ -33,11 +33,11 @@ class GrpcServer {
     const bindCode = this.server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
 
     if (bindCode !== port) {
-      const error = errors.COULD_NOT_BIND(host , port.toString());
+      const error = Errors.COULD_NOT_BIND(host , port.toString());
       throw(error);
     } else {
       this.server.start();
-      this.logger.info(`gRPC server listening on ${host}:${port}`);
+      this.logger.info(`gRPC server listening on: ${host}:${port}`);
       return true;
     }
   }

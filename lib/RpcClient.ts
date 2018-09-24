@@ -3,7 +3,6 @@ import fs from 'fs';
 import uuidv1 from 'uuid/v1';
 import { EventEmitter } from 'events';
 
-// TODO: add TLS config options for BTCD
 type RpcConfig = {
   host: string;
   port: number;

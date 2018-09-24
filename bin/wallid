@@ -4,8 +4,17 @@ const Walli = require('../dist/Walli').default;
 
 const { argv } = require('yargs')
   .options({
+    walliDir: {
+      describe: 'Data direcotry for walli-server',
+      alias: 'w',
+      type: 'string',
+    },
     config: {
       type: 'string',
+    },
+    walletPath: {
+      type: 'string',
+      describe: 'Path to the wallet file',
     },
     btcdconfig: {
       type: 'string',

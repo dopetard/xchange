@@ -2,7 +2,7 @@
   "name": "walli-server",
   "version": "1.0.0",
   "description": "Backend for the walli prototype",
-  "main": "bin/walli",
+  "main": "bin/wallid",
   "scripts": {
     "postinstall": "npm run compile",
     "proto": "cross-os proto",
@@ -40,32 +40,43 @@
     "url": "git+https://github.com/dopetard/walli-server.git"
   },
   "dependencies": {
+    "@michael1011/bitcoin-ops": "^1.4.3",
+    "bip32": "^1.0.2",
+    "bip39": "^2.5.0",
+    "bip66": "^1.1.5",
+    "bitcoin-ops": "^1.4.1",
+    "bitcoinjs-lib": "^4.0.2",
     "cross-os": "^1.3.0",
-    "grpc": "^1.15.0",
+    "exit-hook": "^2.0.0",
+    "grpc": "^1.15.1",
     "ini": "^1.3.5",
     "toml": "^2.3.3",
-    "typescript": "^3.0.0",
+    "typescript": "^3.0.3",
     "uuid": "^3.3.2",
     "winston": "^3.1.0",
     "ws": "^6.0.0",
-    "yargs": "^12.0.1"
+    "yargs": "^12.0.2"
   },
   "devDependencies": {
-    "@types/chai": "^4.1.4",
+    "@types/bip32": "^1.0.0",
+    "@types/bip39": "^2.4.0",
+    "@types/bitcoinjs-lib": "^4.0.0",
+    "@types/chai": "^4.1.5",
+    "@types/exit-hook": "^1.1.0",
     "@types/ini": "^1.3.29",
     "@types/mocha": "^5.2.5",
-    "@types/node": "^10.9.4",
+    "@types/node": "^10.10.3",
     "@types/uuid": "^3.4.4",
-    "@types/ws": "^6.0.0",
-    "@types/yargs": "^11.1.1",
+    "@types/ws": "^6.0.1",
+    "@types/yargs": "^12.0.0",
     "chai": "^4.1.2",
     "grpc-tools": "^1.6.6",
-    "grpc_tools_node_protoc_ts": "^2.3.1",
+    "grpc_tools_node_protoc_ts": "^2.4.0",
     "mocha": "^5.2.0",
     "ts-node": "^7.0.1",
     "ts-protoc-gen": "^0.7.6",
     "tslint": "^5.11.0",
     "tslint-config-airbnb": "^5.11.0",
-    "tslint-no-circular-imports": "^0.5.2"
+    "tslint-no-circular-imports": "^0.6.1"
   }
 }

@@ -2,7 +2,7 @@ import Logger from '../Logger';
 import RpcClient, { RpcConfig } from '../RpcClient';
 import { BaseClientClass, ClientStatus } from '../BaseClient';
 import ChainClient from './ChainClient';
-import { errors } from '../consts/errors';
+import Errors from '../consts/Errors';
 
 type BtcdConfig = RpcConfig;
 
@@ -26,8 +26,8 @@ interface BtcdClient {
 class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
   public static readonly serviceName = 'BTCD';
 
-  private readonly disabledError = errors.IS_DISABLED(BtcdClient.serviceName);
-  private readonly disconnectedError = errors.IS_DISCONNECTED(BtcdClient.serviceName);
+  private readonly disabledError = Errors.IS_DISABLED(BtcdClient.serviceName);
+  private readonly disconnectedError = Errors.IS_DISCONNECTED(BtcdClient.serviceName);
 
   private rpcClient: RpcClient;
 
@@ -41,9 +41,9 @@ class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
   public connect = async () => {
     try {
       await this.rpcClient.connect();
-      this.setStatus(ClientStatus.CONNECTED);
+      this.setStatus(ClientStatus.Connected);
     } catch (error) {
-      this.setStatus(ClientStatus.DISCONNECTED);
+      this.setStatus(ClientStatus.Disconnected);
       throw error;
     }
   }
@@ -62,8 +62,8 @@ class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
 
   private verifyConnected = () => {
     switch (this.clientStatus) {
-      case ClientStatus.DISABLED: throw(this.disabledError);
-      case ClientStatus.DISCONNECTED: throw(this.disconnectedError);
+      case ClientStatus.Disabled: throw(this.disabledError);
+      case ClientStatus.Disconnected: throw(this.disconnectedError);
     }
   }
 }

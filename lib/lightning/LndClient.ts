@@ -2,10 +2,9 @@ import fs from 'fs';
 import grpc, { ClientReadableStream } from 'grpc';
 import Logger from '../Logger';
 import { BaseClientClass, ClientStatus } from '../BaseClient';
-import { errors } from '../consts/errors';
+import Errors from '../consts/Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
-import errorCodePrefix from '../consts/errorCodePrefix';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
 
 // TODO: error handling
@@ -51,8 +50,8 @@ interface LndClient {
 class LndClient extends BaseClientClass implements LightningClient {
   public static readonly serviceName = 'LND';
 
-  private readonly disabledError = errors.IS_DISABLED(LndClient.serviceName);
-  private readonly disconnectedError = errors.IS_DISCONNECTED(LndClient.serviceName);
+  private readonly disabledError = Errors.IS_DISABLED(LndClient.serviceName);
+  private readonly disconnectedError = Errors.IS_DISCONNECTED(LndClient.serviceName);
 
   private lightning!: GrpcClient | LightningMethodIndex;
   private meta!: grpc.Metadata;
@@ -81,13 +80,13 @@ class LndClient extends BaseClientClass implements LightningClient {
     } else {
       this.logger.error('could not find required files for LND');
 
-      this.setStatus(ClientStatus.DISABLED);
+      this.setStatus(ClientStatus.Disabled);
       throw(this.disabledError);
     }
   }
 
   public connect = async () => {
-    this.setStatus(ClientStatus.CONNECTED);
+    this.setStatus(ClientStatus.Connected);
     this.subscribeInvoices();
   }
 
@@ -155,8 +154,8 @@ class LndClient extends BaseClientClass implements LightningClient {
 
   private verifyConnected = () => {
     switch (this.clientStatus) {
-      case ClientStatus.DISABLED: throw(this.disabledError);
-      case ClientStatus.DISCONNECTED: throw(this.disconnectedError);
+      case ClientStatus.Disabled: throw(this.disabledError);
+      case ClientStatus.Disconnected: throw(this.disconnectedError);
     }
   }
 }
