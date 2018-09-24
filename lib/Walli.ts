@@ -1,3 +1,5 @@
+import fs from 'fs';
+import { generateMnemonic } from 'bip39';
 import Logger from './Logger';
 import Config, { ConfigType } from './Config';
 import BtcdClient from './chain/BtcdClient';
@@ -5,21 +7,32 @@ import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
 import { Arguments } from 'yargs';
+import WalletManager from './wallet/WalletManager';
 
 class Walli {
-  public service: Service;
-
   private config: ConfigType;
   private logger: Logger;
+
+  private walletManager: WalletManager;
 
   private btcdClient: BtcdClient;
   private lndClient: LndClient;
 
+  private service: Service;
   private grpcServer: GrpcServer;
 
   constructor(config: Arguments) {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
+
+    if (fs.existsSync(this.config.walletPath)) {
+      this.walletManager = new WalletManager(['BTC'], this.config.walletPath);
+    } else {
+      const mnemonic = generateMnemonic();
+      this.logger.warn(`generated new mnemonic: ${mnemonic}`);
+
+      this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletPath);
+    }
 
     this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
