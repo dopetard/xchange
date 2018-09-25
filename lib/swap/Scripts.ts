@@ -2,14 +2,14 @@
  * This file is based on scripts created by Alex Bosworth in the repository github.com/submarineswaps/swaps-service
  */
 
-// TODO: typings for bip66 library
+// TODO: add missing typings
 import bip66 from 'bip66';
 import { script, crypto } from 'bitcoinjs-lib';
+import Bn from 'bn.js';
+import * as varuint from 'varuint-bitcoin';
 import ops from '@michael1011/bitcoin-ops';
-import { getHexBuffer, getHexString } from './Utils';
-
-const zero = getHexBuffer('00');
-const pointSize = 32;
+import { getHexBuffer, getHexString } from '../Utils';
+import { ScriptElement } from '../consts/Types';
 
 /**
  * DER encode bytes to eliminate sign confusion in a big-endian number
@@ -19,6 +19,8 @@ const pointSize = 32;
  * @returns an enocded point buffer
  */
 const derEncode = (point: string) => {
+  const zero = getHexBuffer('00');
+
   let i = 0;
   let x = getHexBuffer(point);
 
@@ -48,6 +50,8 @@ const derEncode = (point: string) => {
  * @returns encoded signature Buffer
  */
 export const encodeSignature = (flag: number, signature: string) => {
+  const pointSize = 32;
+
   const signatureEnd = pointSize + pointSize;
 
   const hashType = Buffer.from([flag]);
@@ -57,6 +61,27 @@ export const encodeSignature = (flag: number, signature: string) => {
   const s = derEncode(getHexString(signatureBuffer.slice(pointSize, signatureEnd)));
 
   return Buffer.concat([bip66.encode(r, s), hashType]);
+};
+
+/**
+ * Convert an array of ScriptElement to a formed pushdata script
+ *
+ * @param elements array of ScriptElement
+ *
+ * @returns a formed pushdata script
+ */
+export const toPushdataScript = (elements: ScriptElement[]): string => {
+  const buffers: Buffer[] = [];
+
+  elements.forEach((element) => {
+    if (Buffer.isBuffer(element)) {
+      buffers.push(Buffer.concat([varuint.encode(element.length), element]));
+    } else {
+      buffers.push(new Bn(element, 10).toArrayLike(Buffer));
+    }
+  });
+
+  return getHexString(Buffer.concat(buffers));
 };
 
 /**

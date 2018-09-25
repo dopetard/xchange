@@ -1,8 +1,9 @@
 // tslint:disable:max-line-length
 import { expect } from 'chai';
-import { Transaction } from 'bitcoinjs-lib';
-import { getHexString } from '../../lib/Utils';
-import * as scripts from '../../lib/Scripts';
+import { Transaction, crypto } from 'bitcoinjs-lib';
+import ops from '@michael1011/bitcoin-ops';
+import { getHexString, getHexBuffer } from '../../lib/Utils';
+import * as scripts from '../../lib/swap/Scripts';
 
 describe('Scripts', () => {
   const publicKeyHash = '0000000000000000000000000000000000000000';
@@ -45,6 +46,22 @@ describe('Scripts', () => {
 
       expect(getHexString(scripts.encodeSignature(flag, signature))).to.be.equal(data.result);
     });
+  });
+
+  it('should get formed pushdata script', () => {
+    const testData = {
+      args: {
+        elements: [
+          ops.OP_DUP,
+          ops.OP_HASH160,
+          crypto.hash160(getHexBuffer(publicKeyHash)),
+          ops.OP_EQUALVERIFY,
+        ],
+      },
+      result: '76a914944f997c5553a6f3e1028e707c71b5fa0dd3afa788',
+    };
+
+    expect(scripts.toPushdataScript(testData.args.elements)).to.be.equal(testData.result);
   });
 
   it('should get P2WPKH output script', () => {
