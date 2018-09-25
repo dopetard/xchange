@@ -2,9 +2,9 @@
 import grpc from 'grpc';
 import Service from '../service/Service';
 import Logger from '../Logger';
-import { LndInfo } from '../lightning/LndClient';
+import { Info as LndInfo } from '../lightning/LndClient';
 import * as wallirpc from '../proto/wallirpc_pb';
-import { BtcdInfo } from '../chain/BtcdClient';
+import { Info as BtcdInfo } from '../chain/BtcdClient';
 
 class GrpcService {
   private logger: Logger;
@@ -34,9 +34,7 @@ class GrpcService {
         }
 
         version ? lnd.setVersion(version) : undefined;
-        chainsList ? lnd.setChainsList(chainsList) : undefined;
         blockheight ? lnd.setBlockheight(blockheight) : undefined;
-        uris ? lnd.setUrisList(uris) : undefined;
         lnd.setError(error ? error : 'null');
         return lnd;
       });
@@ -48,11 +46,8 @@ class GrpcService {
         btcd.setVersion(version);
         btcd.setProtocolversion(protocolversion);
         btcd.setBlocks(blocks);
-        btcd.setTimeoffset(timeoffset);
         btcd.setConnections(connections);
-        btcd.setProxy(proxy);
         btcd.setTestnet(testnet);
-        btcd.setRelayfee(relayfee);
         return btcd;
       });
 

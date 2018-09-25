@@ -1,6 +1,8 @@
 import Logger from '../Logger';
-import BtcdClient, { BtcdInfo } from '../chain/BtcdClient';
-import LndClient, { LndInfo } from '../lightning/LndClient';
+import BtcdClient, { Info as BtcdInfo } from '../chain/BtcdClient';
+import LndClient, { Info as LndInfo } from '../lightning/LndClient';
+
+const packageJson = require('../../package.json');
 
 type walliInfo = {
   version: string,
@@ -13,7 +15,7 @@ class Service{
   constructor(private logger: Logger, private btcdClient: BtcdClient, private lndClient: LndClient) {}
 
   public getInfo = async (): Promise<walliInfo> => {
-    const version = require('../../package.json').version;
+    const version = packageJson.version;
     const btcdInfo = await this.btcdClient.getInfo();
     const lndInfo = await this.lndClient.getLndInfo();
 

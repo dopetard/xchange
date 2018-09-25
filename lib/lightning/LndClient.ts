@@ -197,4 +197,4 @@ class LndClient extends BaseClientClass implements LightningClient {
 }
 
 export default LndClient;
-export { LndConfig, Info as LndInfo };
+export { LndConfig, Info };

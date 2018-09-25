@@ -69,4 +69,4 @@ class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
 }
 
 export default BtcdClient;
-export { BtcdConfig, Info as BtcdInfo };
+export { BtcdConfig, Info };

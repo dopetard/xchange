@@ -17,10 +17,8 @@ message GetInfoResponse {
 
 message LndInfo {
   string version = 1;
-  repeated string chains = 2;
   LndChannels lndChannels = 3;
   int32 blockheight = 4;
-  repeated string uris = 5;
   string error = 6;
 }
 
@@ -28,12 +26,8 @@ message BtcdInfo {
   int32 version = 1;
   int32 protocolversion = 2;
   int32 blocks = 3;
-  int32 timeoffset = 4;
   int32 connections = 5;
-  string proxy = 6;
-  int64 difficulty = 7;
   bool testnet = 8;
-  float relayfee = 9;
 }
 
 message LndChannels {
