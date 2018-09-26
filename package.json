@@ -11,7 +11,7 @@
     "dev": "npm run compile && npm run start",
     "lint": "tslint --project tsconfig.json && tslint --config tslint-alt.json 'bin/*' 'test/**/*.ts'",
     "test": "npm run test:unit",
-    "test:unit": "mocha -r ts-node/register test/unit/*"
+    "test:unit": "mocha -r ts-node/register test/unit/* test/unit/**/*"
   },
   "bin": {
     "wallid": "./bin/wallid",
@@ -47,6 +47,7 @@
     "@michael1011/bitcoin-ops": "^1.4.3",
     "bip32": "^1.0.2",
     "bip39": "^2.5.0",
+    "bip65": "^1.0.3",
     "bip66": "^1.1.5",
     "bitcoin-ops": "^1.4.1",
     "bitcoinjs-lib": "^4.0.2",
