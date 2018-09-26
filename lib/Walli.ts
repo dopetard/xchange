@@ -36,8 +36,7 @@ class Walli {
 
     this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
-
-    this.service = new Service(this.btcdClient);
+    this.service = new Service(this.logger, this.btcdClient, this.lndClient);
     this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);
   }
 

@@ -19,12 +19,12 @@ type LndConfig = {
 
 /** General information about the state of this lnd client. */
 type Info = {
-  error?: string;
+  version?: string;
+  chainsList?: string[];
   channels?: ChannelCount;
-  chains?: string[];
   blockheight?: number;
   uris?: string[];
-  version?: string;
+  error?: string;
 };
 
 type ChannelCount = {
@@ -119,6 +119,42 @@ class LndClient extends BaseClientClass implements LightningClient {
     return this.unaryCall<lndrpc.GetInfoRequest, lndrpc.GetInfoResponse.AsObject>('getInfo', new lndrpc.GetInfoRequest());
   }
 
+  public getLndInfo = async (): Promise<Info> => {
+    let channels: ChannelCount | undefined;
+    let chainsList: string[] | undefined;
+    let blockheight: number | undefined;
+    let uris: string[] | undefined;
+    let version: string | undefined;
+    try {
+      const lnd = await this.getInfo();
+      channels = {
+        active: lnd.numActiveChannels,
+        pending: lnd.numPendingChannels,
+      };
+      chainsList = lnd.chainsList,
+      blockheight = lnd.blockHeight,
+      uris = lnd.urisList,
+      version = lnd.version;
+      return {
+        version,
+        chainsList,
+        channels,
+        blockheight,
+        uris,
+      };
+    } catch (err) {
+      this.logger.error(`LND error: ${err}`);
+      return {
+        version,
+        chainsList,
+        channels,
+        blockheight,
+        uris,
+        error: err,
+      };
+    }
+  }
+
   /**
    * Attempt to add a new invoice to the lnd invoice database.
    * @param value the value of this invoice in satoshis
@@ -161,4 +197,4 @@ class LndClient extends BaseClientClass implements LightningClient {
 }
 
 export default LndClient;
-export { LndConfig };
+export { LndConfig, Info };
