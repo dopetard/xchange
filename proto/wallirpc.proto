@@ -5,7 +5,9 @@ import "google/api/annotations.proto";
 package wallirpc;
 
 service Walli {
-  rpc getInfo (GetInfoRequest) returns (GetInfoResponse);
+  rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);
+  
+  rpc CreateSubmarine (CreateSubmarineRequest) returns (CreateSubmarineResponse);
 }
 
 message GetInfoRequest {}
@@ -15,11 +17,32 @@ message GetInfoResponse {
   LndInfo lndInfo = 3;
 }
 
+message CreateSubmarineRequest {
+  string invoice = 1;
+}
+
+message CreateSubmarineResponse {
+  string redeemScript = 1;
+  Addresses addresses = 2;
+}
+
+message Addresses {
+  string bech32 = 1;
+  string compatibility = 2;
+  string legacy = 3;
+}
+
 message LndInfo {
   string version = 1;
   LndChannels lndChannels = 3;
   int32 blockheight = 4;
   string error = 6;
+}
+
+message LndChannels {
+  int32 active = 1;
+  int32 inactive = 2;
+  int32 pending = 3;
 }
 
 message BtcdInfo {
@@ -28,10 +51,4 @@ message BtcdInfo {
   int32 blocks = 3;
   int32 connections = 5;
   bool testnet = 8;
-}
-
-message LndChannels {
-  int32 active = 1;
-  int32 inactive = 2;
-  int32 pending = 3;
 }

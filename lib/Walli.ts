@@ -1,4 +1,5 @@
 import fs from 'fs';
+import { Arguments } from 'yargs';
 import { generateMnemonic } from 'bip39';
 import Logger from './Logger';
 import Config, { ConfigType } from './Config';
@@ -6,14 +7,15 @@ import BtcdClient from './chain/BtcdClient';
 import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
-import { Arguments } from 'yargs';
 import WalletManager from './wallet/WalletManager';
+import SwapManager from './swap/SwapManager';
 
 class Walli {
   private config: ConfigType;
   private logger: Logger;
 
   private walletManager: WalletManager;
+  private swapManager: SwapManager;
 
   private btcdClient: BtcdClient;
   private lndClient: LndClient;
@@ -25,6 +27,9 @@ class Walli {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
 
+    this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
+    this.lndClient = new LndClient(this.logger, this.config.lnd);
+
     if (fs.existsSync(this.config.walletPath)) {
       this.walletManager = new WalletManager(['BTC'], this.config.walletPath);
     } else {
@@ -34,9 +39,16 @@ class Walli {
       this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletPath);
     }
 
-    this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
-    this.lndClient = new LndClient(this.logger, this.config.lnd);
-    this.service = new Service(this.logger, this.btcdClient, this.lndClient);
+    this.swapManager = new SwapManager(this.logger, this.walletManager, this.btcdClient, this.lndClient);
+
+    this.service = new Service({
+      logger: this.logger,
+      walletManager: this.walletManager,
+      swapManager: this.swapManager,
+      btcdClient: this.btcdClient,
+      lndClient: this.lndClient,
+    });
+
     this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);
   }
 
