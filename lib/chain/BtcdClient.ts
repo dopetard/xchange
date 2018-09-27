@@ -20,6 +20,7 @@ type Info = {
 
 interface BtcdClient {
   on(event: 'error', listener: (error: string) => void): this;
+  on(event: 'relevanttxaccepted', listener: (msg: object) => void): this;
   emit(event: 'error', error: string): boolean;
 }
 
@@ -58,6 +59,12 @@ class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
     this.verifyConnected();
 
     return this.rpcClient.call<string>('sendrawtransaction', rawTransaction, allowHighFees);
+  }
+
+  public loadTxFilter = (reload: boolean, addresses: string[], outpoints: string[]): Promise<any> => {
+    this.verifyConnected();
+
+    return this.rpcClient.call<any>('loadtxfilter', reload, addresses, outpoints);
   }
 
   private verifyConnected = () => {

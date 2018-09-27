@@ -1,6 +1,7 @@
 import Logger from '../Logger';
 import BtcdClient, { Info as BtcdInfo } from '../chain/BtcdClient';
 import LndClient, { Info as LndInfo } from '../lightning/LndClient';
+import { callback } from '../cli/Command';
 
 const packageJson = require('../../package.json');
 
@@ -24,6 +25,20 @@ class Service{
       btcdInfo,
       lndInfo,
     };
+  }
+
+  public subscribeToTx = async (args: {reload: boolean, addressesList: string[], outpointsList: string[]}, callback: Function) => {
+    const { reload, addressesList, outpointsList } = args;
+    try {
+      await this.btcdClient.loadTxFilter(reload, addressesList, outpointsList);
+      this.btcdClient.on('relevanttxaccepted', msg => callback(msg));
+    } catch (error) {
+      console.log(error);
+    }
+    /*
+    await this.btcdClient.loadTxFilter(reload, addressesList, outpointsList).then(() => {
+      this.btcdClient.on('txaccepted', msg => callback(msg));
+    }).catch(err => console.log(`err: ${err.message}`)); */
   }
 }
 

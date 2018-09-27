@@ -60,6 +60,10 @@ class GrpcService {
       callback(error, null);
     }
   }
+
+  public subscribeToTx: grpc.handleServerStreamingCall<wallirpc.SubscribeToTxRequest, wallirpc.SubscribeToTxResponse> = (call) => {
+    this.service.subscribeToTx(call.request.toObject() , msg => call.write(msg));
+  }
 }
 
 export default GrpcService;
