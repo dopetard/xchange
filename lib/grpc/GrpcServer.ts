@@ -24,6 +24,7 @@ class GrpcServer {
     const grpcService = new GrpcService(logger, service);
     this.server.addService(WalliService, {
       getInfo: grpcService.getInfo,
+      subscribeToTx: grpcService.subscribeToTx,
     });
   }
 

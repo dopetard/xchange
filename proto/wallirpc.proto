@@ -6,6 +6,7 @@ package wallirpc;
 
 service Walli {
   rpc getInfo (GetInfoRequest) returns (GetInfoResponse);
+  rpc subscribeToTx (SubscribeToTxRequest) returns (stream SubscribeToTxResponse);
 }
 
 message GetInfoRequest {}
@@ -14,6 +15,13 @@ message GetInfoResponse {
   BtcdInfo btcdInfo = 2;
   LndInfo lndInfo = 3;
 }
+
+message SubscribeToTxRequest {
+  bool reload = 1;
+  repeated string addresses = 2;
+  repeated string outpoints = 3;
+}
+message SubscribeToTxResponse {}
 
 message LndInfo {
   string version = 1;
