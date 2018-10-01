@@ -1,11 +1,8 @@
-// tslint:disable:max-line-length
 import { expect } from 'chai';
-import { Transaction } from 'bitcoinjs-lib';
-import { getHexString } from '../../lib/Utils';
-import * as scripts from '../../lib/swap/Scripts';
+import { getHexString } from '../../../lib/Utils';
+import * as scripts from '../../../lib/swap/Scripts';
 
 describe('Scripts', () => {
-  const publicKeyHash = '0000000000000000000000000000000000000000';
   const redeemScript = '00';
 
   it('should get P2WPKH output script', () => {
@@ -63,3 +60,5 @@ describe('Scripts', () => {
     expect(getHexString(scripts.p2shP2wshOutput(testData.args.scriptHex))).to.be.equal(testData.result);
   });
 });
+
+export const publicKeyHash = '0000000000000000000000000000000000000000';

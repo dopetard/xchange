@@ -176,6 +176,16 @@ class LndClient extends BaseClientClass implements LightningClient {
   }
 
   /**
+   * Decode an encoded payment request.
+   * @param paymentRequest encoded payment request
+   */
+  public decodePayReq = (paymentRequest: string): Promise<lndrpc.PayReq.AsObject> => {
+    const request = new lndrpc.PayReqString();
+    request.setPayReq(paymentRequest);
+    return this.unaryCall<lndrpc.PayReqString, lndrpc.PayReq.AsObject>('decodePayReq', request);
+  }
+
+  /**
    * Subscribe to events for when invoices are settled.
    */
   private subscribeInvoices = (): void => {

@@ -21,9 +21,10 @@ class GrpcServer {
     this.logger = logger;
     this.grpcConfig = grpcConfig;
 
-    const grpcService = new GrpcService(logger, service);
+    const grpcService = new GrpcService(service);
     this.server.addService(WalliService, {
       getInfo: grpcService.getInfo,
+      createSubmarine: grpcService.createSubmarine,
     });
   }
 
