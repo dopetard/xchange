@@ -39,7 +39,7 @@ class SwapManager {
     const { paymentHash } = await this.lndClient.decodePayReq(invoice);
     const destinationPublicKey = getHexString(wallet.getNewAddress().publicKey);
 
-    this.logger.debug(`creating Submarine Swap for ${paymentHash}`);
+    this.logger.debug(`creating Submarine Swap for preimage: ${paymentHash}`);
 
     const redeemScript = pkRefundSwap(
       paymentHash,

@@ -56,7 +56,7 @@ class Logger {
   }
 
   public debug = (message: string) => {
-    winston.verbose(message);
+    winston.debug(message);
   }
 
   public silly = (message: string) => {
