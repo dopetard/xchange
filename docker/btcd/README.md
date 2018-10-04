@@ -1,4 +1,6 @@
-# This file is based on the repository github.com/Roasbeef/btcd-in-a-box created by Roasbeef
+# BTCD-DOCKER
+
+### This file is based on the repository github.com/Roasbeef/btcd-in-a-box created by Roasbeef
 
 ## Installing The Image
 * Installation instructions assume you already have ```docker``` installed. If this is not the case, then check out the [official installation docs](https://docs.docker.com/installation/) so you can get ```docker``` up and running on your machine. 
