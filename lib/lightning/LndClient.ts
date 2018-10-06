@@ -193,8 +193,11 @@ class LndClient extends BaseClientClass implements LightningClient {
 
     this.invoiceSubscription = this.lightning.subscribeInvoices(new lndrpc.InvoiceSubscription(), this.meta)
       .on('data', (invoice: lndrpc.Invoice) => {
-        this.logger.info(`invoice update: ${invoice}`);
-        this.emit('invoice.settled', String(invoice.getRHash()));
+        this.logger.info(`invoice update: ${invoice.getRHash_asB64()}`);
+
+        if (invoice.getSettled()) {
+          this.emit('invoice.settled', String(invoice.getRHash_asB64()));
+        }
       });
   }
 
