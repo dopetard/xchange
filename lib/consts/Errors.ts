@@ -3,10 +3,6 @@ import ErrorCodePrefix from './ErrorCodesPrefix';
 import { Error } from './Types';
 
 export default {
-  IS_DISABLED: (clientName: string): Error => ({
-    message: `${clientName} is disabled`,
-    code: concatErrorCode(ErrorCodePrefix.General, 0),
-  }),
   IS_DISCONNECTED: (clientName: string): Error => ({
     message: `${clientName} is disconnected`,
     code: concatErrorCode(ErrorCodePrefix.General, 1),

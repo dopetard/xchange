@@ -73,8 +73,7 @@ class GrpcService {
         return addressesRpc;
       };
 
-      response.setRedeemscript(createSubmarineResponse.redeemScript);
-      response.setAddresses(getAddresses(createSubmarineResponse.addresses));
+      response.setAddresses(getAddresses(createSubmarineResponse));
 
       callback(null, response);
 

@@ -1,7 +1,7 @@
 import fs from 'fs';
 import grpc, { ClientReadableStream } from 'grpc';
+import { EventEmitter } from 'events';
 import Logger from '../Logger';
-import { BaseClientClass, ClientStatus } from '../BaseClient';
 import Errors from '../consts/Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
@@ -47,10 +47,9 @@ interface LndClient {
 }
 
 /** A class representing a client to interact with lnd. */
-class LndClient extends BaseClientClass implements LightningClient {
+class LndClient extends EventEmitter implements LightningClient {
   public static readonly serviceName = 'LND';
 
-  private readonly disabledError = Errors.IS_DISABLED(LndClient.serviceName);
   private readonly disconnectedError = Errors.IS_DISCONNECTED(LndClient.serviceName);
 
   private lightning!: GrpcClient | LightningMethodIndex;
@@ -61,8 +60,8 @@ class LndClient extends BaseClientClass implements LightningClient {
    * Create an lnd client.
    * @param config the lnd configuration
    */
-  constructor(logger: Logger, config: LndConfig) {
-    super(logger, LndClient.serviceName);
+  constructor(private logger: Logger, config: LndConfig) {
+    super();
 
     const { host, port, certPath, macaroonPath } = config;
 
@@ -79,14 +78,11 @@ class LndClient extends BaseClientClass implements LightningClient {
       this.lightning = new GrpcClient(uri, credentials);
     } else {
       this.logger.error('could not find required files for LND');
-
-      this.setStatus(ClientStatus.Disabled);
-      throw(this.disabledError);
+      throw(this.disconnectedError);
     }
   }
 
   public connect = async () => {
-    this.setStatus(ClientStatus.Connected);
     this.subscribeInvoices();
   }
 
@@ -99,8 +95,6 @@ class LndClient extends BaseClientClass implements LightningClient {
 
   private unaryCall = <T, U>(methodName: string, params: T): Promise<U> => {
     return new Promise((resolve, reject) => {
-      this.verifyConnected();
-
       (this.lightning as LightningMethodIndex)[methodName](params, this.meta, (err: grpc.ServiceError, response: GrpcResponse) => {
         if (err) {
           reject(err);
@@ -189,8 +183,6 @@ class LndClient extends BaseClientClass implements LightningClient {
    * Subscribe to events for when invoices are settled.
    */
   private subscribeInvoices = (): void => {
-    this.verifyConnected();
-
     this.invoiceSubscription = this.lightning.subscribeInvoices(new lndrpc.InvoiceSubscription(), this.meta)
       .on('data', (invoice: lndrpc.Invoice) => {
         this.logger.info(`invoice update: ${invoice.getRHash_asB64()}`);
@@ -198,14 +190,10 @@ class LndClient extends BaseClientClass implements LightningClient {
         if (invoice.getSettled()) {
           this.emit('invoice.settled', String(invoice.getRHash_asB64()));
         }
+      })
+      .on('error', (error) => {
+        this.logger.error(`Invoice subscription ended: ${error}`);
       });
-  }
-
-  private verifyConnected = () => {
-    switch (this.clientStatus) {
-      case ClientStatus.Disabled: throw(this.disabledError);
-      case ClientStatus.Disconnected: throw(this.disconnectedError);
-    }
   }
 }
 

@@ -23,8 +23,7 @@ interface RpcClient {
 }
 
 class RpcClient extends EventEmitter {
-
-  private ws!: WebSocket;
+  public ws!: WebSocket;
 
   /** A map between request ids and their pending Promises */
   private pendingRequests = new Map<string, PromiseFunctions>();
@@ -72,6 +71,7 @@ class RpcClient extends EventEmitter {
         if (error) {
           this.pendingRequests.delete(message.id);
           reject(error.message);
+
         } else {
           this.pendingRequests.set(id, {
             resolve,
@@ -102,7 +102,6 @@ class RpcClient extends EventEmitter {
           promise.reject(data.error);
         }
       }
-
     });
   }
 

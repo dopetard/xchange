@@ -1,0 +1,7 @@
+version: "3"
+
+services:
+  btcd:
+    image: michael1011/btcd
+    ports:
+      - 18334:18334

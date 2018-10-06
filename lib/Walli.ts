@@ -27,7 +27,7 @@ class Walli {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
 
-    this.btcdClient = new BtcdClient(this.logger, this.config.btcd);
+    this.btcdClient = new BtcdClient(this.config.btcd);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
 
     if (fs.existsSync(this.config.walletPath)) {
@@ -66,7 +66,7 @@ class Walli {
       await this.btcdClient.connect();
 
       const info = await this.btcdClient.getInfo();
-      this.logger.debug(`BTCD status: ${info.blocks} blocks on ${info.testnet ? 'testnet' : 'mainnet'}`);
+      this.logger.verbose(`BTCD status: ${info.blocks} blocks`);
     } catch (error) {
       this.logCouldNotConnect(BtcdClient.serviceName, error);
     }
@@ -88,7 +88,8 @@ class Walli {
         this.logger.info(`invoice settled: ${rHash}`);
       });
 
-      this.logger.debug(`LND status: ${JSON.stringify(await this.lndClient.getInfo(), undefined, 2)}`);
+      const info = await this.lndClient.getInfo();
+      this.logger.verbose(`LND status: ${JSON.stringify(info, undefined, 2)}`);
     } catch (error) {
       this.logCouldNotConnect(LndClient.serviceName, error);
     }

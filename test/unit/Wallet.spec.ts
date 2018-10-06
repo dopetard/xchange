@@ -19,13 +19,13 @@ describe('Wallet', () => {
   it('should get correct address from index', () => {
     const index = 1;
 
-    expect(wallet.getAddressByIndex(index)).to.be.deep.equal(getAddressByIndex(index));
+    expect(wallet.getKeysByIndex(index)).to.be.deep.equal(getAddressByIndex(index));
   });
 
   it('should get new address', () => {
     const newHighestIndex = highestIndex + 1;
 
-    expect(wallet.getNewAddress()).to.be.deep.equal(getAddressByIndex(newHighestIndex));
+    expect(wallet.getNewKeys()).to.be.deep.equal(getAddressByIndex(newHighestIndex));
     expect(wallet.highestUsedIndex).to.be.equal(newHighestIndex);
   });
 });
