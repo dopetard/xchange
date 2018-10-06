@@ -1,6 +1,5 @@
 // tslint:disable:max-line-length
 import { expect } from 'chai';
-import { Transaction } from 'bitcoinjs-lib';
 import { getHexString } from '../../lib/Utils';
 import * as scripts from '../../lib/swap/Scripts';
 
