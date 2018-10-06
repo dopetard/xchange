@@ -19,6 +19,7 @@ type WalletFile = {
 };
 
 // TODO: recovery with existing mnemonic
+// TODO: prefix of different networks (testnet, regtest, simnet)
 class WalletManager {
   public wallets = new Map<string, Wallet>();
 

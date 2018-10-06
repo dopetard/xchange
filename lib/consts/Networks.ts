@@ -1,6 +1,6 @@
-import { Network, networks } from 'bitcoinjs-lib';
+import { networks } from 'bitcoinjs-lib';
 
-const Networks: { [ name: string ]: Network } = {
+const Networks = {
   bitcoin_mainnet: networks.bitcoin,
   bitcoin_testnet: networks.testnet,
   bitcoin_regtest: {
@@ -9,7 +9,7 @@ const Networks: { [ name: string ]: Network } = {
       private: 70615956,
       public: 70617039,
     },
-    bech32: 'tb',
+    bech32: 'bcrt',
     pubKeyHash: 111,
     scriptHash: 196,
     wif: 239,
