@@ -4,7 +4,7 @@ import fs from 'fs';
 import toml from 'toml';
 import ini from 'ini';
 import { Arguments } from 'yargs';
-import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
+import { deepMerge, capitalizeFirstLetter, resolveHome, splitListen } from './Utils';
 import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
 import LndClient, { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
@@ -55,8 +55,8 @@ class Config {
       btcd: {
         host: '127.0.0.1',
         port: 18334,
-        user: '',
-        password: '',
+        rpcuser: '',
+        rpcpass: '',
         configPath: path.join(this.btcdDir, 'btcd.conf'),
         certPath: path.join(this.btcdDir, 'rpc.cert'),
       },
@@ -113,7 +113,7 @@ class Config {
     );
 
     if (args) {
-      deepMerge(this, args);
+      deepMerge(this.config, args);
     }
 
     return this.config;
@@ -122,17 +122,21 @@ class Config {
   private parseIniConfig = (filename: string, mergeTarget: any, configType: string) => {
     if (fs.existsSync(filename)) {
       try {
-        const config = ini.parse(fs.readFileSync(filename, 'utf-8'));
-        const { rpcuser, rpcpass, listen } = config['Application Options'];
+        const config = ini.parse(fs.readFileSync(filename, 'utf-8'))['Application Options'];
 
-        rpcuser ? mergeTarget.user = rpcuser : undefined;
-        rpcpass ? mergeTarget.password = rpcpass : undefined;
-
-        if (listen) {
-          const split = listen.split(':');
-          mergeTarget.host = split[0];
-          mergeTarget.port = split[1];
+        switch (configType) {
+          case 'LND':
+            const configLND: LndConfig = config;
+            deepMerge(mergeTarget, configLND);
+            config.listen ? splitListen(mergeTarget, config.listen) : undefined;
+            break;
+          default:
+            const configBTCD: BtcdConfig = config;
+            deepMerge(mergeTarget, configBTCD);
+            config.listen ? splitListen(mergeTarget, config.listen) : undefined;
+            break;
         }
+
       } catch (error) {
         throw Errors.COULD_NOT_PARSE_CONFIG(configType, error);
       }
