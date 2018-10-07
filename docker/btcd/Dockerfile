@@ -1,7 +1,10 @@
 # This file is based on the repository github.com/Roasbeef/btcd-in-a-box created by Roasbeef
 
-FROM golang:1.11.1
+FROM golang:1.11.1-alpine3.8
 LABEL maintainer="Olaoluwa Osuntokun <laolu32@gmail.com>"
+
+# Install Git
+RUN apk update && apk upgrade && apk add --no-cache git
 
 # Grab and install the latest version of btcd and it's dependencies.
 RUN go get github.com/btcsuite/btcd/...
