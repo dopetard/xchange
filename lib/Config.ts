@@ -113,7 +113,7 @@ class Config {
     );
 
     if (args) {
-      deepMerge(this, args);
+      deepMerge(this.config, args);
     }
 
     return this.config;

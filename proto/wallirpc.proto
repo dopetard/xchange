@@ -22,7 +22,6 @@ message CreateSubmarineRequest {
 }
 
 message CreateSubmarineResponse {
-  string redeemScript = 1;
   Addresses addresses = 2;
 }
 

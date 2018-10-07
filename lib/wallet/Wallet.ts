@@ -15,14 +15,14 @@ class Wallet {
     return this.highestIndex;
   }
 
-  public getAddressByIndex = (index: number) => {
+  public getKeysByIndex = (index: number) => {
     return this.masterNode.derivePath(`${this.derivationPath}/${index}`);
   }
 
-  public getNewAddress = () => {
+  public getNewKeys = () => {
     this.highestIndex += 1;
 
-    return this.getAddressByIndex(this.highestIndex);
+    return this.getKeysByIndex(this.highestIndex);
   }
 }
 

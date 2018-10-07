@@ -1,0 +1,8 @@
+version: "3"
+
+services:
+  btcd:
+    image: michael1011/btcd
+    ports:
+      - 18334:18334
+    command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs

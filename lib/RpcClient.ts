@@ -19,12 +19,13 @@ type PromiseFunctions = {
 
 interface RpcClient {
   on(event: 'error', listener: (error: string) => void): this;
+  on(event: 'message.orphan', listener: (message: any) => void): this;
   emit(event: 'error', error: string): boolean;
+  emit(event: 'message.orphan', message: any): boolean;
 }
 
 class RpcClient extends EventEmitter {
-
-  private ws!: WebSocket;
+  public ws!: WebSocket;
 
   /** A map between request ids and their pending Promises */
   private pendingRequests = new Map<string, PromiseFunctions>();
@@ -64,14 +65,15 @@ class RpcClient extends EventEmitter {
     const promise = new Promise<any>((resolve, reject) => {
       const message = {
         id,
-        params,
         method,
+        params,
       };
 
       this.ws.send(JSON.stringify(message), (error) => {
         if (error) {
           this.pendingRequests.delete(message.id);
           reject(error.message);
+
         } else {
           this.pendingRequests.set(id, {
             resolve,
@@ -90,19 +92,24 @@ class RpcClient extends EventEmitter {
 
     this.ws.on('message', (rawData) => {
       const data = JSON.parse(rawData.toString());
-      const promise = this.pendingRequests.get(data.id);
 
-      // Handle the Promise and remove it from pendingRequests
-      if (promise) {
-        this.pendingRequests.delete(data.id);
+      // Messages that don't have an id are not a direct reponse to a request, don't have
+      // a promise that has to be resolved and therefore should be handled separately
+      if (data.id) {
+        const promise = this.pendingRequests.get(data.id);
 
-        if (!data.error) {
-          promise.resolve(data.result);
-        } else {
-          promise.reject(data.error);
+        if (promise) {
+          this.pendingRequests.delete(data.id);
+
+          if (!data.error) {
+            promise.resolve(data.result);
+          } else {
+            promise.reject(data.error);
+          }
         }
+      } else {
+        this.emit('message.orphan', data);
       }
-
     });
   }
 

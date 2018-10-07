@@ -79,9 +79,6 @@ export namespace CreateSubmarineRequest {
 }
 
 export class CreateSubmarineResponse extends jspb.Message { 
-    getRedeemscript(): string;
-    setRedeemscript(value: string): void;
-
 
     hasAddresses(): boolean;
     clearAddresses(): void;
@@ -101,7 +98,6 @@ export class CreateSubmarineResponse extends jspb.Message {
 
 export namespace CreateSubmarineResponse {
     export type AsObject = {
-        redeemscript: string,
         addresses?: Addresses.AsObject,
     }
 }

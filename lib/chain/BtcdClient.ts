@@ -1,8 +1,6 @@
-import Logger from '../Logger';
+import { EventEmitter } from 'events';
 import RpcClient, { RpcConfig } from '../RpcClient';
-import { BaseClientClass, ClientStatus } from '../BaseClient';
 import ChainClient from './ChainClient';
-import Errors from '../consts/Errors';
 
 type BtcdConfig = RpcConfig;
 
@@ -18,53 +16,90 @@ type Info = {
   relayfee: number;
 };
 
+type Block = {
+  hash: string;
+  confirmations: number;
+  strippedsize: number;
+  size: number;
+  weight: number;
+  height: number;
+  version: number;
+  versionHex: string;
+  merkleroot: string;
+  tx: string[];
+  time: number;
+  nonce: number;
+  bits: string;
+  difficulty: number;
+  previousblockhash: string;
+  nextblockhash: string;
+};
+
 interface BtcdClient {
   on(event: 'error', listener: (error: string) => void): this;
+  on(event: 'transaction', listener: (transactionHex: string) => void): this;
   emit(event: 'error', error: string): boolean;
+  emit(event: 'transaction', transactionHex: string): boolean;
 }
 
-class BtcdClient extends BaseClientClass implements ChainClient, BtcdClient {
+class BtcdClient extends EventEmitter implements ChainClient, BtcdClient {
   public static readonly serviceName = 'BTCD';
-
-  private readonly disabledError = Errors.IS_DISABLED(BtcdClient.serviceName);
-  private readonly disconnectedError = Errors.IS_DISCONNECTED(BtcdClient.serviceName);
 
   private rpcClient: RpcClient;
 
-  constructor(logger: Logger, config: RpcConfig) {
-    super(logger, BtcdClient.serviceName);
+  constructor(config: RpcConfig) {
+    super();
 
     this.rpcClient = new RpcClient(config);
     this.rpcClient.on('error', error => this.emit('error', error));
   }
 
+  // TODO: make more efficient: don't parse JSON twice
+  private bindWs = () => {
+    this.rpcClient.on('message.orphan', (data) => {
+      if (data.method === 'relevanttxaccepted') {
+        const transactions = data.params;
+
+        transactions.forEach((transaction) => {
+          this.emit('transaction', transaction);
+        });
+      }
+    });
+  }
+
   public connect = async () => {
-    try {
-      await this.rpcClient.connect();
-      this.setStatus(ClientStatus.Connected);
-    } catch (error) {
-      this.setStatus(ClientStatus.Disconnected);
-      throw error;
-    }
+    await this.rpcClient.connect();
+
+    this.bindWs();
+  }
+
+  public disconnect = async () => {
+    await this.rpcClient.close();
   }
 
   public getInfo = (): Promise<Info> => {
-    this.verifyConnected();
-
     return this.rpcClient.call<Info>('getinfo');
   }
 
   public sendRawTransaction = (rawTransaction: string, allowHighFees = true): Promise<string> => {
-    this.verifyConnected();
-
     return this.rpcClient.call<string>('sendrawtransaction', rawTransaction, allowHighFees);
   }
 
-  private verifyConnected = () => {
-    switch (this.clientStatus) {
-      case ClientStatus.Disabled: throw(this.disabledError);
-      case ClientStatus.Disconnected: throw(this.disconnectedError);
-    }
+  public loadTxFiler = (reload: boolean, addresses: string[], outpoints: string[]): Promise<null> => {
+    // tslint:disable-next-line no-null-keyword
+    return this.rpcClient.call<null>('loadtxfilter', reload, addresses, outpoints);
+  }
+
+  public getBlock = (blockHash: string): Promise<Block> => {
+    return this.rpcClient.call<Block>('getblock', blockHash);
+  }
+
+  public getRawTransaction = (transactionHash: string) => {
+    return this.rpcClient.call<any>('getrawtransaction', transactionHash);
+  }
+
+  public generate = (blocks: number): Promise<string[]> => {
+    return this.rpcClient.call<string[]>('generate', blocks);
   }
 }
 

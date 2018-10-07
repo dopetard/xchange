@@ -9,25 +9,23 @@ const { argv } = require('yargs')
       alias: 'w',
       type: 'string',
     },
-    config: {
+    configPath: {
       type: 'string',
+      describe: 'Path to the config file',
     },
-    walletPath: {
-      type: 'string',
-      describe: 'Path to the wallet file',
-    },
-    btcdconfig: {
-      type: 'string',
-    },
-    logfile: {
+    logPath: {
       describe: 'Path to the logfile',
       type: 'string',
     },
-    loglevel: {
+    logLevel: {
       describe: 'Verbosity of the logger',
       alias: 'l',
       type: 'string',
       choices: ['error', 'warn', 'info', 'verbose', 'debug', 'silly'],
+    },
+    walletPath: {
+      type: 'string',
+      describe: 'Path to the wallet file',
     },
     'grpc.host': {
       describe: 'Host for the Walli gRPC interface',
@@ -37,20 +35,40 @@ const { argv } = require('yargs')
       describe: 'Port for the Walli gRPC interface',
       type: 'number',
     },
-    'rpc.host': {
+    'btcd.host': {
       describe: 'Host of the BTCD RPC interface',
       type: 'string',
     },
-    'rpc.port': {
+    'btcd.port': {
       describe: 'Port of the BTCD RPC interface',
       type: 'number',
     },
-    'rpc.user': {
+    'btcd.user': {
       describe: 'User for the BTCD RPC interface',
       type: 'string',
     },
-    'rpc.password': {
+    'btcd.password': {
       describe: 'Password for the BTCD RPC interface',
+      type: 'string',
+    },
+    'btcd.certPath': {
+      describe: 'Path to the certificate of the BTCD RPC interface',
+      type: 'string',
+    },
+    'lnd.host': {
+      describe: 'Host of the LND gRPC interface',
+      type: 'string',
+    },
+    'lnd.port': {
+      describe: 'Port of the LND gRPC interface',
+      type: 'number',
+    },
+    'lnd.certPath': {
+      describe: 'Path to the certificate of the LND gRPC interface',
+      type: 'string',
+    },
+    'lnd.macaroonPath': {
+      describe: 'Path to the macaroon file of the LND gRPC interface',
       type: 'string',
     },
   });
