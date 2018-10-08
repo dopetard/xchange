@@ -4,8 +4,10 @@ import fs from 'fs';
 import toml from 'toml';
 import ini from 'ini';
 import { Arguments } from 'yargs';
-import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
-import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
+import { deepMerge, capitalizeFirstLetter, resolveHome, splitListen } from './Utils';
+import { RpcConfig } from './RpcClient';
+import BtcdClient from './chain/BtcdClient';
+import LtcdClient from './chain/LtcdClient';
 import LndClient, { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
 import Errors from './consts/Errors';
@@ -21,7 +23,8 @@ type ConfigType = {
   logLevel: string;
   walletPath: string;
   grpc: GrpcConfig;
-  btcd: BtcdConfig & ServiceConfigOption;
+  btcd: RpcConfig & ServiceConfigOption;
+  ltcd: RpcConfig & ServiceConfigOption;
   lnd: LndConfig & ServiceConfigOption;
 };
 
@@ -30,6 +33,7 @@ class Config {
 
   private walliDir: string;
   private btcdDir: string;
+  private ltcdDir: string;
   private lndDir: string;
 
   /**
@@ -38,6 +42,7 @@ class Config {
   constructor() {
     this.walliDir = this.getServiceDataDir('walli');
     this.btcdDir = this.getServiceDataDir('btcd');
+    this.ltcdDir = this.getServiceDataDir('ltcd');
     this.lndDir = this.getServiceDataDir('lnd');
 
     const { configPath, walletPath, logPath } = this.getWalliDirPaths(this.walliDir);
@@ -55,17 +60,25 @@ class Config {
       btcd: {
         host: '127.0.0.1',
         port: 18334,
-        user: '',
-        password: '',
+        rpcuser: '',
+        rpcpass: '',
         configPath: path.join(this.btcdDir, 'btcd.conf'),
         certPath: path.join(this.btcdDir, 'rpc.cert'),
+      },
+      ltcd: {
+        host: '127.0.0.1',
+        port: 19334,
+        rpcuser: '',
+        rpcpass: '',
+        configPath: path.join(this.ltcdDir, 'btcd.conf'),
+        certPath: path.join(this.ltcdDir, 'rpc.cert'),
       },
       lnd: {
         host: '127.0.0.1',
         port: 10009,
         certPath: path.join(this.lndDir, 'tls.cert'),
         // The macaroon for the Bitcoin testnet is hardcoded for now
-        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
+        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'simnet', 'admin.macaroon'),
         configPath: path.join(this.lndDir, 'lnd.conf'),
       },
     };
@@ -98,12 +111,19 @@ class Config {
     }
 
     const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configPath, this.config.btcd.configPath) : this.config.btcd.configPath;
+    const ltcdConfigFile = args.ltcd ? this.resolveConfigPath(args.ltcd.configPath, this.config.ltcd.configPath) : this.config.ltcd.configPath;
     const lndConfigFile = args.lnd ? this.resolveConfigPath(args.lnd.configPath, this.config.lnd.configPath) : this.config.lnd.configPath;
 
     this.parseIniConfig(
       btcdConfigFile,
       this.config.btcd,
       BtcdClient.serviceName,
+    );
+
+    this.parseIniConfig(
+      ltcdConfigFile,
+      this.config.ltcd,
+      LtcdClient.serviceName,
     );
 
     this.parseIniConfig(
@@ -115,24 +135,27 @@ class Config {
     if (args) {
       deepMerge(this.config, args);
     }
-
     return this.config;
   }
 
   private parseIniConfig = (filename: string, mergeTarget: any, configType: string) => {
     if (fs.existsSync(filename)) {
       try {
-        const config = ini.parse(fs.readFileSync(filename, 'utf-8'));
-        const { rpcuser, rpcpass, listen } = config['Application Options'];
+        const config = ini.parse(fs.readFileSync(filename, 'utf-8'))['Application Options'];
 
-        rpcuser ? mergeTarget.user = rpcuser : undefined;
-        rpcpass ? mergeTarget.password = rpcpass : undefined;
-
-        if (listen) {
-          const split = listen.split(':');
-          mergeTarget.host = split[0];
-          mergeTarget.port = split[1];
+        switch (configType) {
+          case 'LND':
+            const configLND: LndConfig = config;
+            deepMerge(mergeTarget, configLND);
+            config.listen ? splitListen(mergeTarget, config.listen) : undefined;
+            break;
+          default:
+            const configClient: RpcConfig = config;
+            deepMerge(mergeTarget, configClient);
+            config.listen ? splitListen(mergeTarget, config.listen) : undefined;
+            break;
         }
+
       } catch (error) {
         throw Errors.COULD_NOT_PARSE_CONFIG(configType, error);
       }

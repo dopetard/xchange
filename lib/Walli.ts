@@ -4,6 +4,7 @@ import { generateMnemonic } from 'bip39';
 import Logger from './Logger';
 import Config, { ConfigType } from './Config';
 import BtcdClient from './chain/BtcdClient';
+import LtcdClient from './chain/LtcdClient';
 import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
@@ -18,6 +19,7 @@ class Walli {
   private swapManager: SwapManager;
 
   private btcdClient: BtcdClient;
+  private ltcdClient: LtcdClient;
   private lndClient: LndClient;
 
   private service: Service;
@@ -28,6 +30,7 @@ class Walli {
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
 
     this.btcdClient = new BtcdClient(this.config.btcd);
+    this.ltcdClient = new LtcdClient(this.config.ltcd);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
 
     if (fs.existsSync(this.config.walletPath)) {
@@ -55,6 +58,7 @@ class Walli {
   public start = async () => {
     await Promise.all([
       this.connectBtcd(),
+      this.connectLtcd(),
       this.connectLnd(),
     ]);
 
@@ -67,6 +71,17 @@ class Walli {
 
       const info = await this.btcdClient.getInfo();
       this.logger.verbose(`BTCD status: ${info.blocks} blocks`);
+    } catch (error) {
+      this.logCouldNotConnect(BtcdClient.serviceName, error);
+    }
+  }
+
+  private connectLtcd = async () => {
+    try {
+      await this.ltcdClient.connect();
+
+      const info = await this.ltcdClient.getInfo();
+      this.logger.verbose(`LTCD status: ${info.blocks} blocks`);
     } catch (error) {
       this.logCouldNotConnect(BtcdClient.serviceName, error);
     }

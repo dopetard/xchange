@@ -43,16 +43,44 @@ const { argv } = require('yargs')
       describe: 'Port of the BTCD RPC interface',
       type: 'number',
     },
-    'btcd.user': {
+    'btcd.rpcuser': {
       describe: 'User for the BTCD RPC interface',
       type: 'string',
     },
-    'btcd.password': {
+    'btcd.rpcpass': {
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
     },
     'btcd.certPath': {
       describe: 'Path to the certificate of the BTCD RPC interface',
+      type: 'string',
+    },
+    'btcd.configPath': {
+      describe: 'Path to BTCD conf file',
+      type: 'string',
+    },
+    'ltcd.host': {
+      describe: 'Host of the BTCD RPC interface',
+      type: 'string',
+    },
+    'ltcd.port': {
+      describe: 'Port of the BTCD RPC interface',
+      type: 'number',
+    },
+    'ltcd.rpcuser': {
+      describe: 'User for the BTCD RPC interface',
+      type: 'string',
+    },
+    'ltcd.rpcpass': {
+      describe: 'Password for the BTCD RPC interface',
+      type: 'string',
+    },
+    'ltcd.certPath': {
+      describe: 'Path to the certificate of the BTCD RPC interface',
+      type: 'string',
+    },
+    'ltcd.configPath': {
+      describe: 'Path to BTCD conf file',
       type: 'string',
     },
     'lnd.host': {
