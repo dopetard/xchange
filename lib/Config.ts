@@ -117,7 +117,7 @@ class Config {
     this.parseIniConfig(
       btcdConfigFile,
       this.config.btcd,
-      BtcdClient.serviceName,
+      BtcdClient.connect(),
     );
 
     this.parseIniConfig(
