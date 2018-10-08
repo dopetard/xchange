@@ -4,7 +4,7 @@ import fs from 'fs';
 import toml from 'toml';
 import ini from 'ini';
 import { Arguments } from 'yargs';
-import { deepMerge, capitalizeFirstLetter, resolveHome } from './Utils';
+import { deepMerge, capitalizeFirstLetter, resolveHome, generateCertificate, getSystemHomeDir } from './Utils';
 import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
 import LndClient, { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
@@ -51,6 +51,8 @@ class Config {
       grpc: {
         host: '127.0.0.1',
         port: 9000,
+        certPath: path.join(this.walliDir, 'tls.cert'),
+        keyPath: path.join(this.walliDir, 'tls.key'),
       },
       btcd: {
         host: '127.0.0.1',
@@ -65,7 +67,7 @@ class Config {
         port: 10009,
         certPath: path.join(this.lndDir, 'tls.cert'),
         // The macaroon for the Bitcoin testnet is hardcoded for now
-        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
+        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'simnet', 'admin.macaroon'),
         configPath: path.join(this.lndDir, 'lnd.conf'),
       },
     };
@@ -91,6 +93,13 @@ class Config {
       } catch (error) {
         throw Errors.COULD_NOT_PARSE_CONFIG('walli', error);
       }
+    }
+
+    const grpcCert = args.grpc ? args.grpc.certPath : this.config.grpc.certPath;
+    const grpcKey = args.grpc ?  args.grpc.keyPath : this.config.grpc.keyPath;
+
+    if (!fs.existsSync(grpcCert) && !fs.existsSync(grpcKey)) {
+      generateCertificate(grpcCert, grpcKey);
     }
 
     if (!fs.existsSync(this.config.walliDir)) {
@@ -153,7 +162,7 @@ class Config {
 
   // TODO: support for Geth/Parity and Raiden
   private getServiceDataDir = (service: string) => {
-    const homeDir = this.getSystemHomeDir();
+    const homeDir = getSystemHomeDir();
     const serviceDir = service.toLowerCase();
 
     switch (os.platform()) {
@@ -162,14 +171,6 @@ class Config {
         return path.join(homeDir, capitalizeFirstLetter(serviceDir));
 
       default: return path.join(homeDir, `.${serviceDir}`);
-    }
-  }
-
-  private getSystemHomeDir = (): string => {
-    switch (os.platform()) {
-      case 'win32': return process.env.LOCALAPPDATA!;
-      case 'darwin': return path.join(process.env.HOME!, 'Library', 'Application Support');
-      default: return process.env.HOME!;
     }
   }
 

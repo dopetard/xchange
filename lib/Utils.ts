@@ -1,5 +1,7 @@
 import os from 'os';
 import path from 'path';
+import fs from 'fs';
+import { pki, md } from 'node-forge';
 
 /**
  * Get pair id of base and quote asset
@@ -153,4 +155,58 @@ export const groupBy = (arr: object[], keyGetter: (item: any) => string | number
  */
 export const ms = (): number => {
   return Date.now();
+};
+
+export const generateCertificate = (tlsCertPath: string, tlsKeyPath: string): void => {
+  const keys = pki.rsa.generateKeyPair(1024);
+  const cert = pki.createCertificate();
+
+  cert.publicKey = keys.publicKey;
+  cert.serialNumber = String(Math.floor(Math.random() * 1024) + 1);
+
+  const date = new Date();
+  cert.validity.notBefore = date;
+  cert.validity.notAfter = new Date(date.getFullYear() + 5, date.getMonth(), date.getDay());
+
+  const attributes = [
+    {
+      name: 'organizationName',
+      value: 'value',
+    },
+  ];
+
+  cert.setSubject(attributes);
+  cert.setIssuer(attributes);
+
+  cert.setExtensions([
+    {
+      name: 'subjectAltName',
+      altNames: [
+        {
+          type: 2,
+          value: 'localhost',
+        },
+        {
+          type: 7,
+          ip: '127.0.0.1',
+        },
+      ],
+    },
+  ]);
+
+  cert.sign(keys.privateKey, md.sha256.create());
+
+  const certificate = pki.certificateToPem(cert);
+  const privateKey = pki.privateKeyToPem(keys.privateKey);
+
+  fs.writeFileSync(tlsCertPath, certificate);
+  fs.writeFileSync(tlsKeyPath, privateKey);
+};
+
+export const getSystemHomeDir = (): string => {
+  switch (os.platform()) {
+    case 'win32': return process.env.LOCALAPPDATA!;
+    case 'darwin': return path.join(process.env.HOME!, 'Library', 'Application Support');
+    default: return process.env.HOME!;
+  }
 };

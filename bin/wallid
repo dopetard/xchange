@@ -35,6 +35,14 @@ const { argv } = require('yargs')
       describe: 'Port for the Walli gRPC interface',
       type: 'number',
     },
+    'grpc.certPath': {
+      describe: 'tlsCert for Walli gRPC',
+      type: 'string',
+    },
+    'grpc.keyPath': {
+      describe: 'tlsKey for Walli gRPC',
+      type: 'string',
+    },
     'btcd.host': {
       describe: 'Host of the BTCD RPC interface',
       type: 'string',
