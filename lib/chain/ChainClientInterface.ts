@@ -1,5 +1,6 @@
 import BaseClient from '../BaseClient';
 import { Info, Block } from '../consts/ChainType';
+
 /**
  * A generic interface that can be used for multiple chain nodes and implementations
  */
