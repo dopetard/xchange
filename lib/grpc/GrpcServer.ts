@@ -10,8 +10,8 @@ import assert from 'assert';
 type GrpcConfig = {
   host: string,
   port: number,
-  certPath: string,
-  keyPath: string,
+  certpath: string,
+  keypath: string,
 };
 
 class GrpcServer {
@@ -32,9 +32,9 @@ class GrpcServer {
   }
 
   public listen = async () => {
-    const { port, host, certPath, keyPath } = this.grpcConfig;
-    const cert = fs.readFileSync(certPath);
-    const key = fs.readFileSync(keyPath);
+    const { port, host, certpath, keypath } = this.grpcConfig;
+    const cert = fs.readFileSync(certpath);
+    const key = fs.readFileSync(keypath);
 
     assert(Number.isInteger(port) && port > 1023 && port < 65536, 'port must be an integer between 1024 and 65536');
     // tslint:disable-next-line:no-null-keyword

@@ -3,7 +3,7 @@ import path from 'path';
 import grpc from 'grpc';
 import errors from '../consts/Errors';
 import { Arguments } from 'yargs';
-import { getSystemHomeDir } from '../Utils';
+import { getServiceDataDir } from '../Utils';
 import { WalliClient } from '../proto/wallirpc_grpc_pb';
 
 interface GrpcResponse {
@@ -11,7 +11,7 @@ interface GrpcResponse {
 }
 
 export const loadWalliClient = (argv: Arguments): WalliClient => {
-  const certPath = argv.tlscertpath ? argv.tlscertpath : path.join(getSystemHomeDir(), 'Walli', 'tls.cert');
+  const certPath = argv.tlscertpath ? argv.tlscertpath : path.join(getServiceDataDir('walli'), 'tls.cert');
   const cert = fs.readFileSync(certPath);
 
   return new WalliClient(`${argv.rpc.host}:${argv.rpc.port}`, grpc.credentials.createSsl(cert));

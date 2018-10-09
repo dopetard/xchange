@@ -4,26 +4,26 @@ const Walli = require('../dist/Walli').default;
 
 const { argv } = require('yargs')
   .options({
-    walliDir: {
+    wallidir: {
       describe: 'Data direcotry for walli-server',
       alias: 'w',
       type: 'string',
     },
-    configPath: {
+    configpath: {
       type: 'string',
       describe: 'Path to the config file',
     },
-    logPath: {
+    logpath: {
       describe: 'Path to the logfile',
       type: 'string',
     },
-    logLevel: {
+    loglevel: {
       describe: 'Verbosity of the logger',
       alias: 'l',
       type: 'string',
       choices: ['error', 'warn', 'info', 'verbose', 'debug', 'silly'],
     },
-    walletPath: {
+    walletpath: {
       type: 'string',
       describe: 'Path to the wallet file',
     },
@@ -35,12 +35,12 @@ const { argv } = require('yargs')
       describe: 'Port for the Walli gRPC interface',
       type: 'number',
     },
-    'grpc.certPath': {
-      describe: 'tlsCert for Walli gRPC',
+    'grpc.certpath': {
+      describe: 'Path to the TLS certificate of the Walli gRPC interface',
       type: 'string',
     },
-    'grpc.keyPath': {
-      describe: 'tlsKey for Walli gRPC',
+    'grpc.keypath': {
+      describe: 'Path to the key of the TLS certificate of the Walli gRPC interface',
       type: 'string',
     },
     'btcd.host': {
@@ -59,7 +59,7 @@ const { argv } = require('yargs')
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
     },
-    'btcd.certPath': {
+    'btcd.certpath': {
       describe: 'Path to the certificate of the BTCD RPC interface',
       type: 'string',
     },
