@@ -6,8 +6,7 @@ import ini from 'ini';
 import { Arguments } from 'yargs';
 import { deepMerge, capitalizeFirstLetter, resolveHome, splitListen } from './Utils';
 import { RpcConfig } from './RpcClient';
-import { ChainTypes } from './consts/Types';
-import LndClient, { LndConfig } from './lightning/LndClient';
+import { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
 import Errors from './consts/Errors';
 
@@ -77,7 +76,7 @@ class Config {
         port: 10009,
         certPath: path.join(this.lndDir, 'tls.cert'),
         // The macaroon for the Bitcoin testnet is hardcoded for now
-        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'simnet', 'admin.macaroon'),
+        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
         configPath: path.join(this.lndDir, 'lnd.conf'),
       },
     };
@@ -116,19 +115,19 @@ class Config {
     this.parseIniConfig(
       btcdConfigFile,
       this.config.btcd,
-      ChainTypes.BTC,
+      false,
     );
 
     this.parseIniConfig(
       ltcdConfigFile,
       this.config.ltcd,
-      ChainTypes.LTC,
+      false,
     );
 
     this.parseIniConfig(
       lndConfigFile,
       this.config.lnd,
-      LndClient.serviceName,
+      true,
     );
 
     if (args) {
@@ -137,26 +136,30 @@ class Config {
     return this.config;
   }
 
-  private parseIniConfig = (filename: string, mergeTarget: any, configType: string) => {
+  private parseIniConfig = (filename: string, mergeTarget: any, isLndConfig: boolean) => {
     if (fs.existsSync(filename)) {
       try {
         const config = ini.parse(fs.readFileSync(filename, 'utf-8'))['Application Options'];
 
-        switch (configType) {
-          case 'LND':
-            const configLND: LndConfig = config;
-            deepMerge(mergeTarget, configLND);
-            config.listen ? splitListen(mergeTarget, config.listen) : undefined;
-            break;
-          default:
-            const configClient: RpcConfig = config;
-            deepMerge(mergeTarget, configClient);
-            config.listen ? splitListen(mergeTarget, config.listen) : undefined;
-            break;
+        if (isLndConfig) {
+          const configLND: LndConfig = config;
+          if (config.listen) {
+            const listen = splitListen(config.listen);
+            mergeTarget.host = listen.host;
+            mergeTarget.port = listen.port;
+          }
+          deepMerge(mergeTarget, configLND);
+        } else {
+          const configClient: RpcConfig = config;
+          if (config.listen) {
+            const listen = splitListen(config.listen);
+            mergeTarget.host = listen.host;
+            mergeTarget.port = listen.port;
+          }
+          deepMerge(mergeTarget, configClient);
         }
-
       } catch (error) {
-        throw Errors.COULD_NOT_PARSE_CONFIG(configType, error);
+        throw Errors.COULD_NOT_PARSE_CONFIG(filename, error);
       }
     }
   }

@@ -3,7 +3,7 @@ import { Arguments } from 'yargs';
 import { generateMnemonic } from 'bip39';
 import Logger from './Logger';
 import Config, { ConfigType } from './Config';
-import { ChainTypes } from './consts/Types';
+import { ChainType } from './consts/ChainType';
 import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
@@ -29,12 +29,12 @@ class Walli {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
 
-    this.btcdClient = new ChainClient(this.config.btcd, ChainTypes.BTC);
-    this.ltcdClient = new ChainClient(this.config.ltcd, ChainTypes.LTC);
+    this.btcdClient = new ChainClient(this.config.btcd, ChainType.BTC);
+    this.ltcdClient = new ChainClient(this.config.ltcd, ChainType.LTC);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
 
     if (fs.existsSync(this.config.walletPath)) {
-      this.walletManager = new WalletManager(['BTC'], this.config.walletPath);
+      this.walletManager = new WalletManager([ChainType.BTC], this.config.walletPath);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.warn(`generated new mnemonic: ${mnemonic}`);
@@ -57,15 +57,15 @@ class Walli {
 
   public start = async () => {
     await Promise.all([
-      this.connectChain(this.btcdClient),
-      this.connectChain(this.ltcdClient),
+      this.connectChainClient(this.btcdClient),
+      this.connectChainClient(this.ltcdClient),
       this.connectLnd(),
     ]);
 
     await this.startGrpcServer();
   }
 
-  private connectChain = async (client: ChainClient) => {
+  private connectChainClient = async (client: ChainClient) => {
     try {
       await client.connect();
 

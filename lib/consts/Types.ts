@@ -4,8 +4,3 @@ export type Error = {
 };
 
 export type ScriptElement = Buffer | number;
-
-export enum ChainTypes {
-  LTC = 'LTC',
-  BTC = 'BTC',
-}

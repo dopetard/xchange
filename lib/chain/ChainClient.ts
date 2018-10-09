@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events';
-import { ChainTypes } from '../consts/Types';
+import { ChainType } from '../consts/ChainType';
 import RpcClient, { RpcConfig } from '../RpcClient';
-import ChainInterface from './ChainInterface';
+import ChainClientInterface from './ChainClientInterface';
 
 type Info = {
   version: number;
@@ -34,19 +34,19 @@ type Block = {
   nextblockhash: string;
 };
 
-interface ChainEvents {
+interface ChainClientEvents {
   on(event: 'error', listener: (error: string) => void): this;
   on(event: 'transaction', listener: (transactionHex: string) => void): this;
   emit(event: 'error', error: string): boolean;
   emit(event: 'transaction', transactionHex: string): boolean;
 }
 
-class ChainClient extends EventEmitter implements ChainInterface, ChainEvents {
-  public readonly serviceName: ChainTypes;
+class ChainClient extends EventEmitter implements ChainClientInterface, ChainClientEvents {
+  public readonly serviceName: ChainType;
 
   private rpcClient: RpcClient;
 
-  constructor(config: RpcConfig, serviceName: ChainTypes) {
+  constructor(config: RpcConfig, serviceName: ChainType) {
     super();
 
     this.serviceName = serviceName;
@@ -54,7 +54,6 @@ class ChainClient extends EventEmitter implements ChainInterface, ChainEvents {
     this.rpcClient.on('error', error => this.emit('error', error));
   }
 
-  // TODO: make more efficient: don't parse JSON twice
   private bindWs = () => {
     this.rpcClient.on('message.orphan', (data) => {
       if (data.method === 'relevanttxaccepted') {

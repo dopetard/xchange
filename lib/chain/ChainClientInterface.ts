@@ -3,7 +3,7 @@ import { Info, Block } from './ChainClient';
 /**
  * A generic interface that can be used for multiple chain nodes and implementations
  */
-interface ChainInterface extends BaseClient {
+interface ChainClientInterface extends BaseClient {
   sendRawTransaction(rawTransaction: string): Promise<any>;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
@@ -15,4 +15,4 @@ interface ChainInterface extends BaseClient {
   generate(blocks: number): Promise<string[]>;
 }
 
-export default ChainInterface;
+export default ChainClientInterface;

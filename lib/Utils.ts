@@ -156,10 +156,14 @@ export const ms = (): number => {
 };
 
 /**
- * Split listen string from config files.
+ * Split string into host and port.
+ * @param listen string of format host:port
+ * @returns {host: string, port: string}
  */
-export const splitListen = (mergeTarget: any, listen: string) =>  {
+export const splitListen = (listen: string) =>  {
   const split = listen.split(':');
-  mergeTarget.host = split[0];
-  mergeTarget.port = split[1];
+  return {
+    host: split[0],
+    port: split[1],
+  };
 };
