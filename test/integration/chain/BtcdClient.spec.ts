@@ -20,8 +20,20 @@ describe('BtcdClient', () => {
     certpath: path.join('docker', 'btcd', 'data', 'rpc.cert'),
   }, ChainType.BTC);
 
-  it('should connect', async () => {
+  const ltcdClient = new ChainClient({
+    host: 'localhost',
+    port: 19334,
+    rpcpass: 'user',
+    rpcuser: 'user',
+    certpath: path.join('docker', 'ltcd', 'data', 'rpc.cert'),
+  }, ChainType.LTC);
+
+  it('BtcdClient should connect', async () => {
     await expect(client.connect()).to.be.fulfilled;
+  });
+
+  it('LtcdClient should connect', async () => {
+    await expect(ltcdClient.connect()).to.be.fulfilled;
   });
 
   it('should update address subscriptions', async () => {

@@ -6,3 +6,8 @@ services:
     ports:
       - 18334:18334
     command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
+  ltcd: 
+    image: michael1011/ltcd
+    ports:
+      - 19334:19334
+    command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
