@@ -6,8 +6,7 @@ import ini from 'ini';
 import { Arguments } from 'yargs';
 import { deepMerge, capitalizeFirstLetter, resolveHome, splitListen } from './Utils';
 import { RpcConfig } from './RpcClient';
-import BtcdClient from './chain/BtcdClient';
-import LtcdClient from './chain/LtcdClient';
+import { ChainTypes } from './consts/Types';
 import LndClient, { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
 import Errors from './consts/Errors';
@@ -70,7 +69,7 @@ class Config {
         port: 19334,
         rpcuser: '',
         rpcpass: '',
-        configPath: path.join(this.ltcdDir, 'btcd.conf'),
+        configPath: path.join(this.ltcdDir, 'ltcd.conf'),
         certPath: path.join(this.ltcdDir, 'rpc.cert'),
       },
       lnd: {
@@ -117,13 +116,13 @@ class Config {
     this.parseIniConfig(
       btcdConfigFile,
       this.config.btcd,
-      BtcdClient.connect(),
+      ChainTypes.BTC,
     );
 
     this.parseIniConfig(
       ltcdConfigFile,
       this.config.ltcd,
-      LtcdClient.serviceName,
+      ChainTypes.LTC,
     );
 
     this.parseIniConfig(

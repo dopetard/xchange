@@ -3,13 +3,13 @@ import { Arguments } from 'yargs';
 import { generateMnemonic } from 'bip39';
 import Logger from './Logger';
 import Config, { ConfigType } from './Config';
-import BtcdClient from './chain/BtcdClient';
-import LtcdClient from './chain/LtcdClient';
+import { ChainTypes } from './consts/Types';
 import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
 import WalletManager from './wallet/WalletManager';
 import SwapManager from './swap/SwapManager';
+import ChainClient from './chain/ChainClient';
 
 class Walli {
   private config: ConfigType;
@@ -18,8 +18,8 @@ class Walli {
   private walletManager: WalletManager;
   private swapManager: SwapManager;
 
-  private btcdClient: BtcdClient;
-  private ltcdClient: LtcdClient;
+  private btcdClient: ChainClient;
+  private ltcdClient: ChainClient;
   private lndClient: LndClient;
 
   private service: Service;
@@ -29,8 +29,8 @@ class Walli {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logPath, this.config.logLevel);
 
-    this.btcdClient = new BtcdClient(this.config.btcd);
-    this.ltcdClient = new LtcdClient(this.config.ltcd);
+    this.btcdClient = new ChainClient(this.config.btcd, ChainTypes.BTC);
+    this.ltcdClient = new ChainClient(this.config.ltcd, ChainTypes.LTC);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
 
     if (fs.existsSync(this.config.walletPath)) {
@@ -57,33 +57,22 @@ class Walli {
 
   public start = async () => {
     await Promise.all([
-      this.connectBtcd(),
-      this.connectLtcd(),
+      this.connectChain(this.btcdClient),
+      this.connectChain(this.ltcdClient),
       this.connectLnd(),
     ]);
 
     await this.startGrpcServer();
   }
 
-  private connectBtcd = async () => {
+  private connectChain = async (client: ChainClient) => {
     try {
-      await this.btcdClient.connect();
+      await client.connect();
 
-      const info = await this.btcdClient.getInfo();
-      this.logger.verbose(`BTCD status: ${info.blocks} blocks`);
+      const info = await client.getInfo();
+      this.logger.verbose(`${client.serviceName} status: ${info.blocks} blocks`);
     } catch (error) {
-      this.logCouldNotConnect(BtcdClient.serviceName, error);
-    }
-  }
-
-  private connectLtcd = async () => {
-    try {
-      await this.ltcdClient.connect();
-
-      const info = await this.ltcdClient.getInfo();
-      this.logger.verbose(`LTCD status: ${info.blocks} blocks`);
-    } catch (error) {
-      this.logCouldNotConnect(BtcdClient.serviceName, error);
+      this.logCouldNotConnect(client.serviceName, error);
     }
   }
 

@@ -1,11 +1,11 @@
 import { address, Network } from 'bitcoinjs-lib';
 import Logger from '../Logger';
-import BtcdClient from '../chain/BtcdClient';
 import LndClient from '../lightning/LndClient';
 import WalletManager from '../wallet/WalletManager';
 import { getHexString } from '../Utils';
 import { pkRefundSwap } from './Submarine';
 import { p2wshOutput, p2shP2wshOutput, p2shOutput } from './Scripts';
+import ChainClient from '../chain/ChainClient';
 
 type Addresses = {
   bech32: string;
@@ -28,7 +28,7 @@ class SwapManager {
   constructor(
     private logger: Logger,
     private walletManager: WalletManager,
-    private btcdClient: BtcdClient,
+    private btcdClient: ChainClient,
     private lndClient: LndClient) {}
 
   /**

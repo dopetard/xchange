@@ -1,6 +1,6 @@
 import Logger from '../Logger';
 import WalletManager from '../wallet/WalletManager';
-import BtcdClient, { Info as BtcdInfo } from '../chain/BtcdClient';
+import BtcdClient, { Info as ChainInfo } from '../chain/ChainClient';
 import LndClient, { Info as LndInfo } from '../lightning/LndClient';
 import SwapManager from '../swap/SwapManager';
 import Networks from '../consts/Networks';
@@ -17,7 +17,7 @@ type ServiceComponents = {
 
 type WalliInfo = {
   version: string,
-  btcdInfo: BtcdInfo,
+  btcdInfo: ChainInfo,
   lndInfo: LndInfo,
 };
 
