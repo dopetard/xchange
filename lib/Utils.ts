@@ -154,3 +154,31 @@ export const groupBy = (arr: object[], keyGetter: (item: any) => string | number
 export const ms = (): number => {
   return Date.now();
 };
+
+/**
+ * Get directory of system home.
+ */
+export const getSystemHomeDir = (): string => {
+  switch (os.platform()) {
+    case 'win32': return process.env.LOCALAPPDATA!;
+    case 'darwin': return path.join(process.env.HOME!, 'Library', 'Application Support');
+    default: return process.env.HOME!;
+  }
+};
+
+// TODO: support for Geth/Parity and Raiden
+/**
+ * Get service data directory.
+ */
+export const getServiceDataDir = (service: string) => {
+  const homeDir = getSystemHomeDir();
+  const serviceDir = service.toLowerCase();
+
+  switch (os.platform()) {
+    case 'win32':
+    case 'darwin':
+      return path.join(homeDir, capitalizeFirstLetter(serviceDir));
+
+    default: return path.join(homeDir, `.${serviceDir}`);
+  }
+};

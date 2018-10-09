@@ -1,3 +1,4 @@
+import fs from 'fs';
 import grpc, { Server } from 'grpc';
 import Logger from '../Logger';
 import Errors from './Errors';
@@ -9,6 +10,8 @@ import assert from 'assert';
 type GrpcConfig = {
   host: string,
   port: number,
+  certpath: string,
+  keypath: string,
 };
 
 class GrpcServer {
@@ -29,9 +32,18 @@ class GrpcServer {
   }
 
   public listen = async () => {
-    const { port, host } = this.grpcConfig;
+    const { port, host, certpath, keypath } = this.grpcConfig;
+    const cert = fs.readFileSync(certpath);
+    const key = fs.readFileSync(keypath);
+
     assert(Number.isInteger(port) && port > 1023 && port < 65536, 'port must be an integer between 1024 and 65536');
-    const bindCode = this.server.bind(`${host}:${port}`, grpc.ServerCredentials.createInsecure());
+    // tslint:disable-next-line:no-null-keyword
+    const serverCert = grpc.ServerCredentials.createSsl(null,
+      [{
+        cert_chain: cert,
+        private_key: key,
+      }], false);
+    const bindCode = this.server.bind(`${host}:${port}`, serverCert);
 
     if (bindCode !== port) {
       const error = Errors.COULD_NOT_BIND(host , port.toString());
