@@ -4,22 +4,23 @@ import fs from 'fs';
 import toml from 'toml';
 import ini from 'ini';
 import { Arguments } from 'yargs';
-import { deepMerge, capitalizeFirstLetter, resolveHome, splitListen } from './Utils';
+import { pki, md } from 'node-forge';
+import { deepMerge, resolveHome, splitListen, getServiceDataDir } from './Utils';
 import { RpcConfig } from './RpcClient';
 import { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
 import Errors from './consts/Errors';
 
 type ServiceConfigOption = {
-  configPath: string;
+  configpath: string;
 };
 
 type ConfigType = {
-  walliDir: string;
-  configPath: string;
-  logPath: string;
-  logLevel: string;
-  walletPath: string;
+  wallidir: string;
+  configpath: string;
+  logpath: string;
+  loglevel: string;
+  walletpath: string;
   grpc: GrpcConfig;
   btcd: RpcConfig & ServiceConfigOption;
   ltcd: RpcConfig & ServiceConfigOption;
@@ -38,38 +39,40 @@ class Config {
    * The constructor sets the default values
    */
   constructor() {
-    this.walliDir = this.getServiceDataDir('walli');
-    this.btcdDir = this.getServiceDataDir('btcd');
-    this.ltcdDir = this.getServiceDataDir('ltcd');
-    this.lndDir = this.getServiceDataDir('lnd');
+    this.walliDir = getServiceDataDir('walli');
+    this.btcdDir = getServiceDataDir('btcd');
+    this.ltcdDir = getServiceDataDir('ltcd');
+    this.lndDir = getServiceDataDir('lnd');
 
-    const { configPath, walletPath, logPath } = this.getWalliDirPaths(this.walliDir);
+    const { configpath, walletpath, logpath } = this.getWalliDirPaths(this.walliDir);
 
     this.config = {
-      configPath,
-      walletPath,
-      logPath,
-      walliDir: this.walliDir,
-      logLevel: this.getDefaultLogLevel(),
+      configpath,
+      walletpath,
+      logpath,
+      wallidir: this.walliDir,
+      loglevel: this.getDefaultLogLevel(),
       grpc: {
         host: '127.0.0.1',
         port: 9000,
+        certpath: path.join(this.walliDir, 'tls.cert'),
+        keypath: path.join(this.walliDir, 'tls.key'),
       },
       btcd: {
         host: '127.0.0.1',
         port: 18334,
         rpcuser: '',
         rpcpass: '',
-        configPath: path.join(this.btcdDir, 'btcd.conf'),
-        certPath: path.join(this.btcdDir, 'rpc.cert'),
+        configpath: path.join(this.btcdDir, 'btcd.conf'),
+        certpath: path.join(this.btcdDir, 'rpc.cert'),
       },
       ltcd: {
         host: '127.0.0.1',
         port: 19334,
         rpcuser: '',
         rpcpass: '',
-        configPath: path.join(this.ltcdDir, 'ltcd.conf'),
-        certPath: path.join(this.ltcdDir, 'rpc.cert'),
+        configpath: path.join(this.ltcdDir, 'ltcd.conf'),
+        certpath: path.join(this.ltcdDir, 'rpc.cert'),
       },
       lnd: {
         host: '127.0.0.1',
@@ -77,7 +80,7 @@ class Config {
         certPath: path.join(this.lndDir, 'tls.cert'),
         // The macaroon for the Bitcoin testnet is hardcoded for now
         macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
-        configPath: path.join(this.lndDir, 'lnd.conf'),
+        configpath: path.join(this.lndDir, 'lnd.conf'),
       },
     };
   }
@@ -87,12 +90,16 @@ class Config {
    * This loads arguments specified by the user either from a TOML config file or from command line arguments
    */
   public load = (args: Arguments): ConfigType => {
-    if (args && args.walliDir) {
-      this.config.walliDir = resolveHome(args.walliDir);
-      deepMerge(this.config, this.getWalliDirPaths(this.config.walliDir));
+    if (!fs.existsSync(this.config.wallidir)) {
+      fs.mkdirSync(this.config.wallidir);
     }
 
-    const walliConfigFile = this.resolveConfigPath(args.configPath, this.config.configPath);
+    if (args && args.walliDir) {
+      this.config.wallidir = resolveHome(args.walliDir);
+      deepMerge(this.config, this.getWalliDirPaths(this.config.wallidir));
+    }
+
+    const walliConfigFile = this.resolveConfigPath(args.configPath, this.config.configpath);
 
     if (fs.existsSync(walliConfigFile)) {
       try {
@@ -104,13 +111,16 @@ class Config {
       }
     }
 
-    if (!fs.existsSync(this.config.walliDir)) {
-      fs.mkdirSync(this.config.walliDir);
+    const grpcCert = args.grpc ? args.grpc.certpath : this.config.grpc.certpath;
+    const grpcKey = args.grpc ?  args.grpc.keypath : this.config.grpc.keypath;
+
+    if (!fs.existsSync(grpcCert) && !fs.existsSync(grpcKey)) {
+      this.generateCertificate(grpcCert, grpcKey);
     }
 
-    const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configPath, this.config.btcd.configPath) : this.config.btcd.configPath;
-    const ltcdConfigFile = args.ltcd ? this.resolveConfigPath(args.ltcd.configPath, this.config.ltcd.configPath) : this.config.ltcd.configPath;
-    const lndConfigFile = args.lnd ? this.resolveConfigPath(args.lnd.configPath, this.config.lnd.configPath) : this.config.lnd.configPath;
+    const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configpath, this.config.btcd.configpath) : this.config.btcd.configpath;
+    const ltcdConfigFile = args.ltcd ? this.resolveConfigPath(args.ltcd.configpath, this.config.ltcd.configpath) : this.config.ltcd.configpath;
+    const lndConfigFile = args.lnd ? this.resolveConfigPath(args.lnd.configpath, this.config.lnd.configpath) : this.config.lnd.configpath;
 
     this.parseIniConfig(
       btcdConfigFile,
@@ -133,6 +143,7 @@ class Config {
     if (args) {
       deepMerge(this.config, args);
     }
+
     return this.config;
   }
 
@@ -164,11 +175,11 @@ class Config {
     }
   }
 
-  private getWalliDirPaths = (walliDir: string): { configPath: string, walletPath: string, logPath: string } => {
+  private getWalliDirPaths = (walliDir: string): { configpath: string, walletpath: string, logpath: string } => {
     return {
-      configPath: path.join(walliDir, 'walli.conf'),
-      walletPath: path.join(walliDir, 'wallet.dat'),
-      logPath: path.join(walliDir, 'walli.log'),
+      configpath: path.join(walliDir, 'walli.conf'),
+      walletpath: path.join(walliDir, 'wallet.dat'),
+      logpath: path.join(walliDir, 'walli.log'),
     };
   }
 
@@ -176,30 +187,54 @@ class Config {
     return configPath ? resolveHome(configPath) : fallback;
   }
 
-  // TODO: support for Geth/Parity and Raiden
-  private getServiceDataDir = (service: string) => {
-    const homeDir = this.getSystemHomeDir();
-    const serviceDir = service.toLowerCase();
-
-    switch (os.platform()) {
-      case 'win32':
-      case 'darwin':
-        return path.join(homeDir, capitalizeFirstLetter(serviceDir));
-
-      default: return path.join(homeDir, `.${serviceDir}`);
-    }
-  }
-
-  private getSystemHomeDir = (): string => {
-    switch (os.platform()) {
-      case 'win32': return process.env.LOCALAPPDATA!;
-      case 'darwin': return path.join(process.env.HOME!, 'Library', 'Application Support');
-      default: return process.env.HOME!;
-    }
-  }
-
   private getDefaultLogLevel = (): string => {
     return process.env.NODE_ENV === 'production' ? 'info' : 'debug';
+  }
+
+  private generateCertificate = (tlsCertPath: string, tlsKeyPath: string): void => {
+    const keys = pki.rsa.generateKeyPair(1024);
+    const cert = pki.createCertificate();
+
+    cert.publicKey = keys.publicKey;
+    cert.serialNumber = String(Math.floor(Math.random() * 1024) + 1);
+
+    const date = new Date();
+    cert.validity.notBefore = date;
+    cert.validity.notAfter = new Date(date.getFullYear() + 5, date.getMonth(), date.getDay());
+
+    const attributes = [
+      {
+        name: 'organizationName',
+        value: 'Walli autogenerated certificate',
+      },
+    ];
+
+    cert.setSubject(attributes);
+    cert.setIssuer(attributes);
+
+    cert.setExtensions([
+      {
+        name: 'subjectAltName',
+        altNames: [
+          {
+            type: 2,
+            value: 'localhost',
+          },
+          {
+            type: 7,
+            ip: '127.0.0.1',
+          },
+        ],
+      },
+    ]);
+
+    cert.sign(keys.privateKey, md.sha256.create());
+
+    const certificate = pki.certificateToPem(cert);
+    const privateKey = pki.privateKeyToPem(keys.privateKey);
+
+    fs.writeFileSync(tlsCertPath, certificate);
+    fs.writeFileSync(tlsKeyPath, privateKey);
   }
 }
 

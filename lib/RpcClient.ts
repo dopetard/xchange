@@ -8,7 +8,7 @@ type RpcConfig = {
   port: number;
   rpcuser: string;
   rpcpass: string;
-  certPath: string;
+  certpath: string;
 };
 
 /** A hack to make promises handleable from other functions */
@@ -36,7 +36,7 @@ class RpcClient extends EventEmitter {
 
   public connect = async () => {
     return new Promise((resolve, reject) => {
-      const rpcCert = fs.readFileSync(this.config.certPath,  { encoding: 'utf-8' });
+      const rpcCert = fs.readFileSync(this.config.certpath,  { encoding: 'utf-8' });
       const credentials = Buffer.from(`${this.config.rpcuser}:${this.config.rpcpass}`);
       this.ws = new WebSocket(`wss://${this.config.host}:${this.config.port}/ws`, {
         headers: {

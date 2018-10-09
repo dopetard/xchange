@@ -1,38 +1,7 @@
 import { EventEmitter } from 'events';
-import { ChainType } from '../consts/ChainType';
+import { ChainType, Block, Info } from '../consts/ChainType';
 import RpcClient, { RpcConfig } from '../RpcClient';
 import ChainClientInterface from './ChainClientInterface';
-
-type Info = {
-  version: number;
-  protocolversion: number;
-  blocks: number;
-  timeoffset: number;
-  connections: number;
-  proxy: string;
-  difficulty: number;
-  testnet: boolean;
-  relayfee: number;
-};
-
-type Block = {
-  hash: string;
-  confirmations: number;
-  strippedsize: number;
-  size: number;
-  weight: number;
-  height: number;
-  version: number;
-  versionHex: string;
-  merkleroot: string;
-  tx: string[];
-  time: number;
-  nonce: number;
-  bits: string;
-  difficulty: number;
-  previousblockhash: string;
-  nextblockhash: string;
-};
 
 interface ChainClientEvents {
   on(event: 'error', listener: (error: string) => void): this;

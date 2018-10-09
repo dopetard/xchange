@@ -27,19 +27,19 @@ class Walli {
 
   constructor(config: Arguments) {
     this.config = new Config().load(config);
-    this.logger = new Logger(this.config.logPath, this.config.logLevel);
+    this.logger = new Logger(this.config.logpath, this.config.loglevel);
 
     this.btcdClient = new ChainClient(this.config.btcd, ChainType.BTC);
     this.ltcdClient = new ChainClient(this.config.ltcd, ChainType.LTC);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
 
-    if (fs.existsSync(this.config.walletPath)) {
-      this.walletManager = new WalletManager([ChainType.BTC], this.config.walletPath);
+    if (fs.existsSync(this.config.walletpath)) {
+      this.walletManager = new WalletManager([ChainType.BTC], this.config.walletpath);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.warn(`generated new mnemonic: ${mnemonic}`);
 
-      this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletPath);
+      this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletpath);
     }
 
     this.swapManager = new SwapManager(this.logger, this.walletManager, this.btcdClient, this.lndClient);

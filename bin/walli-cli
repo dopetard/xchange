@@ -17,6 +17,11 @@ require('yargs')
       default: 9000,
       type: 'number',
     },
+    tlscertpath: {
+      describe: 'Path to TLS cert',
+      type: 'string',
+      alias: 't',
+    },
   })
   .commandDir('../dist/cli/commands/')
   .demandCommand(1, '')

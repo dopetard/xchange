@@ -167,3 +167,30 @@ export const splitListen = (listen: string) =>  {
     port: split[1],
   };
 };
+/**
+ * Get directory of system home.
+ */
+export const getSystemHomeDir = (): string => {
+  switch (os.platform()) {
+    case 'win32': return process.env.LOCALAPPDATA!;
+    case 'darwin': return path.join(process.env.HOME!, 'Library', 'Application Support');
+    default: return process.env.HOME!;
+  }
+};
+
+/**
+ * Get service data directory.
+ * TODO: support for Geth/Parity and Raiden
+ */
+export const getServiceDataDir = (service: string) => {
+  const homeDir = getSystemHomeDir();
+  const serviceDir = service.toLowerCase();
+
+  switch (os.platform()) {
+    case 'win32':
+    case 'darwin':
+      return path.join(homeDir, capitalizeFirstLetter(serviceDir));
+
+    default: return path.join(homeDir, `.${serviceDir}`);
+  }
+};

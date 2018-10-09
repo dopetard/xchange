@@ -8,17 +8,17 @@ import Networks from '../../../lib/consts/Networks';
 
 chai.use(chaiAsPromised);
 
-describe('BtcdClient', () => {
+describe('LtcdClient', () => {
   const testWif = 'cQ4crx5qPv7NDdj41ehumfB9f89zyWdggy8JnNDjKVQwsLswahd4';
   const testAddress = 'msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs';
 
   const client = new ChainClient({
     host: 'localhost',
-    port: 18334,
+    port: 19334,
     rpcuser: 'user',
     rpcpass: 'user',
-    certpath: path.join('docker', 'btcd', 'data', 'rpc.cert'),
-  }, ChainType.BTC);
+    certpath: path.join('docker', 'ltcd', 'data', 'rpc.cert'),
+  }, ChainType.LTC);
 
   it('should connect', async () => {
     await expect(client.connect()).to.be.fulfilled;
