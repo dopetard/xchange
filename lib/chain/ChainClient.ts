@@ -1,5 +1,6 @@
 import { EventEmitter } from 'events';
-import { ChainType, Block, Info } from '../consts/ChainType';
+import { ChainType } from '../consts/ChainType';
+import { Block, Info } from '../consts/Types';
 import RpcClient, { RpcConfig } from '../RpcClient';
 import ChainClientInterface from './ChainClientInterface';
 
