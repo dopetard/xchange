@@ -51,16 +51,44 @@ const { argv } = require('yargs')
       describe: 'Port of the BTCD RPC interface',
       type: 'number',
     },
-    'btcd.user': {
+    'btcd.rpcuser': {
       describe: 'User for the BTCD RPC interface',
       type: 'string',
     },
-    'btcd.password': {
+    'btcd.rpcpass': {
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
     },
     'btcd.certpath': {
       describe: 'Path to the certificate of the BTCD RPC interface',
+      type: 'string',
+    },
+    'btcd.configpath': {
+      describe: 'Path to BTCD conf file',
+      type: 'string',
+    },
+    'ltcd.host': {
+      describe: 'Host of the BTCD RPC interface',
+      type: 'string',
+    },
+    'ltcd.port': {
+      describe: 'Port of the BTCD RPC interface',
+      type: 'number',
+    },
+    'ltcd.rpcuser': {
+      describe: 'User for the BTCD RPC interface',
+      type: 'string',
+    },
+    'ltcd.rpcpass': {
+      describe: 'Password for the BTCD RPC interface',
+      type: 'string',
+    },
+    'ltcd.certpath': {
+      describe: 'Path to the certificate of the BTCD RPC interface',
+      type: 'string',
+    },
+    'ltcd.configpath': {
+      describe: 'Path to BTCD conf file',
       type: 'string',
     },
     'lnd.host': {
@@ -71,11 +99,11 @@ const { argv } = require('yargs')
       describe: 'Port of the LND gRPC interface',
       type: 'number',
     },
-    'lnd.certPath': {
+    'lnd.certpath': {
       describe: 'Path to the certificate of the LND gRPC interface',
       type: 'string',
     },
-    'lnd.macaroonPath': {
+    'lnd.macaroonpath': {
       describe: 'Path to the macaroon file of the LND gRPC interface',
       type: 'string',
     },

@@ -1,7 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import grpc from 'grpc';
-import errors from '../consts/Errors';
 import { Arguments } from 'yargs';
 import { getServiceDataDir } from '../Utils';
 import { WalliClient } from '../proto/wallirpc_grpc_pb';

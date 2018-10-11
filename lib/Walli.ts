@@ -3,12 +3,13 @@ import { Arguments } from 'yargs';
 import { generateMnemonic } from 'bip39';
 import Logger from './Logger';
 import Config, { ConfigType } from './Config';
-import BtcdClient from './chain/BtcdClient';
+import { ChainType } from './consts/ChainType';
 import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
 import WalletManager from './wallet/WalletManager';
 import SwapManager from './swap/SwapManager';
+import ChainClient from './chain/ChainClient';
 
 class Walli {
   private config: ConfigType;
@@ -17,7 +18,8 @@ class Walli {
   private walletManager: WalletManager;
   private swapManager: SwapManager;
 
-  private btcdClient: BtcdClient;
+  private btcdClient: ChainClient;
+  private ltcdClient: ChainClient;
   private lndClient: LndClient;
 
   private service: Service;
@@ -25,18 +27,19 @@ class Walli {
 
   constructor(config: Arguments) {
     this.config = new Config().load(config);
-    this.logger = new Logger(this.config.logPath, this.config.logLevel);
+    this.logger = new Logger(this.config.logpath, this.config.loglevel);
 
-    this.btcdClient = new BtcdClient(this.config.btcd);
+    this.btcdClient = new ChainClient(this.config.btcd, ChainType.BTC);
+    this.ltcdClient = new ChainClient(this.config.ltcd, ChainType.LTC);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
 
-    if (fs.existsSync(this.config.walletPath)) {
-      this.walletManager = new WalletManager(['BTC'], this.config.walletPath);
+    if (fs.existsSync(this.config.walletpath)) {
+      this.walletManager = new WalletManager([ChainType.BTC], this.config.walletpath);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.warn(`generated new mnemonic: ${mnemonic}`);
 
-      this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletPath);
+      this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletpath);
     }
 
     this.swapManager = new SwapManager(this.logger, this.walletManager, this.btcdClient, this.lndClient);
@@ -54,21 +57,22 @@ class Walli {
 
   public start = async () => {
     await Promise.all([
-      this.connectBtcd(),
+      this.connectChainClient(this.btcdClient),
+      this.connectChainClient(this.ltcdClient),
       this.connectLnd(),
     ]);
 
     await this.startGrpcServer();
   }
 
-  private connectBtcd = async () => {
+  private connectChainClient = async (client: ChainClient) => {
     try {
-      await this.btcdClient.connect();
+      await client.connect();
 
-      const info = await this.btcdClient.getInfo();
-      this.logger.verbose(`BTCD status: ${info.blocks} blocks`);
+      const info = await client.getInfo();
+      this.logger.verbose(`${client.serviceName} status: ${info.blocks} blocks`);
     } catch (error) {
-      this.logCouldNotConnect(BtcdClient.serviceName, error);
+      this.logCouldNotConnect(client.serviceName, error);
     }
   }
 

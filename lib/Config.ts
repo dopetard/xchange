@@ -5,24 +5,25 @@ import toml from 'toml';
 import ini from 'ini';
 import { Arguments } from 'yargs';
 import { pki, md } from 'node-forge';
-import { deepMerge, getServiceDataDir, resolveHome } from './Utils';
-import BtcdClient, { BtcdConfig } from './chain/BtcdClient';
-import LndClient, { LndConfig } from './lightning/LndClient';
+import { deepMerge, resolveHome, splitListen, getServiceDataDir } from './Utils';
+import { RpcConfig } from './RpcClient';
+import { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
 import Errors from './consts/Errors';
 
 type ServiceConfigOption = {
-  configPath: string;
+  configpath: string;
 };
 
 type ConfigType = {
-  walliDir: string;
-  configPath: string;
-  logPath: string;
-  logLevel: string;
-  walletPath: string;
+  wallidir: string;
+  configpath: string;
+  logpath: string;
+  loglevel: string;
+  walletpath: string;
   grpc: GrpcConfig;
-  btcd: BtcdConfig & ServiceConfigOption;
+  btcd: RpcConfig & ServiceConfigOption;
+  ltcd: RpcConfig & ServiceConfigOption;
   lnd: LndConfig & ServiceConfigOption;
 };
 
@@ -31,6 +32,7 @@ class Config {
 
   private walliDir: string;
   private btcdDir: string;
+  private ltcdDir: string;
   private lndDir: string;
 
   /**
@@ -39,16 +41,17 @@ class Config {
   constructor() {
     this.walliDir = getServiceDataDir('walli');
     this.btcdDir = getServiceDataDir('btcd');
+    this.ltcdDir = getServiceDataDir('ltcd');
     this.lndDir = getServiceDataDir('lnd');
 
-    const { configPath, walletPath, logPath } = this.getWalliDirPaths(this.walliDir);
+    const { configpath, walletpath, logpath } = this.getWalliDirPaths(this.walliDir);
 
     this.config = {
-      configPath,
-      walletPath,
-      logPath,
-      walliDir: this.walliDir,
-      logLevel: this.getDefaultLogLevel(),
+      configpath,
+      walletpath,
+      logpath,
+      wallidir: this.walliDir,
+      loglevel: this.getDefaultLogLevel(),
       grpc: {
         host: '127.0.0.1',
         port: 9000,
@@ -58,18 +61,26 @@ class Config {
       btcd: {
         host: '127.0.0.1',
         port: 18334,
-        user: '',
-        password: '',
-        configPath: path.join(this.btcdDir, 'btcd.conf'),
+        rpcuser: '',
+        rpcpass: '',
+        configpath: path.join(this.btcdDir, 'btcd.conf'),
         certpath: path.join(this.btcdDir, 'rpc.cert'),
+      },
+      ltcd: {
+        host: '127.0.0.1',
+        port: 19334,
+        rpcuser: '',
+        rpcpass: '',
+        configpath: path.join(this.ltcdDir, 'ltcd.conf'),
+        certpath: path.join(this.ltcdDir, 'rpc.cert'),
       },
       lnd: {
         host: '127.0.0.1',
         port: 10009,
-        certPath: path.join(this.lndDir, 'tls.cert'),
+        certpath: path.join(this.lndDir, 'tls.cert'),
         // The macaroon for the Bitcoin testnet is hardcoded for now
-        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
-        configPath: path.join(this.lndDir, 'lnd.conf'),
+        macaroonpath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
+        configpath: path.join(this.lndDir, 'lnd.conf'),
       },
     };
   }
@@ -79,12 +90,16 @@ class Config {
    * This loads arguments specified by the user either from a TOML config file or from command line arguments
    */
   public load = (args: Arguments): ConfigType => {
-    if (args && args.walliDir) {
-      this.config.walliDir = resolveHome(args.walliDir);
-      deepMerge(this.config, this.getWalliDirPaths(this.config.walliDir));
+    if (!fs.existsSync(this.config.wallidir)) {
+      fs.mkdirSync(this.config.wallidir);
     }
 
-    const walliConfigFile = this.resolveConfigPath(args.configPath, this.config.configPath);
+    if (args && args.walliDir) {
+      this.config.wallidir = resolveHome(args.walliDir);
+      deepMerge(this.config, this.getWalliDirPaths(this.config.wallidir));
+    }
+
+    const walliConfigFile = this.resolveConfigPath(args.configPath, this.config.configpath);
 
     if (fs.existsSync(walliConfigFile)) {
       try {
@@ -103,23 +118,26 @@ class Config {
       this.generateCertificate(grpcCert, grpcKey);
     }
 
-    if (!fs.existsSync(this.config.walliDir)) {
-      fs.mkdirSync(this.config.walliDir);
-    }
-
-    const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configPath, this.config.btcd.configPath) : this.config.btcd.configPath;
-    const lndConfigFile = args.lnd ? this.resolveConfigPath(args.lnd.configPath, this.config.lnd.configPath) : this.config.lnd.configPath;
+    const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configpath, this.config.btcd.configpath) : this.config.btcd.configpath;
+    const ltcdConfigFile = args.ltcd ? this.resolveConfigPath(args.ltcd.configpath, this.config.ltcd.configpath) : this.config.ltcd.configpath;
+    const lndConfigFile = args.lnd ? this.resolveConfigPath(args.lnd.configpath, this.config.lnd.configpath) : this.config.lnd.configpath;
 
     this.parseIniConfig(
       btcdConfigFile,
       this.config.btcd,
-      BtcdClient.serviceName,
+      false,
+    );
+
+    this.parseIniConfig(
+      ltcdConfigFile,
+      this.config.ltcd,
+      false,
     );
 
     this.parseIniConfig(
       lndConfigFile,
       this.config.lnd,
-      LndClient.serviceName,
+      true,
     );
 
     if (args) {
@@ -129,31 +147,39 @@ class Config {
     return this.config;
   }
 
-  private parseIniConfig = (filename: string, mergeTarget: any, configType: string) => {
+  private parseIniConfig = (filename: string, mergeTarget: any, isLndConfig: boolean) => {
     if (fs.existsSync(filename)) {
       try {
-        const config = ini.parse(fs.readFileSync(filename, 'utf-8'));
-        const { rpcuser, rpcpass, listen } = config['Application Options'];
+        const config = ini.parse(fs.readFileSync(filename, 'utf-8'))['Application Options'];
 
-        rpcuser ? mergeTarget.user = rpcuser : undefined;
-        rpcpass ? mergeTarget.password = rpcpass : undefined;
-
-        if (listen) {
-          const split = listen.split(':');
-          mergeTarget.host = split[0];
-          mergeTarget.port = split[1];
+        if (isLndConfig) {
+          const configLND: LndConfig = config;
+          if (config.listen) {
+            const listen = splitListen(config.listen);
+            mergeTarget.host = listen.host;
+            mergeTarget.port = listen.port;
+          }
+          deepMerge(mergeTarget, configLND);
+        } else {
+          const configClient: RpcConfig = config;
+          if (config.listen) {
+            const listen = splitListen(config.listen);
+            mergeTarget.host = listen.host;
+            mergeTarget.port = listen.port;
+          }
+          deepMerge(mergeTarget, configClient);
         }
       } catch (error) {
-        throw Errors.COULD_NOT_PARSE_CONFIG(configType, error);
+        throw Errors.COULD_NOT_PARSE_CONFIG(filename, error);
       }
     }
   }
 
-  private getWalliDirPaths = (walliDir: string): { configPath: string, walletPath: string, logPath: string } => {
+  private getWalliDirPaths = (walliDir: string): { configpath: string, walletpath: string, logpath: string } => {
     return {
-      configPath: path.join(walliDir, 'walli.conf'),
-      walletPath: path.join(walliDir, 'wallet.dat'),
-      logPath: path.join(walliDir, 'walli.log'),
+      configpath: path.join(walliDir, 'walli.conf'),
+      walletpath: path.join(walliDir, 'wallet.dat'),
+      logpath: path.join(walliDir, 'walli.log'),
     };
   }
 

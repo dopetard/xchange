@@ -156,6 +156,18 @@ export const ms = (): number => {
 };
 
 /**
+ * Split string into host and port.
+ * @param listen string of format host:port
+ * @returns {host: string, port: string}
+ */
+export const splitListen = (listen: string) =>  {
+  const split = listen.split(':');
+  return {
+    host: split[0],
+    port: split[1],
+  };
+};
+/**
  * Get directory of system home.
  */
 export const getSystemHomeDir = (): string => {
@@ -166,9 +178,9 @@ export const getSystemHomeDir = (): string => {
   }
 };
 
-// TODO: support for Geth/Parity and Raiden
 /**
  * Get service data directory.
+ * TODO: support for Geth/Parity and Raiden
  */
 export const getServiceDataDir = (service: string) => {
   const homeDir = getSystemHomeDir();

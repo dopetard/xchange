@@ -3,7 +3,7 @@ import grpc from 'grpc';
 import Service from '../service/Service';
 import * as wallirpc from '../proto/wallirpc_pb';
 import { Info as LndInfo } from '../lightning/LndClient';
-import { Info as BtcdInfo } from '../chain/BtcdClient';
+import { Info as ChainInfo } from '../chain/ChainClient';
 import { Addresses } from '../swap/SwapManager';
 
 class GrpcService {
@@ -35,7 +35,7 @@ class GrpcService {
         return lnd;
       });
 
-      const getBtcdInfo = ((btcdInfo: BtcdInfo): wallirpc.BtcdInfo => {
+      const getBtcdInfo = ((btcdInfo: ChainInfo): wallirpc.BtcdInfo => {
         const btcd = new wallirpc.BtcdInfo;
 
         const { version, protocolversion, blocks, connections, testnet } = btcdInfo;
