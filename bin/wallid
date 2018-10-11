@@ -63,7 +63,7 @@ const { argv } = require('yargs')
       describe: 'Path to the certificate of the BTCD RPC interface',
       type: 'string',
     },
-    'btcd.configPath': {
+    'btcd.configpath': {
       describe: 'Path to BTCD conf file',
       type: 'string',
     },
@@ -83,11 +83,11 @@ const { argv } = require('yargs')
       describe: 'Password for the BTCD RPC interface',
       type: 'string',
     },
-    'ltcd.certPath': {
+    'ltcd.certpath': {
       describe: 'Path to the certificate of the BTCD RPC interface',
       type: 'string',
     },
-    'ltcd.configPath': {
+    'ltcd.configpath': {
       describe: 'Path to BTCD conf file',
       type: 'string',
     },
@@ -99,11 +99,11 @@ const { argv } = require('yargs')
       describe: 'Port of the LND gRPC interface',
       type: 'number',
     },
-    'lnd.certPath': {
+    'lnd.certpath': {
       describe: 'Path to the certificate of the LND gRPC interface',
       type: 'string',
     },
-    'lnd.macaroonPath': {
+    'lnd.macaroonpath': {
       describe: 'Path to the macaroon file of the LND gRPC interface',
       type: 'string',
     },

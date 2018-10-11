@@ -77,9 +77,9 @@ class Config {
       lnd: {
         host: '127.0.0.1',
         port: 10009,
-        certPath: path.join(this.lndDir, 'tls.cert'),
+        certpath: path.join(this.lndDir, 'tls.cert'),
         // The macaroon for the Bitcoin testnet is hardcoded for now
-        macaroonPath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
+        macaroonpath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
         configpath: path.join(this.lndDir, 'lnd.conf'),
       },
     };

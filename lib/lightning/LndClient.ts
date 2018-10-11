@@ -13,8 +13,8 @@ import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
 type LndConfig = {
   host: string;
   port: number;
-  certPath: string;
-  macaroonPath: string;
+  certpath: string;
+  macaroonpath: string;
 };
 
 /** General information about the state of this lnd client. */
@@ -63,15 +63,15 @@ class LndClient extends EventEmitter implements LightningClient {
   constructor(private logger: Logger, config: LndConfig) {
     super();
 
-    const { host, port, certPath, macaroonPath } = config;
+    const { host, port, certpath, macaroonpath } = config;
 
-    if (fs.existsSync(macaroonPath) && fs.existsSync(certPath)) {
+    if (fs.existsSync(macaroonpath) && fs.existsSync(certpath)) {
       const uri = `${host}:${port}`;
 
-      const lndCert = fs.readFileSync(certPath);
+      const lndCert = fs.readFileSync(certpath);
       const credentials = grpc.credentials.createSsl(lndCert);
 
-      const adminMacaroon = fs.readFileSync(macaroonPath);
+      const adminMacaroon = fs.readFileSync(macaroonpath);
       this.meta = new grpc.Metadata();
       this.meta.add('macaroon', adminMacaroon.toString('hex'));
 
