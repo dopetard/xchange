@@ -1,25 +1,21 @@
 import { EventEmitter } from 'events';
 import { ChainType } from '../consts/ChainType';
-import { Block, Info } from '../consts/Types';
 import RpcClient, { RpcConfig } from '../RpcClient';
-import ChainClientInterface from './ChainClientInterface';
+import ChainClientInterface, { Info, Block } from './ChainClientInterface';
 
 interface ChainClientEvents {
   on(event: 'error', listener: (error: string) => void): this;
-  on(event: 'transaction', listener: (transactionHex: string) => void): this;
+  on(event: 'transaction.relevant', listener: (transactionHex: string) => void): this;
   emit(event: 'error', error: string): boolean;
-  emit(event: 'transaction', transactionHex: string): boolean;
+  emit(event: 'transaction.relevant', transactionHex: string): boolean;
 }
 
 class ChainClient extends EventEmitter implements ChainClientInterface, ChainClientEvents {
-  public readonly serviceName: ChainType;
-
   private rpcClient: RpcClient;
 
-  constructor(config: RpcConfig, serviceName: ChainType) {
+  constructor(config: RpcConfig, public readonly serviceName: ChainType) {
     super();
 
-    this.serviceName = serviceName;
     this.rpcClient = new RpcClient(config);
     this.rpcClient.on('error', error => this.emit('error', error));
   }
@@ -30,7 +26,7 @@ class ChainClient extends EventEmitter implements ChainClientInterface, ChainCli
         const transactions = data.params;
 
         transactions.forEach((transaction) => {
-          this.emit('transaction', transaction);
+          this.emit('transaction.relevant', transaction);
         });
       }
     });
@@ -73,4 +69,3 @@ class ChainClient extends EventEmitter implements ChainClientInterface, ChainCli
 }
 
 export default ChainClient;
-export { Info, Block };

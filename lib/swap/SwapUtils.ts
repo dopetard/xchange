@@ -43,20 +43,19 @@ const derEncode = (point: string) => {
  * Encode a signature
  *
  * @param flag signature hash flag number
- * @param signature signature hex string
+ * @param signature signature hex Buffer
  *
  * @returns encoded signature Buffer
  */
-export const encodeSignature = (flag: number, signature: string) => {
+export const encodeSignature = (flag: number, signature: Buffer) => {
   const pointSize = 32;
 
   const signatureEnd = pointSize + pointSize;
 
   const hashType = Buffer.from([flag]);
-  const signatureBuffer = getHexBuffer(signature);
 
-  const r = derEncode(getHexString(signatureBuffer.slice(0, pointSize)));
-  const s = derEncode(getHexString(signatureBuffer.slice(pointSize, signatureEnd)));
+  const r = derEncode(getHexString(signature.slice(0, pointSize)));
+  const s = derEncode(getHexString(signature.slice(pointSize, signatureEnd)));
 
   return Buffer.concat([bip66.encode(r, s), hashType]);
 };
@@ -68,7 +67,7 @@ export const encodeSignature = (flag: number, signature: string) => {
  *
  * @returns a formed pushdata script
  */
-export const toPushdataScript = (elements: ScriptElement[]): string => {
+export const toPushdataScript = (elements: ScriptElement[]): Buffer => {
   const buffers: Buffer[] = [];
 
   elements.forEach((element) => {
@@ -79,5 +78,26 @@ export const toPushdataScript = (elements: ScriptElement[]): string => {
     }
   });
 
-  return getHexString(Buffer.concat(buffers));
+  return Buffer.concat(buffers);
+};
+
+/**
+ * Convert an array of ScriptElement to a formed script
+ *
+ * @param elements array of ScriptElement
+ *
+ * @returns a script buffer
+ */
+export const scriptBuffersToScript = (elements: ScriptElement[]): Buffer => {
+  const buffers: Buffer[] = [];
+
+  elements.forEach((element) => {
+    if (Buffer.isBuffer(element)) {
+      buffers.push(Buffer.concat([varuint.encode(element.length), element]));
+    } else {
+      buffers.push(getHexBuffer(element.toString(16)));
+    }
+  });
+
+  return Buffer.concat(buffers);
 };
