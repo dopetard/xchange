@@ -1,11 +1,13 @@
-import { address, Network } from 'bitcoinjs-lib';
+import { BIP32 } from 'bip32';
+import { address, Transaction, crypto, Network } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import LndClient from '../lightning/LndClient';
-import WalletManager from '../wallet/WalletManager';
-import { getHexString } from '../Utils';
+import { getHexBuffer } from '../Utils';
 import { pkRefundSwap } from './Submarine';
-import { p2wshOutput, p2shP2wshOutput, p2shOutput } from './Scripts';
+import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2pkhOutput } from './Scripts';
 import ChainClient from '../chain/ChainClient';
+import Wallet from '../wallet/Wallet';
+import { constructClaimTransaction, SwapOutput, SwapOutputType } from './Claim';
 
 type Addresses = {
   bech32: string;
@@ -14,44 +16,78 @@ type Addresses = {
 };
 
 type SwapDetails = {
-  privateKey: Buffer,
-  redeemScript: string;
+  keys: BIP32,
+  redeemScript: Buffer;
   addresses: Addresses;
 };
 
-// TODO: support for more currencies
+// TODO: support for more currencies / networks
 class SwapManager {
 
   // A map between the rHash and SwapDetail
   private swaps = new Map<string, SwapDetails>();
 
-  constructor(
-    private logger: Logger,
-    private walletManager: WalletManager,
-    private btcdClient: ChainClient,
-    private lndClient: LndClient) {}
+  private claimPromises: Promise<void>[] = [];
+
+  constructor(private logger: Logger, private network: Network,
+    private wallet: Wallet, private btcdClient: ChainClient, private lndClient: LndClient) {
+
+    this.btcdClient.on('transaction.relevant', (transactionHex) => {
+      const transaction = Transaction.fromHex(transactionHex);
+
+      // TODO: make more efficient
+      transaction.outs.forEach((output, vout) => {
+        const address = this.encodeAddress(output.script);
+
+        this.swaps.forEach((swapDetails, rHash) => {
+          const swapAddresses = swapDetails.addresses;
+
+          if (Object.values(swapAddresses).includes(address)) {
+            const getSwapOutputType = (): SwapOutputType => {
+              switch (address) {
+                case swapAddresses.bech32:
+                  return SwapOutputType.Bech32;
+
+                case swapAddresses.compatibility:
+                  return SwapOutputType.Compatibility;
+
+                default:
+                  return SwapOutputType.Legacy;
+              }
+            };
+
+            this.claimPromises.push(this.claimSwap(rHash, {
+              vout,
+              value: output.value,
+              script: output.script,
+              type: getSwapOutputType(),
+              txHash: transaction.getHash(),
+            }));
+
+            return;
+          }
+        });
+      });
+    });
+  }
 
   /**
    * Create a Submarine swap
    *
-   * @param network network on which the addresses will be used
    * @param invoice the invoice that should be paid
    * @param refundPublicKey the public key of the refund address
    */
-  public createSwap = async (network: Network, invoice: string, refundPublicKey: string): Promise<Addresses> => {
-    const wallet = this.walletManager.wallets.get('BTC')!;
-
+  public createSwap = async (invoice: string, refundPublicKey: Buffer): Promise<Addresses> => {
     const { blocks } = await this.btcdClient.getInfo();
     const { paymentHash } = await this.lndClient.decodePayReq(invoice);
 
-    const keys = wallet.getNewKeys();
-    const destinationPublicKey = getHexString(keys.publicKey);
+    const keys = this.wallet.getNewKeys();
 
     this.logger.debug(`creating Submarine Swap for rHash: ${paymentHash}`);
 
     const redeemScript = pkRefundSwap(
-      paymentHash,
-      destinationPublicKey,
+      getHexBuffer(paymentHash),
+      keys.publicKey,
       refundPublicKey,
       blocks + 10,
     );
@@ -59,22 +95,19 @@ class SwapManager {
     const addresses = {
       bech32: this.encodeAddress(
         p2wshOutput(redeemScript),
-        network,
       ),
       compatibility: this.encodeAddress(
         p2shP2wshOutput(redeemScript),
-        network,
       ),
       legacy: this.encodeAddress(
         p2shOutput(redeemScript),
-        network,
       ),
     };
 
     this.swaps.set(paymentHash, {
+      keys,
       addresses,
       redeemScript,
-      privateKey: keys.privateKey,
     });
 
     await this.btcdClient.loadTxFiler(false, Object.values(addresses), []);
@@ -82,10 +115,27 @@ class SwapManager {
     return addresses;
   }
 
-  private encodeAddress = (outputScript: Buffer, network: Network) => {
+  private claimSwap = async (rHash: string, utxo: SwapOutput) => {
+    // TODO: get preimage
+    const preimage = Buffer.from('');
+
+    const destinationKeys = this.wallet.getNewKeys();
+    const destinationAddess = p2pkhOutput(
+      crypto.hash160(destinationKeys.publicKey),
+    );
+
+    const { keys, redeemScript } = this.swaps.get(rHash)!;
+
+    const tx = constructClaimTransaction(preimage, keys, utxo, redeemScript, destinationAddess);
+    await this.btcdClient.sendRawTransaction(tx.toHex());
+
+    this.swaps.delete(rHash);
+  }
+
+  private encodeAddress = (outputScript: Buffer) => {
     return address.fromOutputScript(
       outputScript,
-      network,
+      this.network,
     );
   }
 }

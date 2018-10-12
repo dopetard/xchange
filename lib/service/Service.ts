@@ -1,9 +1,10 @@
 import Logger from '../Logger';
 import WalletManager from '../wallet/WalletManager';
-import BtcdClient, { Info as ChainInfo } from '../chain/ChainClient';
+import ChainClient from '../chain/ChainClient';
+import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import LndClient, { Info as LndInfo } from '../lightning/LndClient';
 import SwapManager from '../swap/SwapManager';
-import Networks from '../consts/Networks';
+import { getHexBuffer } from 'lib/Utils';
 
 const packageJson = require('../../package.json');
 
@@ -11,7 +12,7 @@ type ServiceComponents = {
   logger: Logger,
   walletManager: WalletManager,
   swapManager: SwapManager,
-  btcdClient: BtcdClient,
+  btcdClient: ChainClient,
   lndClient: LndClient,
 };
 
@@ -48,9 +49,8 @@ class Service {
    */
   public createSubmarine = async (args: { invoice: string }) => {
     return this.serviceComponents.swapManager.createSwap(
-      Networks.bitcoin_testnet,
       args.invoice,
-      '02fcba7ecf41bc7e1be4ee122d9d22e3333671eb0a3a87b5cdf099d59874e1940f',
+      getHexBuffer('02fcba7ecf41bc7e1be4ee122d9d22e3333671eb0a3a87b5cdf099d59874e1940f'),
     );
   }
 }

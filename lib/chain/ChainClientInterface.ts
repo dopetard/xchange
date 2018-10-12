@@ -1,5 +1,35 @@
 import BaseClient from '../BaseClient';
-import { Info, Block } from '../consts/Types';
+
+type Info = {
+  version: number;
+  protocolversion: number;
+  blocks: number;
+  timeoffset: number;
+  connections: number;
+  proxy: string;
+  difficulty: number;
+  testnet: boolean;
+  relayfee: number;
+};
+
+type Block = {
+  hash: string;
+  confirmations: number;
+  strippedsize: number;
+  size: number;
+  weight: number;
+  height: number;
+  version: number;
+  versionHex: string;
+  merkleroot: string;
+  tx: string[];
+  time: number;
+  nonce: number;
+  bits: string;
+  difficulty: number;
+  previousblockhash: string;
+  nextblockhash: string;
+};
 
 /**
  * A generic interface that can be used for multiple chain nodes and implementations
@@ -17,3 +47,4 @@ interface ChainClientInterface extends BaseClient {
 }
 
 export default ChainClientInterface;
+export { Info, Block };
