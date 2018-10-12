@@ -1,4 +1,3 @@
-import os from 'os';
 import path from 'path';
 import fs from 'fs';
 import toml from 'toml';
@@ -9,6 +8,7 @@ import { deepMerge, resolveHome, splitListen, getServiceDataDir } from './Utils'
 import { RpcConfig } from './RpcClient';
 import { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
+import { XudConfig } from './xud/XudClient';
 import Errors from './consts/Errors';
 
 type ServiceConfigOption = {
@@ -24,6 +24,7 @@ type ConfigType = {
   grpc: GrpcConfig;
   btcd: RpcConfig & ServiceConfigOption;
   ltcd: RpcConfig & ServiceConfigOption;
+  xud: XudConfig & ServiceConfigOption;
   lnd: LndConfig & ServiceConfigOption;
 };
 
@@ -33,6 +34,7 @@ class Config {
   private walliDir: string;
   private btcdDir: string;
   private ltcdDir: string;
+  private xudDir: string;
   private lndDir: string;
 
   /**
@@ -42,6 +44,7 @@ class Config {
     this.walliDir = getServiceDataDir('walli');
     this.btcdDir = getServiceDataDir('btcd');
     this.ltcdDir = getServiceDataDir('ltcd');
+    this.xudDir = getServiceDataDir('xud');
     this.lndDir = getServiceDataDir('lnd');
 
     const { configpath, walletpath, logpath } = this.getWalliDirPaths(this.walliDir);
@@ -74,6 +77,12 @@ class Config {
         configpath: path.join(this.ltcdDir, 'ltcd.conf'),
         certpath: path.join(this.ltcdDir, 'rpc.cert'),
       },
+      xud: {
+        host: '127.0.0.1',
+        port: 8886,
+        configpath: path.join(this.xudDir, 'xud.conf'),
+        certpath: path.join(this.xudDir, 'tls.cert'),
+      },
       lnd: {
         host: '127.0.0.1',
         port: 10009,
@@ -102,13 +111,7 @@ class Config {
     const walliConfigFile = this.resolveConfigPath(args.configPath, this.config.configpath);
 
     if (fs.existsSync(walliConfigFile)) {
-      try {
-        const walliToml = fs.readFileSync(walliConfigFile, 'utf-8');
-        const walliConfig = toml.parse(walliToml);
-        deepMerge(this.config, walliConfig);
-      } catch (error) {
-        throw Errors.COULD_NOT_PARSE_CONFIG('walli', error);
-      }
+      this.parseTomlConfig(walliConfigFile, this.config);
     }
 
     const grpcCert = args.grpc ? args.grpc.certpath : this.config.grpc.certpath;
@@ -121,6 +124,7 @@ class Config {
     const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configpath, this.config.btcd.configpath) : this.config.btcd.configpath;
     const ltcdConfigFile = args.ltcd ? this.resolveConfigPath(args.ltcd.configpath, this.config.ltcd.configpath) : this.config.ltcd.configpath;
     const lndConfigFile = args.lnd ? this.resolveConfigPath(args.lnd.configpath, this.config.lnd.configpath) : this.config.lnd.configpath;
+    const xudConfigFile = args.xud ? this.resolveConfigPath(args.xud.configpath, this.config.xud.configpath) : this.config.xud.configpath;
 
     this.parseIniConfig(
       btcdConfigFile,
@@ -132,6 +136,11 @@ class Config {
       ltcdConfigFile,
       this.config.ltcd,
       false,
+    );
+
+    this.parseTomlConfig(
+      xudConfigFile,
+      this.config.xud,
     );
 
     this.parseIniConfig(
@@ -175,6 +184,17 @@ class Config {
     }
   }
 
+  private parseTomlConfig = (filename: string, mergeTarget: any) => {
+    if (fs.existsSync(filename)) {
+      try {
+        const tomlFile = fs.readFileSync(filename, 'utf-8');
+        const parsedConfig = toml.parse(tomlFile);
+        deepMerge(mergeTarget, parsedConfig);
+      } catch (error) {
+        throw Errors.COULD_NOT_PARSE_CONFIG(filename, error);
+      }
+    }
+  }
   private getWalliDirPaths = (walliDir: string): { configpath: string, walletpath: string, logpath: string } => {
     return {
       configpath: path.join(walliDir, 'walli.conf'),

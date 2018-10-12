@@ -91,6 +91,18 @@ const { argv } = require('yargs')
       describe: 'Path to BTCD conf file',
       type: 'string',
     },
+    'xud.host': {
+      describe: 'Host of the XUD gRPC interface',
+      type: 'string',
+    },
+    'xud.port': {
+      describe: 'Port of the XUD gRPC interface',
+      type: 'number',
+    },
+    'xud.certpath': {
+      describe: 'Path to the certificate of the XUD gRPC interface',
+      type: 'string',
+    },
     'lnd.host': {
       describe: 'Host of the LND gRPC interface',
       type: 'string',
