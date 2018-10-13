@@ -5,9 +5,15 @@ services:
     image: michael1011/btcd
     ports:
       - 18334:18334
+    volumes:
+      - ../../docker/data/btcd:/rpc
+
     command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
   ltcd: 
     image: michael1011/ltcd
     ports:
       - 19334:19334
+    volumes:
+      - ../../docker/data/ltcd:/rpc
+
     command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
