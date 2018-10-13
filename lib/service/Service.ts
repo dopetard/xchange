@@ -4,7 +4,7 @@ import ChainClient from '../chain/ChainClient';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import LndClient, { Info as LndInfo } from '../lightning/LndClient';
 import SwapManager from '../swap/SwapManager';
-import { getHexBuffer } from 'lib/Utils';
+import { getHexBuffer } from '../Utils';
 
 const packageJson = require('../../package.json');
 
@@ -13,12 +13,14 @@ type ServiceComponents = {
   walletManager: WalletManager,
   swapManager: SwapManager,
   btcdClient: ChainClient,
+  ltcdClient: ChainClient,
   lndClient: LndClient,
 };
 
 type WalliInfo = {
   version: string,
   btcdInfo: ChainInfo,
+  ltcdInfo: ChainInfo,
   lndInfo: LndInfo,
 };
 
@@ -31,15 +33,17 @@ class Service {
    * Get general information about walli-server and the nodes it is connected to
    */
   public getInfo = async (): Promise<WalliInfo> => {
-    const { btcdClient, lndClient } = this.serviceComponents;
+    const { btcdClient, lndClient, ltcdClient } = this.serviceComponents;
     const version = packageJson.version;
 
     const btcdInfo = await btcdClient.getInfo();
+    const ltcdInfo = await ltcdClient.getInfo();
     const lndInfo = await lndClient.getLndInfo();
 
     return {
       version,
       btcdInfo,
+      ltcdInfo,
       lndInfo,
     };
   }

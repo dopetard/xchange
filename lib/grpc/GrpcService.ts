@@ -35,20 +35,21 @@ class GrpcService {
         return lnd;
       });
 
-      const getBtcdInfo = ((btcdInfo: ChainInfo): wallirpc.BtcdInfo => {
-        const btcd = new wallirpc.BtcdInfo;
+      const getChainInfo = ((info: ChainInfo): wallirpc.ChainInfo => {
+        const chainInfo = new wallirpc.ChainInfo;
 
-        const { version, protocolversion, blocks, connections, testnet } = btcdInfo;
-        btcd.setVersion(version);
-        btcd.setProtocolversion(protocolversion);
-        btcd.setBlocks(blocks);
-        btcd.setConnections(connections);
-        btcd.setTestnet(testnet);
-        return btcd;
+        const { version, protocolversion, blocks, connections, testnet } = info;
+        chainInfo.setVersion(version);
+        chainInfo.setProtocolversion(protocolversion);
+        chainInfo.setBlocks(blocks);
+        chainInfo.setConnections(connections);
+        chainInfo.setTestnet(testnet);
+        return chainInfo;
       });
 
       response.setLndinfo(getLndInfo(getInfoResponse.lndInfo));
-      response.setBtcdinfo(getBtcdInfo(getInfoResponse.btcdInfo));
+      response.setBtcdinfo(getChainInfo(getInfoResponse.btcdInfo));
+      response.setLtcdinfo(getChainInfo(getInfoResponse.ltcdInfo));
 
       callback(null, response);
 

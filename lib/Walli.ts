@@ -51,6 +51,7 @@ class Walli {
       walletManager: this.walletManager,
       swapManager: this.swapManager,
       btcdClient: this.btcdClient,
+      ltcdClient: this.ltcdClient,
       lndClient: this.lndClient,
     });
 
