@@ -19,4 +19,4 @@ EXPOSE 9735 10009
 COPY --from=builder /go/bin/lncli /bin/
 COPY --from=builder /go/bin/lnd /bin/
 
-ENTRYPOINT ["lnd", "--noseedbackup", "--no-macaroons", "--debuglevel=debug", "--tlscertpath=/rpc/lnd.cert", "--tlskeypath=/rpc/lnd.key"]
+ENTRYPOINT ["lnd", "--noseedbackup", "--no-macaroons", "--debuglevel=debug", "--tlscertpath=/rpc/rpc.cert", "--tlskeypath=/rpc/rpc.key"]
