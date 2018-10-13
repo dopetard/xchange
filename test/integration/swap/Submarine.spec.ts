@@ -6,7 +6,7 @@ import { p2shOutput, p2wshOutput, p2shP2wshOutput } from '../../../lib/swap/Scri
 import { pkRefundSwap } from '../../../lib/swap/Submarine';
 import { constructClaimTransaction, SwapOutputType } from '../../../lib/swap/Claim';
 import Networks from '../../../lib/consts/Networks';
-import { constructTransaction, broadcastAndMine, btcdClient, testAddress, testKeys } from '../chain/BtcdClient.spec';
+import { constructTransaction, broadcastAndMine, btcdClient, testAddress, testKeys } from '../chain/ChainClient.spec';
 
 describe('Submarine Swaps', () => {
   const preimage = getHexBuffer('b5b2dbb1f0663878ecbc20323b58b92c');

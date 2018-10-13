@@ -6,11 +6,8 @@ RUN apk update && apk upgrade && apk add --no-cache git
 # Install the latest version of btcd and it's dependencies
 RUN go get github.com/btcsuite/btcd/...
 
-# Generate the rpc certificate
-RUN mkdir /rpc && gencerts --directory "/rpc"
-
 # Start again with a new image to reduce the size
-FROM alpine as final
+FROM alpine:3.8 as final
 
 # Expose testnet ports (server, rpc)
 EXPOSE 18333 18334
@@ -25,9 +22,4 @@ EXPOSE 18444 18334
 COPY --from=builder /go/bin/btcd /bin/
 COPY --from=builder /go/bin/btcctl /bin/
 
-# Copy the rpc certificate from the builder image and add a volume for them 
-COPY --from=builder /rpc /rpc
-VOLUME ["/rpc"]
-
-ENTRYPOINT ["btcd", "--regtest", "--txindex", \
-"--rpcuser=user", "--rpcpass=user", "--rpccert=/rpc/rpc.cert", "--rpckey=/rpc/rpc.key", "--rpclisten=0.0.0.0"]
+ENTRYPOINT ["btcd", "--txindex", "--rpcuser=user", "--rpcpass=user", "--rpccert=/rpc/btcd.cert", "--rpckey=/rpc/btcd.key", "--rpclisten=0.0.0.0"]

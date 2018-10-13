@@ -5,7 +5,7 @@ import ChainClient from '../../../lib/chain/ChainClient';
 import { ChainType } from '../../../lib/consts/ChainType';
 import Networks from '../../../lib/consts/Networks';
 
-describe('BtcdClient', () => {
+describe('ChainClient', () => {
   it('BtcdClient should connect', async () => {
     await btcdClient.connect();
   });

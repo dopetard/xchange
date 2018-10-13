@@ -6,14 +6,29 @@ services:
     ports:
       - 18334:18334
     volumes:
-      - ../../docker/data/btcd:/rpc
+      - ../../docker/data/:/rpc
 
-    command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
+    command: --regtest --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
+
   ltcd: 
     image: michael1011/ltcd
     ports:
       - 19334:19334
     volumes:
-      - ../../docker/data/ltcd:/rpc
+      - ../../docker/data/:/rpc
 
-    command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
+    command: --regtest
+
+  lnd_btc1:
+    image: michael1011/lnd
+    links:
+      - btcd
+    depends_on:
+      - btcd
+    ports:
+      - 10009:10009
+    volumes:
+      - ../../docker/data/lndBtc1:/rpc
+      - ../../docker/data/:/rpcShared
+
+    command: --bitcoin.active --bitcoin.regtest --btcd.rpchost btcd:18334 --btcd.rpccert /rpcShared/btcd.cert --btcd.rpcuser user --btcd.rpcpass user

@@ -4,9 +4,15 @@ import { getTsString } from './Utils';
 
 class Logger {
 
+  public static disabledLogger = new Logger('', '', true);
+
   // TODO: multiple loggeres for different scopes
   // TODO: 'trace' level instead of 'silly'
-  constructor(filename: string, level: string) {
+  constructor(filename: string, level: string, disabled = false) {
+    if (disabled) {
+      return;
+    }
+
     winston.configure({
       level,
       transports: [
