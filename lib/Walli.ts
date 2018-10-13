@@ -53,6 +53,7 @@ class Walli {
       swapManager: this.swapManager,
       btcdClient: this.btcdClient,
       lndClient: this.lndClient,
+      xudClient: this.xudClient,
     });
 
     this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);
@@ -63,9 +64,9 @@ class Walli {
       this.connectChainClient(this.btcdClient),
       this.connectChainClient(this.ltcdClient),
       this.connectLnd(),
+      this.connectXud(),
     ]);
 
-    await this.connectXud();
     await this.startGrpcServer();
   }
 

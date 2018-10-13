@@ -4,6 +4,7 @@ import BtcdClient, { Info as ChainInfo } from '../chain/ChainClient';
 import LndClient, { Info as LndInfo } from '../lightning/LndClient';
 import SwapManager from '../swap/SwapManager';
 import Networks from '../consts/Networks';
+import XudClient, { XudInfo } from '../xud/XudClient';
 
 const packageJson = require('../../package.json');
 
@@ -13,12 +14,14 @@ type ServiceComponents = {
   swapManager: SwapManager,
   btcdClient: BtcdClient,
   lndClient: LndClient,
+  xudClient: XudClient,
 };
 
 type WalliInfo = {
   version: string,
   btcdInfo: ChainInfo,
   lndInfo: LndInfo,
+  xudInfo: XudInfo,
 };
 
 // TODO: refunds for Submarine Swaps
@@ -30,16 +33,18 @@ class Service {
    * Get general information about walli-server and the nodes it is connected to
    */
   public getInfo = async (): Promise<WalliInfo> => {
-    const { btcdClient, lndClient } = this.serviceComponents;
+    const { btcdClient, lndClient, xudClient } = this.serviceComponents;
     const version = packageJson.version;
 
     const btcdInfo = await btcdClient.getInfo();
     const lndInfo = await lndClient.getLndInfo();
+    const xudInfo = await xudClient.getXudInfo();
 
     return {
       version,
       btcdInfo,
       lndInfo,
+      xudInfo,
     };
   }
 

@@ -13,6 +13,15 @@ type XudConfig = {
   certpath: string;
 };
 
+type XudInfo = {
+  version: string;
+  nodepubkey: string;
+  numpeers: number;
+  lndbtc: boolean;
+  lndltc: boolean;
+  raiden: boolean;
+};
+
 interface GrpcResponse {
   toObject: Function;
 }
@@ -61,13 +70,20 @@ class XudClient extends EventEmitter implements XudInterface {
 
   public getInfo = (): Promise<xudrpc.GetInfoResponse.AsObject> => {
     const request = new xudrpc.GetInfoRequest();
-    return this.unaryCall<xudrpc.GetInfoRequest, xudrpc.GetInfoResponse.AsObject>('getInfo', request)
+    return this.unaryCall<xudrpc.GetInfoRequest, xudrpc.GetInfoResponse.AsObject>('getInfo', request);
   }
 
-  public getXudInfo = async (): Promise<any> => {
+  public getXudInfo = async (): Promise<XudInfo> => {
     try {
       const info = await this.getInfo();
-      return info;
+      return {
+        version: info.version,
+        nodepubkey: info.nodePubKey,
+        numpeers: info.numPeers,
+        lndbtc: info.lndbtc ? true : false,
+        lndltc: info.lndltc ? true : false,
+        raiden: info.raiden ? true : false,
+      };
     } catch (error) {
       this.logger.error(`XUD error: ${error}`);
       return error;
@@ -75,5 +91,5 @@ class XudClient extends EventEmitter implements XudInterface {
   }
 
 }
-export { XudConfig };
+export { XudConfig, XudInfo };
 export default XudClient;

@@ -5,6 +5,7 @@ import * as wallirpc from '../proto/wallirpc_pb';
 import { Info as LndInfo } from '../lightning/LndClient';
 import { Info as ChainInfo } from '../chain/ChainClient';
 import { Addresses } from '../swap/SwapManager';
+import { XudInfo } from '../xud/XudClient';
 
 class GrpcService {
 
@@ -16,7 +17,7 @@ class GrpcService {
 
       const getInfoResponse = await this.service.getInfo();
       response.setVersion(getInfoResponse.version);
-
+      console.log(getInfoResponse.xudInfo);
       const getLndInfo = ((lndInfo: LndInfo): wallirpc.LndInfo => {
         const lnd = new wallirpc.LndInfo();
         const { version, blockheight, error } = lndInfo;
@@ -47,9 +48,21 @@ class GrpcService {
         return btcd;
       });
 
+      const getXudInfo = ((xudInfo: XudInfo) => {
+        const xud = new wallirpc.XudInfo;
+
+        const { version, nodepubkey, lndbtc, lndltc, raiden } = xudInfo;
+        xud.setVersion(version);
+        xud.setNodepubkey(nodepubkey);
+        xud.setLndbtc(lndbtc);
+        xud.setLndltc(lndltc);
+        xud.setRaiden(raiden);
+        return xud;
+      });
+
       response.setLndinfo(getLndInfo(getInfoResponse.lndInfo));
       response.setBtcdinfo(getBtcdInfo(getInfoResponse.btcdInfo));
-
+      response.setXudinfo(getXudInfo(getInfoResponse.xudInfo));
       callback(null, response);
 
     } catch (error) {

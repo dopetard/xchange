@@ -15,6 +15,7 @@ message GetInfoResponse {
   string version = 1;
   BtcdInfo btcdInfo = 2;
   LndInfo lndInfo = 3;
+  XudInfo xudInfo = 4;
 }
 
 message CreateSubmarineRequest {
@@ -50,4 +51,12 @@ message BtcdInfo {
   int32 blocks = 3;
   int32 connections = 5;
   bool testnet = 8;
+}
+
+message XudInfo {
+  string version = 1;
+  string nodepubkey = 2;
+  bool lndbtc = 3;
+  bool lndltc = 4;
+  bool raiden = 5;
 }
