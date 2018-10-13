@@ -42,7 +42,8 @@ describe('SwapUtils', () => {
     testData.forEach((data) => {
       const { flag, signature } = data.args;
 
-      expect(getHexString(encodeSignature(flag, signature))).to.be.equal(data.result);
+      const result = encodeSignature(flag, getHexBuffer(signature));
+      expect(getHexString(result)).to.be.equal(data.result);
     });
   });
 
@@ -59,6 +60,7 @@ describe('SwapUtils', () => {
       result: '76a914944f997c5553a6f3e1028e707c71b5fa0dd3afa788',
     };
 
-    expect(toPushdataScript(testData.args.elements)).to.be.equal(testData.result);
+    const result = toPushdataScript(testData.args.elements);
+    expect(getHexString(result)).to.be.equal(testData.result);
   });
 });

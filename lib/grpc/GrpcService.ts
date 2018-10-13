@@ -3,7 +3,7 @@ import grpc from 'grpc';
 import Service from '../service/Service';
 import * as wallirpc from '../proto/wallirpc_pb';
 import { Info as LndInfo } from '../lightning/LndClient';
-import { Info as ChainInfo } from '../chain/ChainClient';
+import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import { Addresses } from '../swap/SwapManager';
 
 class GrpcService {

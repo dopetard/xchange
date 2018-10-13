@@ -4,47 +4,47 @@
 
 import { script, crypto } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
-import { getHexBuffer, getHexString } from '../Utils';
 
 /**
  * Get a P2WPKH output script
  *
- * @param hash public key hash hex string
+ * @param hash public key hash hex Buffer
  *
- * @returns P2WPKH output script buffer
+ * @returns P2WPKH output script Buffer
  */
-export const p2wpkhOutput = (hash: string) => {
+export const p2wpkhOutput = (hash: Buffer) => {
   return script.compile([
     ops.OP_0,
-    getHexBuffer(hash),
+    hash,
   ]);
 };
 
 /**
  * Encode a P2WSH output script
  *
- * @param scriptHex redeem script hex string
+ * @param scriptHex redeem script hex Buffer
  *
  * @returns P2WSH output script Buffer
  */
-export const p2wshOutput = (scriptHex: string) => {
+export const p2wshOutput = (scriptHex: Buffer) => {
   return script.compile([
     ops.OP_0,
-    crypto.sha256(getHexBuffer(scriptHex)),
+    crypto.sha256(scriptHex),
   ]);
 };
 
 /**
  * Get a P2PKH output script
  *
- * @param hash public key hash hex string
+ * @param hash public key hash hex Buffer
  *
  * @returns P2PKH output script Buffer
  */
-export const p2pkhOutput = (hash: string) => {
+export const p2pkhOutput = (hash: Buffer) => {
   return script.compile([
     ops.OP_DUP,
-    ops.OP_HASH160, getHexBuffer(hash),
+    ops.OP_HASH160,
+    hash,
     ops.OP_EQUALVERIFY,
     ops.OP_CHECKSIG,
   ]);
@@ -53,14 +53,14 @@ export const p2pkhOutput = (hash: string) => {
 /**
  * Encode a P2SH output script
  *
- * @param scriptHex redeem script hex string
+ * @param scriptHex redeem script hex Buffer
  *
  * @returns P2SH output script Buffer
  */
-export const p2shOutput = (scriptHex: string) => {
+export const p2shOutput = (scriptHex: Buffer) => {
   return script.compile([
     ops.OP_HASH160,
-    crypto.hash160(getHexBuffer(scriptHex)),
+    crypto.hash160(scriptHex),
     ops.OP_EQUAL,
   ]);
 };
@@ -68,12 +68,12 @@ export const p2shOutput = (scriptHex: string) => {
 /**
  * Get a P2SH nested P2WSH output script
  *
- * @param scriptHex redeem script hex string
+ * @param scriptHex redeem script hex Buffer
  *
  * @returns P2SH output script Buffer
  */
-export const p2shP2wshOutput = (scriptHex: string) => {
+export const p2shP2wshOutput = (scriptHex: Buffer) => {
   const witness = p2wshOutput(scriptHex);
 
-  return p2shOutput(getHexString(witness));
+  return p2shOutput(witness);
 };

@@ -10,6 +10,7 @@ import Service from './service/Service';
 import WalletManager from './wallet/WalletManager';
 import SwapManager from './swap/SwapManager';
 import ChainClient from './chain/ChainClient';
+import Networks from './consts/Networks';
 
 class Walli {
   private config: ConfigType;
@@ -42,7 +43,8 @@ class Walli {
       this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletpath);
     }
 
-    this.swapManager = new SwapManager(this.logger, this.walletManager, this.btcdClient, this.lndClient);
+    this.swapManager = new SwapManager(this.logger, Networks.bitcoin_regtest,
+      this.walletManager.wallets.get('BTC')!, this.btcdClient, this.lndClient);
 
     this.service = new Service({
       logger: this.logger,
