@@ -3,7 +3,7 @@ import grpc from 'grpc';
 import Service from '../service/Service';
 import * as wallirpc from '../proto/wallirpc_pb';
 import { Info as LndInfo } from '../lightning/LndClient';
-import { Info as ChainInfo } from '../chain/ChainClient';
+import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import { Addresses } from '../swap/SwapManager';
 import { XudInfo } from '../xud/XudClient';
 
@@ -17,7 +17,7 @@ class GrpcService {
 
       const getInfoResponse = await this.service.getInfo();
       response.setVersion(getInfoResponse.version);
-      console.log(getInfoResponse.xudInfo);
+
       const getLndInfo = ((lndInfo: LndInfo): wallirpc.LndInfo => {
         const lnd = new wallirpc.LndInfo();
         const { version, blockheight, error } = lndInfo;
@@ -36,16 +36,16 @@ class GrpcService {
         return lnd;
       });
 
-      const getBtcdInfo = ((btcdInfo: ChainInfo): wallirpc.BtcdInfo => {
-        const btcd = new wallirpc.BtcdInfo;
+      const getChainInfo = ((info: ChainInfo): wallirpc.ChainInfo => {
+        const chainInfo = new wallirpc.ChainInfo;
 
-        const { version, protocolversion, blocks, connections, testnet } = btcdInfo;
-        btcd.setVersion(version);
-        btcd.setProtocolversion(protocolversion);
-        btcd.setBlocks(blocks);
-        btcd.setConnections(connections);
-        btcd.setTestnet(testnet);
-        return btcd;
+        const { version, protocolversion, blocks, connections, testnet } = info;
+        chainInfo.setVersion(version);
+        chainInfo.setProtocolversion(protocolversion);
+        chainInfo.setBlocks(blocks);
+        chainInfo.setConnections(connections);
+        chainInfo.setTestnet(testnet);
+        return chainInfo;
       });
 
       const getXudInfo = ((xudInfo: XudInfo) => {
@@ -61,8 +61,10 @@ class GrpcService {
       });
 
       response.setLndinfo(getLndInfo(getInfoResponse.lndInfo));
-      response.setBtcdinfo(getBtcdInfo(getInfoResponse.btcdInfo));
       response.setXudinfo(getXudInfo(getInfoResponse.xudInfo));
+      response.setBtcdinfo(getChainInfo(getInfoResponse.btcdInfo));
+      response.setLtcdinfo(getChainInfo(getInfoResponse.ltcdInfo));
+
       callback(null, response);
 
     } catch (error) {

@@ -13,9 +13,10 @@ service Walli {
 message GetInfoRequest {}
 message GetInfoResponse {
   string version = 1;
-  BtcdInfo btcdInfo = 2;
-  LndInfo lndInfo = 3;
-  XudInfo xudInfo = 4;
+  ChainInfo btcdInfo = 2;
+  ChainInfo ltcdInfo = 3;
+  LndInfo lndInfo = 4;
+  XudInfo xudInfo = 5;
 }
 
 message CreateSubmarineRequest {
@@ -45,7 +46,7 @@ message LndChannels {
   int32 pending = 3;
 }
 
-message BtcdInfo {
+message ChainInfo {
   int32 version = 1;
   int32 protocolversion = 2;
   int32 blocks = 3;

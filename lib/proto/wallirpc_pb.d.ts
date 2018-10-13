@@ -29,8 +29,14 @@ export class GetInfoResponse extends jspb.Message {
 
     hasBtcdinfo(): boolean;
     clearBtcdinfo(): void;
-    getBtcdinfo(): BtcdInfo | undefined;
-    setBtcdinfo(value?: BtcdInfo): void;
+    getBtcdinfo(): ChainInfo | undefined;
+    setBtcdinfo(value?: ChainInfo): void;
+
+
+    hasLtcdinfo(): boolean;
+    clearLtcdinfo(): void;
+    getLtcdinfo(): ChainInfo | undefined;
+    setLtcdinfo(value?: ChainInfo): void;
 
 
     hasLndinfo(): boolean;
@@ -58,7 +64,8 @@ export class GetInfoResponse extends jspb.Message {
 export namespace GetInfoResponse {
     export type AsObject = {
         version: string,
-        btcdinfo?: BtcdInfo.AsObject,
+        btcdinfo?: ChainInfo.AsObject,
+        ltcdinfo?: ChainInfo.AsObject,
         lndinfo?: LndInfo.AsObject,
         xudinfo?: XudInfo.AsObject,
     }
@@ -203,7 +210,7 @@ export namespace LndChannels {
     }
 }
 
-export class BtcdInfo extends jspb.Message { 
+export class ChainInfo extends jspb.Message { 
     getVersion(): number;
     setVersion(value: number): void;
 
@@ -221,16 +228,16 @@ export class BtcdInfo extends jspb.Message {
 
 
     serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): BtcdInfo.AsObject;
-    static toObject(includeInstance: boolean, msg: BtcdInfo): BtcdInfo.AsObject;
+    toObject(includeInstance?: boolean): ChainInfo.AsObject;
+    static toObject(includeInstance: boolean, msg: ChainInfo): ChainInfo.AsObject;
     static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
     static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: BtcdInfo, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): BtcdInfo;
-    static deserializeBinaryFromReader(message: BtcdInfo, reader: jspb.BinaryReader): BtcdInfo;
+    static serializeBinaryToWriter(message: ChainInfo, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): ChainInfo;
+    static deserializeBinaryFromReader(message: ChainInfo, reader: jspb.BinaryReader): ChainInfo;
 }
 
-export namespace BtcdInfo {
+export namespace ChainInfo {
     export type AsObject = {
         version: number,
         protocolversion: number,

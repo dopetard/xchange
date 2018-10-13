@@ -6,7 +6,6 @@ import { script, crypto } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
 import * as bip65 from 'bip65';
 import { toPushdataScript } from './SwapUtils';
-import { getHexBuffer } from '../Utils';
 
 /**
  * Generate a Submarine Swap redeem script with a public key refund path
@@ -18,25 +17,24 @@ import { getHexBuffer } from '../Utils';
  *
  * @returns redeem script
  */
-export const pkRefundSwap = (preimageHash: string, destinationPublicKey: string, refundPublicKey: string, timeoutBlockHeight: number) => {
+export const pkRefundSwap = (preimageHash: Buffer, destinationPublicKey: Buffer, refundPublicKey: Buffer, timeoutBlockHeight: number) => {
   const cltv = script.number.encode(
     bip65.encode({ blocks: timeoutBlockHeight }),
   );
 
   return toPushdataScript([
-    ops.OP_HASH160,
-    crypto.ripemd160(getHexBuffer(preimageHash)),
+    ops.OP_SHA256,
+    preimageHash,
     ops.OP_EQUAL,
 
     ops.OP_IF,
-    getHexBuffer(destinationPublicKey),
+    destinationPublicKey,
 
     ops.OP_ELSE,
     cltv,
     ops.OP_CHECKLOCKTIMEVERIFY,
     ops.OP_DROP,
-    getHexBuffer(refundPublicKey),
-
+    refundPublicKey,
     ops.OP_ENDIF,
 
     ops.OP_CHECKSIG,
@@ -53,20 +51,20 @@ export const pkRefundSwap = (preimageHash: string, destinationPublicKey: string,
  *
  * @returns redeem script
  */
-export const pkHashRefundSwap = (preimageHash: string, destinationPublicKey: string, refundPublicKeyHash: string, timeoutBlockHeight: number) => {
+export const pkHashRefundSwap = (preimageHash: Buffer, destinationPublicKey: Buffer, refundPublicKeyHash: Buffer, timeoutBlockHeight: number) => {
   const cltv = script.number.encode(
     bip65.encode({ blocks: timeoutBlockHeight }),
   );
 
   return toPushdataScript([
     ops.OP_DUP,
-    ops.OP_HASH160,
-    crypto.ripemd160(getHexBuffer(preimageHash)),
+    ops.OP_SHA256,
+    preimageHash,
     ops.OP_EQUAL,
 
     ops.OP_IF,
     ops.OP_DROP,
-    getHexBuffer(destinationPublicKey),
+    destinationPublicKey,
 
     ops.OP_ELSE,
     cltv,
@@ -74,7 +72,7 @@ export const pkHashRefundSwap = (preimageHash: string, destinationPublicKey: str
     ops.OP_DROP,
     ops.OP_DUP,
     ops.OP_HASH160,
-    getHexBuffer(refundPublicKeyHash),
+    refundPublicKeyHash,
     ops.OP_EQUALVERIFY,
 
     ops.OP_ENDIF,
