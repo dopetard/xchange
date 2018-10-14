@@ -22,7 +22,7 @@ EXPOSE 18444 18334
 COPY --from=builder /go/bin/btcd /bin/
 COPY --from=builder /go/bin/btcctl /bin/
 
-# Copy the rpc certificate from the data directory 
+# Copy the rpc certificates from the data directory 
 COPY data /rpc
 
 ENTRYPOINT ["btcd", "--txindex", "--rpcuser=user", "--rpcpass=user", "--rpccert=/rpc/rpc.cert", "--rpckey=/rpc/rpc.key", "--rpclisten=0.0.0.0"]

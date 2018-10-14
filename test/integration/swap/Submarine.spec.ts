@@ -6,7 +6,7 @@ import { p2shOutput, p2wshOutput, p2shP2wshOutput } from '../../../lib/swap/Scri
 import { pkRefundSwap } from '../../../lib/swap/Submarine';
 import { constructClaimTransaction, SwapOutputType } from '../../../lib/swap/Claim';
 import Networks from '../../../lib/consts/Networks';
-import { constructTransaction, broadcastAndMine, btcdClient, testAddress, testKeys } from '../chain/ChainClient.spec';
+import { btcManager, btcdClient, btcKeys, btcAddress } from '../chain/ChainClient.spec';
 
 describe('Submarine Swaps', () => {
   const preimage = getHexBuffer('b5b2dbb1f0663878ecbc20323b58b92c');
@@ -18,11 +18,11 @@ describe('Submarine Swaps', () => {
   const executeSwap = async (outputFunction: (scriptHex: Buffer) => Buffer, swapOutputType: SwapOutputType) => {
     const { blocks } = await btcdClient.getInfo();
 
-    const redeemScript = pkRefundSwap(preimageHash, swapKeys.publicKey, testKeys.publicKey, blocks + 1000);
-    const swapAddress = address.fromOutputScript(outputFunction(redeemScript), Networks.bitcoin_regtest);
+    const redeemScript = pkRefundSwap(preimageHash, swapKeys.publicKey, btcKeys.publicKey, blocks + 1000);
+    const swapAddress = address.fromOutputScript(outputFunction(redeemScript), Networks.bitcoinRegtest);
 
-    const transaction = constructTransaction(swapAddress, 10000);
-    await broadcastAndMine(transaction.toHex());
+    const transaction = btcManager.constructTransaction(swapAddress, 10000);
+    await btcManager.broadcastAndMine(transaction.toHex());
 
     const swapVout = 1;
     const transactionOutput = transaction.outs[swapVout];
@@ -34,7 +34,7 @@ describe('Submarine Swaps', () => {
       value: transactionOutput.value,
     };
 
-    const destinationScript = address.toOutputScript(testAddress, Networks.bitcoin_regtest);
+    const destinationScript = address.toOutputScript(btcAddress, Networks.bitcoinRegtest);
     const claimTransaction = constructClaimTransaction(
       preimage,
       swapKeys,
@@ -43,7 +43,7 @@ describe('Submarine Swaps', () => {
       destinationScript,
     );
 
-    await broadcastAndMine(claimTransaction.toHex());
+    await btcManager.broadcastAndMine(claimTransaction.toHex());
   };
 
   before(async () => {

@@ -209,7 +209,7 @@ class LndClient extends EventEmitter implements LightningClient {
    * Creates a new address
    * @param addressType type of the address
    */
-  public newAddress = (addressType = lndrpc.NewAddressRequest.AddressType.WITNESS_PUBKEY_HASH): Promise<lndrpc.NewAddressResponse.AsObject> => {
+  public newAddress = (addressType = lndrpc.NewAddressRequest.AddressType.NESTED_PUBKEY_HASH): Promise<lndrpc.NewAddressResponse.AsObject> => {
     const request = new lndrpc.NewAddressRequest();
     request.setType(addressType);
 

@@ -2,16 +2,18 @@ import { expect } from 'chai';
 import path from 'path';
 import Logger from '../../../lib/Logger';
 import LndClient from '../../../lib/lightning/LndClient';
-import { constructTransaction, broadcastAndMine, btcdClient } from '../chain/ChainClient.spec';
+import { btcdClient, ltcdClient, btcManager  } from '../chain/ChainClient.spec';
 
 describe('LndClient', () => {
   before(async () => {
     await btcdClient.connect();
+    await ltcdClient.connect();
   });
 
   const channelCapacity = 10000000;
 
   let lndBtc2PubKey: string;
+  let lndLtc2PubKey: string;
 
   it('LndClients should connect', async () => {
     // TODO: make this dynamic
@@ -21,27 +23,34 @@ describe('LndClient', () => {
     await lndBtcClient1.connect();
     await lndBtcClient2.connect();
 
+    await lndLtcClient1.connect();
+    await lndLtcClient2.connect();
+
     // Connect the LNDs to eachother
     const lndBtc2Info = await lndBtcClient2.getInfo();
     await lndBtcClient1.connectPeer(lndBtc2Info.identityPubkey, 'lnd:9735');
 
+    const lndLtc2Info = await lndLtcClient2.getInfo();
+    await lndLtcClient1.connectPeer(lndLtc2Info.identityPubkey, 'lnd:9735');
+
     lndBtc2PubKey = lndBtc2Info.identityPubkey;
+    lndLtc2PubKey = lndLtc2Info.identityPubkey;
   }).timeout(10000);
 
   it('LndClients should fund get funds', async () => {
-    const newAddress = await lndBtcClient1.newAddress();
-
-    const transaction = constructTransaction(newAddress.address, channelCapacity * 10);
-    await broadcastAndMine(transaction.toHex());
+    const btcAddress = await lndBtcClient1.newAddress();
+    const btcTxn = btcManager.constructTransaction(btcAddress.address, channelCapacity * 10);
+    await btcManager.broadcastAndMine(btcTxn.toHex());
 
     // Sleep for 1 seconds to let the LNDs sync
     await sleep(1);
   }).timeout(50000);
 
-  it('LndClients should open channel to eachother', async () => {
+  it('LndClients should open a channel to eachother', async () => {
     expect(lndBtc2PubKey).to.not.be.undefined;
+    expect(lndLtc2PubKey).to.not.be.undefined;
 
-    await lndBtcClient1.openChannel(lndBtc2PubKey, 10000000, channelCapacity / 2);
+    await lndBtcClient1.openChannel(lndBtc2PubKey, channelCapacity, channelCapacity / 2);
     await btcdClient.generate(1);
   });
 
@@ -49,7 +58,11 @@ describe('LndClient', () => {
     await lndBtcClient1.close();
     await lndBtcClient2.close();
 
+    await lndLtcClient1.close();
+    await lndLtcClient2.close();
+
     await btcdClient.disconnect();
+    await ltcdClient.disconnect();
   });
 });
 
@@ -59,14 +72,28 @@ const sleep = (seconds: number) => {
   });
 };
 
+const certpath = path.join('docker', 'data', 'lnd', 'tls.cert');
+
 export const lndBtcClient1 = new LndClient(Logger.disabledLogger, {
+  certpath,
   host: 'localhost',
   port: 10009,
-  certpath: path.join('docker', 'data', 'lnd', 'tls.cert'),
 });
 
 export const lndBtcClient2 = new LndClient(Logger.disabledLogger, {
+  certpath,
   host: 'localhost',
   port: 10010,
-  certpath: path.join('docker', 'data', 'lnd', 'tls.cert'),
+});
+
+export const lndLtcClient1 = new LndClient(Logger.disabledLogger, {
+  certpath,
+  host: 'localhost',
+  port: 11009,
+});
+
+export const lndLtcClient2 = new LndClient(Logger.disabledLogger, {
+  certpath,
+  host: 'localhost',
+  port: 11010,
 });

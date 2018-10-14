@@ -13,7 +13,7 @@ services:
     ports:
       - 19334:19334
 
-    command: --regtest
+    command: --regtest --miningaddr mifUEo6HVnUf66n8tdRVrp7KWmKLMpHA6y
 
   lnd_btc1:
     image: michael1011/lnd
@@ -37,3 +37,26 @@ services:
       - 10010:10009
 
     command: --bitcoin.active --bitcoin.regtest --btcd.rpchost btcd:18334 --btcd.rpccert /rpc/rpc.cert --btcd.rpcuser user --btcd.rpcpass user
+
+  lnd_ltc1:
+    image: michael1011/lnd
+    links:
+      - ltcd
+      - lnd_ltc2:lnd
+    depends_on:
+      - ltcd
+    ports:
+      - 11009:10009
+
+    command: --litecoin.active --litecoin.regtest --ltcd.rpchost btcd:18334 --ltcd.rpccert /rpc/rpc.cert --ltcd.rpcuser user --ltcd.rpcpass user
+
+  lnd_ltc2:
+    image: michael1011/lnd
+    links:
+      - ltcd
+    depends_on:
+      - ltcd
+    ports:
+      - 11010:10009
+
+    command: --litecoin.active --litecoin.regtest --ltcd.rpchost btcd:18334 --ltcd.rpccert /rpc/rpc.cert --ltcd.rpcuser user --ltcd.rpcpass user
