@@ -1,11 +1,10 @@
 import { networks } from 'bitcoinjs-lib';
 
-const litecoin = {
-  messagePrefix: '\\x19Litecoin Signed Message:\n',
-  bip32: {
-    private: 27106558,
-    public: 27108450,
-  },
+const litecoinPrefix = '\\x19Litecoin Signed Message:\n';
+
+const testnetBip32 = {
+  private: 0x019D9CFE,
+  public: 0x019DA462,
 };
 
 const Networks = {
@@ -13,38 +12,38 @@ const Networks = {
   bitcoinTestnet: networks.testnet,
   bitcoinRegtest: {
     messagePrefix: '\\x18Bitcoin Signed Message:\n',
-    bip32: {
-      private: 70615956,
-      public: 70617039,
-    },
+    bip32: testnetBip32,
     bech32: 'bcrt',
-    scriptHash: 196,
-    pubKeyHash: 111,
-    wif: 239,
+    scriptHash: 0xc4,
+    pubKeyHash: 0x6f,
+    wif: 0xef,
   },
   litecoinMainnet: {
-    messagePrefix: litecoin.messagePrefix,
-    bip32: litecoin.bip32,
+    messagePrefix: litecoinPrefix,
+    bip32: {
+      private: 0x019d9cfe,
+      public: 0x019da462,
+    },
     bech32: 'ltc',
-    scriptHash: 50,
-    pubKeyHash: 48,
-    wif: 176,
+    scriptHash: 0x32,
+    pubKeyHash: 0x30,
+    wif: 0xb0,
   },
   litecoinTestnet: {
-    messagePrefix: litecoin.messagePrefix,
-    bip32: litecoin.bip32,
+    messagePrefix: litecoinPrefix,
+    bip32: testnetBip32,
     bech32: 'tltc',
-    scriptHash: 58,
-    pubKeyHash: 111,
-    wif: 239,
+    scriptHash: 0x3a,
+    pubKeyHash: 0x6f,
+    wif: 0xef,
   },
   litecoinRegtest: {
-    messagePrefix: litecoin.messagePrefix,
-    bip32: litecoin.bip32,
+    messagePrefix: litecoinPrefix,
+    bip32: testnetBip32,
     bech32: 'tltc',
-    scriptHash: 58,
-    pubKeyHash: 111,
-    wif: 239,
+    scriptHash: 0xc4,
+    pubKeyHash: 0x6f,
+    wif: 0xef,
   },
 };
 

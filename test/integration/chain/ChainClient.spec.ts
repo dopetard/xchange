@@ -22,17 +22,14 @@ describe('ChainClient', () => {
       hash: transaction.getId(),
       value: transaction.outs[0].value,
     });
-  });
+  }).timeout(10000);
 
   it('LtcdClient should connect', async () => {
     await ltcdClient.connect();
-  });
 
-  it('LtcdClient should activate SegWit', async () => {
-    // 433 blocks are needed to active SegWit on the LTCD regtest network
-    const blockHashes = await ltcdClient.generate(433);
+    const blockHash = await ltcdClient.generate(1);
 
-    const block = await ltcdClient.getBlock(blockHashes[0]);
+    const block = await ltcdClient.getBlock(blockHash[0]);
     const rawTransaction = await ltcdClient.getRawTransaction(block.tx[0]);
     const transaction = Transaction.fromHex(rawTransaction);
 
@@ -77,7 +74,11 @@ type Utxo = {
 };
 
 class UtxoManager {
-  constructor(private chainClient: ChainClient, private network: Network, private utxo: Utxo) {}
+  private keys: ECPair;
+
+  constructor(private chainClient: ChainClient, private network: Network, private utxo: Utxo) {
+    this.keys = network === Networks.bitcoinRegtest ? btcKeys : ltcKeys;
+  }
 
   public constructTransaction = (destinationAddress: string, value: number): Transaction => {
     const tx = new TransactionBuilder(this.network);
@@ -90,7 +91,7 @@ class UtxoManager {
 
     tx.addOutput(destinationAddress, value);
 
-    tx.sign(0, btcKeys);
+    tx.sign(0, this.keys);
 
     const transaction = tx.build();
 
@@ -111,8 +112,8 @@ class UtxoManager {
 export const btcKeys = ECPair.fromWIF('cQ4crx5qPv7NDdj41ehumfB9f89zyWdggy8JnNDjKVQwsLswahd4', Networks.bitcoinRegtest);
 export const btcAddress = 'msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs';
 
-export const ltcKeys = ECPair.fromWIF('cNVduvzzvJMuL9h8niPNtDWoipq7wmhFQn68zFuavaoMnCfsPy3m', Networks.litecoinRegtest);
-export const ltcAddress = 'mifUEo6HVnUf66n8tdRVrp7KWmKLMpHA6y';
+export const ltcKeys = ECPair.fromWIF('cPnCzwHtVipcX7hb72mkkMMf4MSrknHbRnff2LDutSB8AxvxLaby', Networks.litecoinRegtest);
+export const ltcAddress = 'mysNm7METD1JffsC4E1ZW7EcPapmVm9AK4';
 
 export const btcdClient = new ChainClient({
   host: 'localhost',
