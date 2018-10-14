@@ -19,4 +19,7 @@ EXPOSE 9735 10009
 COPY --from=builder /go/bin/lncli /bin/
 COPY --from=builder /go/bin/lnd /bin/
 
-ENTRYPOINT ["lnd", "--noseedbackup", "--no-macaroons", "--debuglevel=debug", "--tlscertpath=/rpc/rpc.cert", "--tlskeypath=/rpc/rpc.key"]
+# Copy the LND rpc certificate from the data directory 
+COPY data /rpc
+
+ENTRYPOINT ["lnd", "--noseedbackup", "--no-macaroons", "--debuglevel=debug", "--tlscertpath=/rpc/lnd/tls.cert", "--tlskeypath=/rpc/lnd/tls.key", "--rpclisten=0.0.0.0", "--listen=0.0.0.0:9735"]

@@ -68,7 +68,7 @@ export const btcdClient = new ChainClient({
   port: 18334,
   rpcuser: 'user',
   rpcpass: 'user',
-  certpath: path.join('docker', 'data', 'btcd', 'rpc.cert'),
+  certpath: path.join('docker', 'data', 'rpc.cert'),
 }, ChainType.BTC);
 
 export const ltcdClient = new ChainClient({
@@ -76,7 +76,7 @@ export const ltcdClient = new ChainClient({
   port: 19334,
   rpcpass: 'user',
   rpcuser: 'user',
-  certpath: path.join('docker', 'data', 'ltcd', 'rpc.cert'),
+  certpath: path.join('docker', 'data', 'rpc.cert'),
 }, ChainType.LTC);
 
 export const constructTransaction = (destinationAddress: string, value: number): Transaction => {

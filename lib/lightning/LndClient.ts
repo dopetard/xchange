@@ -191,6 +191,50 @@ class LndClient extends EventEmitter implements LightningClient {
   }
 
   /**
+   * Establish a connection to a remote peer
+   * @param pubKey identity public key of the remote peer
+   * @param host host of the remote peer
+   */
+  public connectPeer = (pubKey: string, host: string): Promise<lndrpc.ConnectPeerResponse.AsObject> => {
+    const request = new lndrpc.ConnectPeerRequest();
+    const address = new lndrpc.LightningAddress();
+    address.setPubkey(pubKey);
+    address.setHost(host);
+    request.setAddr(address);
+
+    return this.unaryCall<lndrpc.ConnectPeerRequest, lndrpc.ConnectPeerResponse.AsObject>('connectPeer', request);
+  }
+
+  /**
+   * Creates a new address
+   * @param addressType type of the address
+   */
+  public newAddress = (addressType = lndrpc.NewAddressRequest.AddressType.WITNESS_PUBKEY_HASH): Promise<lndrpc.NewAddressResponse.AsObject> => {
+    const request = new lndrpc.NewAddressRequest();
+    request.setType(addressType);
+
+    return this.unaryCall<lndrpc.NewAddressRequest, lndrpc.NewAddressResponse.AsObject>('newAddress', request);
+  }
+
+  /**
+   * Attempts to open a channel to a remote peer
+   * @param pubKey identity public key of the remote peer
+   * @param fundingAmount the number of satohis the local wallet should commit
+   * @param pushSat the number of satoshis that should be pushed to the remote side
+   */
+  public openChannel = (pubKey: string, fundingAmount: number, pushSat?: number): Promise<lndrpc.ChannelPoint.AsObject> => {
+    const request = new lndrpc.OpenChannelRequest();
+    request.setNodePubkeyString(pubKey);
+    request.setLocalFundingAmount(fundingAmount);
+
+    if (pushSat) {
+      request.setPushSat(pushSat);
+    }
+
+    return this.unaryCall<lndrpc.OpenChannelRequest, lndrpc.ChannelPoint.AsObject>('openChannelSync', request);
+  }
+
+  /**
    * Subscribe to events for when invoices are settled.
    */
   private subscribeInvoices = (): void => {
