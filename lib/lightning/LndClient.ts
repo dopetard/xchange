@@ -14,7 +14,7 @@ type LndConfig = {
   host: string;
   port: number;
   certpath: string;
-  macaroonpath: string;
+  macaroonpath?: string;
 };
 
 /** General information about the state of this lnd client. */
@@ -65,21 +65,32 @@ class LndClient extends EventEmitter implements LightningClient {
 
     const { host, port, certpath, macaroonpath } = config;
 
-    if (fs.existsSync(macaroonpath) && fs.existsSync(certpath)) {
+    if (fs.existsSync(certpath)) {
       const uri = `${host}:${port}`;
 
       const lndCert = fs.readFileSync(certpath);
       const credentials = grpc.credentials.createSsl(lndCert);
 
-      const adminMacaroon = fs.readFileSync(macaroonpath);
       this.meta = new grpc.Metadata();
-      this.meta.add('macaroon', adminMacaroon.toString('hex'));
+
+      if (macaroonpath) {
+        if (fs.existsSync(macaroonpath)) {
+          const adminMacaroon = fs.readFileSync(macaroonpath);
+          this.meta.add('macaroon', adminMacaroon.toString('hex'));
+        } else {
+          this.throwFilesNotFound();
+        }
+      }
 
       this.lightning = new GrpcClient(uri, credentials);
     } else {
-      this.logger.error('could not find required files for LND');
-      throw(this.disconnectedError);
+      this.throwFilesNotFound();
     }
+  }
+
+  private throwFilesNotFound = () => {
+    this.logger.error('could not find required files for LND');
+    throw(this.disconnectedError);
   }
 
   public connect = async () => {
@@ -103,14 +114,6 @@ class LndClient extends EventEmitter implements LightningClient {
         }
       });
     });
-  }
-
-  /**
-   * Return general information concerning the lightning node including it’s identity pubkey, alias, the chains it
-   * is connected to, and information concerning the number of open+pending channels.
-   */
-  public getInfo = (): Promise<lndrpc.GetInfoResponse.AsObject> => {
-    return this.unaryCall<lndrpc.GetInfoRequest, lndrpc.GetInfoResponse.AsObject>('getInfo', new lndrpc.GetInfoRequest());
   }
 
   public getLndInfo = async (): Promise<Info> => {
@@ -150,6 +153,14 @@ class LndClient extends EventEmitter implements LightningClient {
   }
 
   /**
+   * Return general information concerning the lightning node including it’s identity pubkey, alias, the chains it
+   * is connected to, and information concerning the number of open+pending channels.
+   */
+  public getInfo = (): Promise<lndrpc.GetInfoResponse.AsObject> => {
+    return this.unaryCall<lndrpc.GetInfoRequest, lndrpc.GetInfoResponse.AsObject>('getInfo', new lndrpc.GetInfoRequest());
+  }
+
+  /**
    * Attempt to add a new invoice to the lnd invoice database.
    * @param value the value of this invoice in satoshis
    */
@@ -180,6 +191,50 @@ class LndClient extends EventEmitter implements LightningClient {
   }
 
   /**
+   * Establish a connection to a remote peer
+   * @param pubKey identity public key of the remote peer
+   * @param host host of the remote peer
+   */
+  public connectPeer = (pubKey: string, host: string): Promise<lndrpc.ConnectPeerResponse.AsObject> => {
+    const request = new lndrpc.ConnectPeerRequest();
+    const address = new lndrpc.LightningAddress();
+    address.setPubkey(pubKey);
+    address.setHost(host);
+    request.setAddr(address);
+
+    return this.unaryCall<lndrpc.ConnectPeerRequest, lndrpc.ConnectPeerResponse.AsObject>('connectPeer', request);
+  }
+
+  /**
+   * Creates a new address
+   * @param addressType type of the address
+   */
+  public newAddress = (addressType = lndrpc.NewAddressRequest.AddressType.NESTED_PUBKEY_HASH): Promise<lndrpc.NewAddressResponse.AsObject> => {
+    const request = new lndrpc.NewAddressRequest();
+    request.setType(addressType);
+
+    return this.unaryCall<lndrpc.NewAddressRequest, lndrpc.NewAddressResponse.AsObject>('newAddress', request);
+  }
+
+  /**
+   * Attempts to open a channel to a remote peer
+   * @param pubKey identity public key of the remote peer
+   * @param fundingAmount the number of satohis the local wallet should commit
+   * @param pushSat the number of satoshis that should be pushed to the remote side
+   */
+  public openChannel = (pubKey: string, fundingAmount: number, pushSat?: number): Promise<lndrpc.ChannelPoint.AsObject> => {
+    const request = new lndrpc.OpenChannelRequest();
+    request.setNodePubkeyString(pubKey);
+    request.setLocalFundingAmount(fundingAmount);
+
+    if (pushSat) {
+      request.setPushSat(pushSat);
+    }
+
+    return this.unaryCall<lndrpc.OpenChannelRequest, lndrpc.ChannelPoint.AsObject>('openChannelSync', request);
+  }
+
+  /**
    * Subscribe to events for when invoices are settled.
    */
   private subscribeInvoices = (): void => {
@@ -192,7 +247,9 @@ class LndClient extends EventEmitter implements LightningClient {
         }
       })
       .on('error', (error) => {
-        this.logger.error(`Invoice subscription ended: ${error}`);
+        if (error.message !== '1 CANCELLED: Cancelled') {
+          this.logger.error(`Invoice subscription ended: ${error}`);
+        }
       });
   }
 }

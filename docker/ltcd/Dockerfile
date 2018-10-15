@@ -1,24 +1,28 @@
-# This file is based on the repository github.com/Roasbeef/btcd-in-a-box created by Roasbeef
+FROM golang:1.11.1-alpine as builder
 
-FROM golang:1.11.1-alpine3.8
-LABEL maintainer="Olaoluwa Osuntokun <laolu32@gmail.com>"
-
-# Install Git
+# Install git and make
 RUN apk update && apk upgrade && apk add --no-cache git
 
-# Grab and install the latest version of btcd and it's dependencies.
+# Install the latest version of ltcd and it's dependencies
 RUN go get github.com/ltcsuite/ltcd/...
 
-# testnet wallet, p2p, and rpc
-# regtest rpc port is the same
-EXPOSE 19332 19335 19334
+# Start again with a new image to reduce the size
+FROM alpine:3.8 as final
 
-# simnet wallet, p2p and rpc
-EXPOSE 18332 18555 18556
+# Expose testnet ports (server, rpc)
+EXPOSE 19335 19334
 
-# Copy files from "btcd" folder into container
-COPY data /root/.ltcd
+# Expose simnet ports (server, rpc)
+EXPOSE 18555 18556
 
-WORKDIR /root
+# Expose regtest ports (server, rpc)
+EXPOSE 18444 19334
 
-ENTRYPOINT ["ltcd", "--regtest", "--configfile=.ltcd/ltcd.conf"]
+# Copy the binaries from the builder image
+COPY --from=builder /go/bin/ltcd /bin/
+COPY --from=builder /go/bin/ltcctl /bin/
+
+# Copy the rpc certificates from the data directory 
+COPY data /rpc
+
+ENTRYPOINT ["ltcd", "--txindex", "--rpcuser=user", "--rpcpass=user", "--rpccert=/rpc/rpc.cert", "--rpckey=/rpc/rpc.key", "--rpclisten=0.0.0.0"]

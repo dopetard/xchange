@@ -5,9 +5,35 @@ services:
     image: michael1011/btcd
     ports:
       - 18334:18334
-    command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
+
+    command: --regtest --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
+
   ltcd: 
     image: michael1011/ltcd
     ports:
       - 19334:19334
-    command: --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
+
+    command: --regtest --miningaddr mysNm7METD1JffsC4E1ZW7EcPapmVm9AK4
+
+  lnd_btc1:
+    image: michael1011/lnd
+    links:
+      - btcd
+      - lnd_btc2:lnd
+    depends_on:
+      - btcd
+    ports:
+      - 10009:10009
+
+    command: --bitcoin.active --bitcoin.regtest --btcd.rpchost btcd:18334 --btcd.rpccert /rpc/rpc.cert --btcd.rpcuser user --btcd.rpcpass user
+
+  lnd_btc2:
+    image: michael1011/lnd
+    links:
+      - btcd
+    depends_on:
+      - btcd
+    ports:
+      - 10010:10009
+
+    command: --bitcoin.active --bitcoin.regtest --btcd.rpchost btcd:18334 --btcd.rpccert /rpc/rpc.cert --btcd.rpcuser user --btcd.rpcpass user
