@@ -11,7 +11,7 @@ describe('Claim', () => {
   const preimage = getHexBuffer('b5b2dbb1f0663878ecbc20323b58b92c');
   const swapKeys = fromBase58('xprv9xgxR6htMdXUXGipynZp1janNrWNYJxaz2o4tH9fdtZqcF26BX5VB88GSM5KgZHWCyAyb8FZpQik2UET84CHfGWXFMG5zWWjmtDMgqYuo19');
   const redeemScript = getHexBuffer('a914a0738c92fde6361f09d28950c7bd0d2bf32b34be87632103be4a251dae719d565ce1d6a7a5787df99fc1ecc1f6e847567981a686f32abce167027802b1752103f7877d4ae985bb30b6f150ad6b6b9935c342432beed1a4781347b169c1e2417368ac');
-  const destinationAddress = address.toOutputScript('bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqdku202', Networks.bitcoin_regtest);
+  const destinationAddress = address.toOutputScript('bcrt1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqdku202', Networks.bitcoinRegtest);
 
   const txHash = getHexBuffer('285d227e2823c679c224b4d562a9b5b5b7b927badd483df9f4225c6fc761d754');
   const vout = 0;
