@@ -56,6 +56,19 @@ class XudClient extends EventEmitter implements XudInterface {
     }
   }
 
+  public close = async () => {
+    const request = new xudrpc.ShutdownRequest();
+    this.xud.shutdown(request, (err, res) => {
+      if (err) {
+        this.logger.error(`XUD could not shutdown due to: ${err}`);
+        throw err;
+      } else {
+        this.logger.warn(`XUD client has been shut down: ${res}`);
+        return true;
+      }
+    });
+  }
+
   private unaryCall = <T, U>(methodName: string, params: T): Promise<U> => {
     return new Promise((resolve, reject) => {
       (this.xud as XudMethodIndex)[methodName](params, this.meta, (err: grpc.ServiceError, response: GrpcResponse) => {
