@@ -1,6 +1,6 @@
 import fs from 'fs';
 import XudInterface from './XudInterface';
-import grpc, { ClientReadableStream } from 'grpc';
+import grpc from 'grpc';
 import { EventEmitter } from 'events';
 import Logger from '../Logger';
 import Errors from '../consts/Errors';
