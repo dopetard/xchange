@@ -37,20 +37,22 @@ class Service {
    * Get general information about walli-server and the nodes it is connected to
    */
   public getInfo = async (): Promise<WalliInfo> => {
-    const { btcdClient, lndClient, xudClient, ltcdClient } = this.serviceComponents;
+    const { btcdClient, ltcdClient, lndClient, xudClient } = this.serviceComponents;
     const version = packageJson.version;
 
-    const btcdInfo = await btcdClient.getInfo();
-    const ltcdInfo = await ltcdClient.getInfo();
-    const lndInfo = await lndClient.getLndInfo();
-    const xudInfo = await xudClient.getXudInfo();
+    const info = await Promise.all([
+      btcdClient.getInfo(),
+      ltcdClient.getInfo(),
+      lndClient.getLndInfo(),
+      xudClient.getXudInfo(),
+    ]);
 
     return {
       version,
-      btcdInfo,
-      ltcdInfo,
-      lndInfo,
-      xudInfo,
+      btcdInfo: info[0],
+      ltcdInfo: info[1],
+      lndInfo:  info[2],
+      xudInfo:  info[3],
     };
   }
 

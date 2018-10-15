@@ -88,7 +88,7 @@ class Walli {
     try {
       await this.grpcServer.listen();
     } catch (error) {
-      this.logger.error(`Could not start gRPC server error: ${error}`);
+      this.logger.error(`Could not start gRPC server: ${error}`);
     }
   }
 
