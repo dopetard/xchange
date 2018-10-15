@@ -46,7 +46,7 @@ class Walli {
       this.walletManager = WalletManager.fromMnemonic(mnemonic, ['BTC'], this.config.walletpath);
     }
 
-    this.swapManager = new SwapManager(this.logger, Networks.bitcoin_regtest,
+    this.swapManager = new SwapManager(this.logger, Networks.bitcoinRegtest,
       this.walletManager.wallets.get('BTC')!, this.btcdClient, this.lndClient);
 
     this.service = new Service({
