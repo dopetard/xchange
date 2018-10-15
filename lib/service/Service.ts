@@ -4,6 +4,8 @@ import ChainClient from '../chain/ChainClient';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import LndClient, { Info as LndInfo } from '../lightning/LndClient';
 import SwapManager from '../swap/SwapManager';
+import Networks from '../consts/Networks';
+import XudClient, { XudInfo } from '../xud/XudClient';
 import { getHexBuffer } from '../Utils';
 
 const packageJson = require('../../package.json');
@@ -15,6 +17,7 @@ type ServiceComponents = {
   btcdClient: ChainClient,
   ltcdClient: ChainClient,
   lndClient: LndClient,
+  xudClient: XudClient,
 };
 
 type WalliInfo = {
@@ -22,6 +25,7 @@ type WalliInfo = {
   btcdInfo: ChainInfo,
   ltcdInfo: ChainInfo,
   lndInfo: LndInfo,
+  xudInfo: XudInfo,
 };
 
 // TODO: refunds for Submarine Swaps
@@ -33,18 +37,22 @@ class Service {
    * Get general information about walli-server and the nodes it is connected to
    */
   public getInfo = async (): Promise<WalliInfo> => {
-    const { btcdClient, lndClient, ltcdClient } = this.serviceComponents;
+    const { btcdClient, ltcdClient, lndClient, xudClient } = this.serviceComponents;
     const version = packageJson.version;
+    const info = await Promise.all([
+      btcdClient.getInfo(),
+      ltcdClient.getInfo(),
+      lndClient.getLndInfo(),
+      xudClient.getXudInfo(),
+    ]);
 
-    const btcdInfo = await btcdClient.getInfo();
-    const ltcdInfo = await ltcdClient.getInfo();
-    const lndInfo = await lndClient.getLndInfo();
-
+    // TODO: refactor this and make more readable
     return {
       version,
-      btcdInfo,
-      ltcdInfo,
-      lndInfo,
+      btcdInfo: info[0],
+      ltcdInfo: info[1],
+      lndInfo:  info[2],
+      xudInfo:  info[3],
     };
   }
 

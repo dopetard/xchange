@@ -10,6 +10,7 @@ import Service from './service/Service';
 import WalletManager from './wallet/WalletManager';
 import SwapManager from './swap/SwapManager';
 import ChainClient from './chain/ChainClient';
+import XudClient from './xud/XudClient';
 import Networks from './consts/Networks';
 
 class Walli {
@@ -22,6 +23,7 @@ class Walli {
   private btcdClient: ChainClient;
   private ltcdClient: ChainClient;
   private lndClient: LndClient;
+  private xudClient: XudClient;
 
   private service: Service;
   private grpcServer: GrpcServer;
@@ -33,6 +35,7 @@ class Walli {
     this.btcdClient = new ChainClient(this.config.btcd, ChainType.BTC);
     this.ltcdClient = new ChainClient(this.config.ltcd, ChainType.LTC);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
+    this.xudClient = new XudClient(this.logger, this.config.xud);
 
     if (fs.existsSync(this.config.walletpath)) {
       this.walletManager = new WalletManager([ChainType.BTC], this.config.walletpath);
@@ -53,6 +56,7 @@ class Walli {
       btcdClient: this.btcdClient,
       ltcdClient: this.ltcdClient,
       lndClient: this.lndClient,
+      xudClient: this.xudClient,
     });
 
     this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);
@@ -63,6 +67,7 @@ class Walli {
       this.connectChainClient(this.btcdClient),
       this.connectChainClient(this.ltcdClient),
       this.connectLnd(),
+      this.connectXud(),
     ]);
 
     await this.startGrpcServer();
@@ -83,7 +88,18 @@ class Walli {
     try {
       await this.grpcServer.listen();
     } catch (error) {
-      this.logger.error(error);
+      this.logger.error(`Could not start gRPC server: ${error}`);
+    }
+  }
+
+  private connectXud = async () => {
+    try {
+      await this.xudClient.connect();
+
+      const info = await this.xudClient.getXudInfo();
+      this.logger.verbose(`XUD status: ${JSON.stringify(info)}`);
+    } catch (error) {
+      this.logCouldNotConnect(XudClient.serviceName, error);
     }
   }
 
@@ -103,7 +119,7 @@ class Walli {
   }
 
   private logCouldNotConnect = (service: string, error: any) => {
-    this.logger.error(`could not connect to ${service}: ${JSON.stringify(error)}`);
+    this.logger.error(`Could not connect to ${service}: ${JSON.stringify(error)}`);
   }
 }
 
