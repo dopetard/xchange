@@ -56,7 +56,7 @@ class XudClient extends EventEmitter implements XudInterface {
     }
   }
 
-  public close = async () => {
+  public disconnect = async () => {
     const request = new xudrpc.ShutdownRequest();
     this.xud.shutdown(request, (err, res) => {
       if (err) {
@@ -84,6 +84,16 @@ class XudClient extends EventEmitter implements XudInterface {
   public getInfo = (): Promise<xudrpc.GetInfoResponse.AsObject> => {
     const request = new xudrpc.GetInfoRequest();
     return this.unaryCall<xudrpc.GetInfoRequest, xudrpc.GetInfoResponse.AsObject>('getInfo', request);
+  }
+
+  public placeOrder(price: number, quantity: number, pair: string, orderId: string, buy: boolean): Promise<xudrpc.PlaceOrderResponse.AsObject> {
+    const request = new xudrpc.PlaceOrderRequest();
+    request.setPrice(price);
+    request.setQuantity(quantity);
+    request.setPairId(pair);
+    request.setOrderId(orderId);
+    request.setSide(buy ? xudrpc.OrderSide.BUY : xudrpc.OrderSide.SELL);
+    return this.unaryCall<xudrpc.PlaceOrderRequest, xudrpc.PlaceOrderResponse.AsObject>('placeOrder', request);
   }
 
   public getXudInfo = async (): Promise<XudInfo> => {
