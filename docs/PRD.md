@@ -75,6 +75,9 @@ In one special case of the user wanting to receive off-chain, the preimage is co
     
 - **Need for a reserve**
     - In the current architectural design, the internal tangled submarine swap between Xchange and user is detached from the external swap carried out between XUDs. Hence this whole process is not atomic with different preimage being used for internal and external swap. Due to this fact, there is a need for the Xchange service provider to have certain amount of funds in reserve to be able to keep this whole process trustless. The amount of reserve can be thought of as the commutative sum of simultaneous number of trade the Xchange service provider wants to power at a given point in time.  
+    
+- **Wallet compatibility**
+    - Client side ERC20 wallets like Metamask and popular Bitcoin wallets doesn't need to make any changes to accommodate this proposed architecture. The whole step of claiming funds can be re-delegated to Xchange service providers.
 
 
     # Future Ideas
