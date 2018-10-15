@@ -39,7 +39,6 @@ class Service {
   public getInfo = async (): Promise<WalliInfo> => {
     const { btcdClient, ltcdClient, lndClient, xudClient } = this.serviceComponents;
     const version = packageJson.version;
-
     const info = await Promise.all([
       btcdClient.getInfo(),
       ltcdClient.getInfo(),
@@ -47,6 +46,7 @@ class Service {
       xudClient.getXudInfo(),
     ]);
 
+    // TODO: refactor this and make more readable
     return {
       version,
       btcdInfo: info[0],

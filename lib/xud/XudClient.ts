@@ -1,5 +1,4 @@
 import fs from 'fs';
-import XudInterface from './XudInterface';
 import grpc from 'grpc';
 import { EventEmitter } from 'events';
 import Logger from '../Logger';
@@ -30,7 +29,7 @@ interface XudMethodIndex extends GrpcClient {
   [methodName: string]: Function;
 }
 
-class XudClient extends EventEmitter implements XudInterface {
+class XudClient extends EventEmitter {
   public static readonly serviceName = 'XUD';
   private readonly disconnectedError = Errors.IS_DISCONNECTED(XudClient.serviceName);
 
@@ -86,12 +85,14 @@ class XudClient extends EventEmitter implements XudInterface {
     return this.unaryCall<xudrpc.GetInfoRequest, xudrpc.GetInfoResponse.AsObject>('getInfo', request);
   }
 
-  public placeOrder(price: number, quantity: number, pair: string, orderId: string, buy: boolean): Promise<xudrpc.PlaceOrderResponse.AsObject> {
+  public placeOrder(price: number, quantity: number, pair: string, buy: boolean, orderId?: string): Promise<xudrpc.PlaceOrderResponse.AsObject> {
     const request = new xudrpc.PlaceOrderRequest();
     request.setPrice(price);
     request.setQuantity(quantity);
     request.setPairId(pair);
-    request.setOrderId(orderId);
+    if (orderId) {
+      request.setOrderId(orderId);
+    }
     request.setSide(buy ? xudrpc.OrderSide.BUY : xudrpc.OrderSide.SELL);
     return this.unaryCall<xudrpc.PlaceOrderRequest, xudrpc.PlaceOrderResponse.AsObject>('placeOrder', request);
   }
