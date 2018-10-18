@@ -3,56 +3,68 @@ import WalletManager from '../wallet/WalletManager';
 import ChainClient from '../chain/ChainClient';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import LndClient, { Info as LndInfo } from '../lightning/LndClient';
-import SwapManager from '../swap/SwapManager';
-import Networks from '../consts/Networks';
 import XudClient, { XudInfo } from '../xud/XudClient';
+import SwapManager from '../swap/SwapManager';
 import { getHexBuffer } from '../Utils';
 
 const packageJson = require('../../package.json');
 
 type ServiceComponents = {
-  logger: Logger,
-  walletManager: WalletManager,
-  swapManager: SwapManager,
-  btcdClient: ChainClient,
-  ltcdClient: ChainClient,
-  lndClient: LndClient,
-  xudClient: XudClient,
+  logger: Logger;
+  walletManager: WalletManager;
+  swapManager: SwapManager;
+  btcdClient: ChainClient;
+  ltcdClient: ChainClient;
+  lndbtcClient: LndClient;
+  lndltcClient: LndClient;
+  xudClient: XudClient;
 };
 
 type WalliInfo = {
-  version: string,
-  btcdInfo: ChainInfo,
-  ltcdInfo: ChainInfo,
-  lndInfo: LndInfo,
-  xudInfo: XudInfo,
+  version: string;
+  btcdInfo: ChainInfo;
+  ltcdInfo: ChainInfo;
+  lndbtcInfo: LndInfo;
+  lndltcInfo: LndInfo;
+  xudInfo: XudInfo;
 };
 
 // TODO: refunds for Submarine Swaps
+// TODO: update gRPC interface and Service
 class Service {
 
   constructor(private serviceComponents: ServiceComponents) {}
 
+  // TODO: update with new way of handling chain and LND clients
   /**
    * Get general information about walli-server and the nodes it is connected to
    */
   public getInfo = async (): Promise<WalliInfo> => {
-    const { btcdClient, ltcdClient, lndClient, xudClient } = this.serviceComponents;
+    const { btcdClient, ltcdClient, lndbtcClient, lndltcClient, xudClient } = this.serviceComponents;
     const version = packageJson.version;
-    const info = await Promise.all([
-      btcdClient.getInfo(),
-      ltcdClient.getInfo(),
-      lndClient.getLndInfo(),
-      xudClient.getXudInfo(),
+
+    const btcdInfo = btcdClient.getInfo();
+    const ltcdInfo = ltcdClient.getInfo();
+    const lndbtcInfo = lndbtcClient.getLndInfo();
+    const lndltcInfo = lndltcClient.getLndInfo();
+    const xudInfo = xudClient.getXudInfo();
+
+    await Promise.all([
+      btcdInfo,
+      ltcdInfo,
+      lndbtcInfo,
+      lndltcInfo,
+      xudInfo,
     ]);
 
     // TODO: refactor this and make more readable
     return {
       version,
-      btcdInfo: info[0],
-      ltcdInfo: info[1],
-      lndInfo:  info[2],
-      xudInfo:  info[3],
+      btcdInfo: await btcdInfo,
+      ltcdInfo: await ltcdInfo,
+      lndbtcInfo: await lndbtcInfo,
+      lndltcInfo: await lndltcInfo,
+      xudInfo: await xudInfo,
     };
   }
 

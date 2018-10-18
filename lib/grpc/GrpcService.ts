@@ -60,7 +60,7 @@ class GrpcService {
         return xud;
       });
 
-      response.setLndinfo(getLndInfo(getInfoResponse.lndInfo));
+      response.setLndinfo(getLndInfo(getInfoResponse.lndbtcInfo));
       response.setXudinfo(getXudInfo(getInfoResponse.xudInfo));
       response.setBtcdinfo(getChainInfo(getInfoResponse.btcdInfo));
       response.setLtcdinfo(getChainInfo(getInfoResponse.ltcdInfo));

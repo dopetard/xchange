@@ -5,6 +5,7 @@ import exitHook from 'exit-hook';
 import Errors from './Errors';
 import Wallet from './Wallet';
 import { splitDerivationPath } from '../Utils';
+import { ChainType } from 'lib/consts/ChainType';
 
 type WalletInfo = {
   coin: string;
@@ -36,7 +37,7 @@ class WalletManager {
    * @param walletPath where information about the wallets should be stored
    * @param writeOnExit whether the wallet should be written to the disk when exiting
    */
-  constructor(coins: string[], walletPath: string, writeOnExit = true) {
+  constructor(coins: ChainType[], walletPath: string, writeOnExit = true) {
     const walletFile = this.loadWallet(walletPath);
 
     this.walletsInfo = walletFile.wallets;
@@ -69,7 +70,7 @@ class WalletManager {
   /**
    * Initiates a new WalletManager with a mnemonic
    */
-  public static fromMnemonic = (mnemonic: string, coins: string[], walletPath: string, writeOnExit = true) => {
+  public static fromMnemonic = (mnemonic: string, coins: ChainType[], walletPath: string, writeOnExit = true) => {
     if (!bip39.validateMnemonic(mnemonic)) {
       throw(Errors.INVALID_MNEMONIC(mnemonic));
     }

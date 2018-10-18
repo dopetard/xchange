@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-const Walli = require('../dist/Walli').default;
+const Xchange = require('../dist/Xchange').default;
 
 const { argv } = require('yargs')
   .options({
-    wallidir: {
-      describe: 'Data direcotry for walli-server',
+    datadir: {
+      describe: 'Data directory for Xchange',
       alias: 'w',
       type: 'string',
     },
@@ -28,67 +28,19 @@ const { argv } = require('yargs')
       describe: 'Path to the wallet file',
     },
     'grpc.host': {
-      describe: 'Host for the Walli gRPC interface',
+      describe: 'Host for the Xchange gRPC interface',
       type: 'string',
     },
     'grpc.port': {
-      describe: 'Port for the Walli gRPC interface',
+      describe: 'Port for the Xchange gRPC interface',
       type: 'number',
     },
     'grpc.certpath': {
-      describe: 'Path to the TLS certificate of the Walli gRPC interface',
+      describe: 'Path to the TLS certificate of the Xchange gRPC interface',
       type: 'string',
     },
     'grpc.keypath': {
-      describe: 'Path to the key of the TLS certificate of the Walli gRPC interface',
-      type: 'string',
-    },
-    'btcd.host': {
-      describe: 'Host of the BTCD RPC interface',
-      type: 'string',
-    },
-    'btcd.port': {
-      describe: 'Port of the BTCD RPC interface',
-      type: 'number',
-    },
-    'btcd.rpcuser': {
-      describe: 'User for the BTCD RPC interface',
-      type: 'string',
-    },
-    'btcd.rpcpass': {
-      describe: 'Password for the BTCD RPC interface',
-      type: 'string',
-    },
-    'btcd.certpath': {
-      describe: 'Path to the certificate of the BTCD RPC interface',
-      type: 'string',
-    },
-    'btcd.configpath': {
-      describe: 'Path to BTCD conf file',
-      type: 'string',
-    },
-    'ltcd.host': {
-      describe: 'Host of the BTCD RPC interface',
-      type: 'string',
-    },
-    'ltcd.port': {
-      describe: 'Port of the BTCD RPC interface',
-      type: 'number',
-    },
-    'ltcd.rpcuser': {
-      describe: 'User for the BTCD RPC interface',
-      type: 'string',
-    },
-    'ltcd.rpcpass': {
-      describe: 'Password for the BTCD RPC interface',
-      type: 'string',
-    },
-    'ltcd.certpath': {
-      describe: 'Path to the certificate of the BTCD RPC interface',
-      type: 'string',
-    },
-    'ltcd.configpath': {
-      describe: 'Path to BTCD conf file',
+      describe: 'Path to the key of the TLS certificate of the Xchange gRPC interface',
       type: 'string',
     },
     'xud.host': {
@@ -103,21 +55,9 @@ const { argv } = require('yargs')
       describe: 'Path to the certificate of the XUD gRPC interface',
       type: 'string',
     },
-    'lnd.host': {
-      describe: 'Host of the LND gRPC interface',
-      type: 'string',
-    },
-    'lnd.port': {
-      describe: 'Port of the LND gRPC interface',
-      type: 'number',
-    },
-    'lnd.certpath': {
-      describe: 'Path to the certificate of the LND gRPC interface',
-      type: 'string',
-    },
-    'lnd.macaroonpath': {
-      describe: 'Path to the macaroon file of the LND gRPC interface',
-      type: 'string',
+    currencies: {
+      describe: 'Currencies that XChange should support',
+      type: 'array',
     },
   });
 
@@ -127,5 +67,5 @@ delete argv.version;
 delete argv.help;
 delete argv.$0;
 
-const walli = new Walli(argv);
-walli.start();
+const xchange = new Xchange(argv);
+xchange.start();

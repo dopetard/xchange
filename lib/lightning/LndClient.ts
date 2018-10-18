@@ -2,10 +2,11 @@ import fs from 'fs';
 import grpc, { ClientReadableStream } from 'grpc';
 import { EventEmitter } from 'events';
 import Logger from '../Logger';
-import Errors from '../consts/Errors';
+import Errors from './Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
+import { ChainType } from 'lib/consts/ChainType';
 
 // TODO: error handling
 
@@ -48,10 +49,6 @@ interface LndClient {
 
 /** A class representing a client to interact with lnd. */
 class LndClient extends EventEmitter implements LightningClient {
-  public static readonly serviceName = 'LND';
-
-  private readonly disconnectedError = Errors.IS_DISCONNECTED(LndClient.serviceName);
-
   private lightning!: GrpcClient | LightningMethodIndex;
   private meta!: grpc.Metadata;
   private invoiceSubscription?: ClientReadableStream<lndrpc.InvoiceSubscription>;
@@ -60,7 +57,7 @@ class LndClient extends EventEmitter implements LightningClient {
    * Create an lnd client.
    * @param config the lnd configuration
    */
-  constructor(private logger: Logger, config: LndConfig) {
+  constructor(private logger: Logger, config: LndConfig, public readonly chainType: ChainType) {
     super();
 
     const { host, port, certpath, macaroonpath } = config;
@@ -89,8 +86,7 @@ class LndClient extends EventEmitter implements LightningClient {
   }
 
   private throwFilesNotFound = () => {
-    this.logger.error('could not find required files for LND');
-    throw(this.disconnectedError);
+    throw(Errors.COULD_NOT_FIND_FILES(this.chainType));
   }
 
   public connect = async () => {

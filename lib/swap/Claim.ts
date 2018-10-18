@@ -7,7 +7,6 @@ import { Transaction, Out, crypto, script, ECPair } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
 import * as varuint from 'varuint-bitcoin';
 import { encodeSignature, scriptBuffersToScript } from './SwapUtils';
-import { getHexString } from '../Utils';
 
 export enum SwapOutputType {
   Bech32,
@@ -30,15 +29,15 @@ export type SwapOutput = {
  * Claim a Submarine Swap
  *
  * @param preimage the preimage of the transaction
- * @param swapKeys the key pair of the swap address
+ * @param destinationKeys the key pair of the swap address
+ * @param destinationScript the output script to which the funds should be sent
  * @param utxo the Swap UTXO to claim
  * @param redeemScript the redeem script of the swap
- * @param destinationAddress the output script to which the funds should be sent
  *
  * @returns claim transaction
  */
-export const constructClaimTransaction = (preimage: Buffer, swapKeys: ECPair | BIP32, utxo: SwapOutput, redeemScript: Buffer,
-  destinationScript: Buffer): Transaction => {
+export const constructClaimTransaction = (preimage: Buffer, destinationKeys: ECPair | BIP32, destinationScript: Buffer, utxo: SwapOutput,
+  redeemScript: Buffer): Transaction => {
 
   const tx = new Transaction();
 
@@ -53,7 +52,7 @@ export const constructClaimTransaction = (preimage: Buffer, swapKeys: ECPair | B
     // Construct the signed input scripts for P2SH inputs
     case SwapOutputType.Legacy:
       const sigHash = tx.hashForSignature(0, redeemScript, Transaction.SIGHASH_ALL);
-      const signature = swapKeys.sign(sigHash);
+      const signature = destinationKeys.sign(sigHash);
 
       const inputScript = [
         encodeSignature(Transaction.SIGHASH_ALL, signature),
@@ -83,7 +82,7 @@ export const constructClaimTransaction = (preimage: Buffer, swapKeys: ECPair | B
   // Construct the signed witness for (nested) SegWit inputs
   if (utxo.type !== SwapOutputType.Legacy) {
     const sigHash = tx.hashForWitnessV0(0, redeemScript, utxo.value, Transaction.SIGHASH_ALL);
-    const signature = script.signature.encode(swapKeys.sign(sigHash), Transaction.SIGHASH_ALL);
+    const signature = script.signature.encode(destinationKeys.sign(sigHash), Transaction.SIGHASH_ALL);
 
     tx.setWitness(0, [
       signature,
