@@ -2,81 +2,87 @@ import assert from 'assert';
 import { BIP32 } from 'bip32';
 import { address, Transaction, crypto, Network } from 'bitcoinjs-lib';
 import Logger from '../Logger';
-import LndClient from '../lightning/LndClient';
-import { getHexBuffer, getHexString } from '../Utils';
+import { getHexBuffer, getPairId, getHexString } from '../Utils';
 import { pkRefundSwap } from './Submarine';
-import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2pkhOutput, p2wpkhOutput } from './Scripts';
-import ChainClient from '../chain/ChainClient';
-import Wallet from '../wallet/Wallet';
-import { constructClaimTransaction, SwapOutputType } from './Claim';
+import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2wpkhOutput } from './Scripts';
+import { constructClaimTransaction, SwapOutputType, SwapOutput } from './Claim';
+import { Pair, Currency } from '../consts/Types';
+import Errors from './Errors';
 
 type BaseSwapDetails = {
-  outputType: SwapOutputType;
   redeemScript: Buffer;
 };
 
 type SwapDetails = BaseSwapDetails & {
   invoice: string;
   destinationKeys: BIP32;
+  outputType: SwapOutputType;
 };
 
 type ReverseSwapDetails = BaseSwapDetails & {
-  preimage: string;
   refundKeys: BIP32;
-};
-
-type Currency = {
-  wallet: Wallet;
-  network: Network;
-  chainClient: ChainClient;
-  lndClient: LndClient;
+  output: SwapOutput;
 };
 
 type SwapMaps = {
+  // A map between an output script and the SwapDetails
   swaps: Map<Buffer, SwapDetails>;
-  reverseSwaps: Map<Buffer, ReverseSwapDetails>;
+
+  // A map between an invoice and the ReverseSwapDetails
+  reverseSwaps: Map<string, ReverseSwapDetails>;
 };
 
-// TODO: automatically refund swaps
-// TODO: verify values
-// TODO: one SwapManager for all pairs
 // TODO: configurable timeouts
+// TODO: verify values and amounts
+// TODO: fees for the Xchange to collect
+// TODO: automatically refund failed swaps
 class SwapManager {
 
-  private baseSwaps: SwapMaps;
-  private quoteSwaps: SwapMaps;
+  private currencies = new Map<string, Currency & SwapMaps>();
+  private pairMap = new Map<string, { base: string, quote: string }>();
 
   private claimPromises: Promise<void>[] = [];
 
-  constructor(private logger: Logger, private baseCurrency: Currency, private quoteCurrency: Currency) {
-    this.baseSwaps = this.initCurrencyMap();
-    this.quoteSwaps = this.initCurrencyMap();
+  constructor(private logger: Logger, private pairs: Pair[]) {
+    this.pairs.forEach((pair) => {
+      const entry = {
+        base: pair.base.symbol,
+        quote: pair.quote.symbol,
+      };
 
-    this.bindCurrency(baseCurrency, this.baseSwaps);
-    this.bindCurrency(quoteCurrency, this.quoteSwaps);
+      this.pairMap.set(getPairId(pair), entry);
+
+      this.addToCurrencies(pair.base);
+      this.addToCurrencies(pair.quote);
+    });
   }
 
   public stop = async () => {
     await Promise.all(this.claimPromises);
   }
 
-  public createSwap = async (pairId: string, isBuy: boolean, invoice: string, refundPublicKey: Buffer,
-    swapOutputType: SwapOutputType): Promise<string> => {
-
-    assert(pairId === 'LTC/BTC');
-
-    const { wallet, network, chainClient, lndClient } = isBuy ? this.baseCurrency : this.quoteCurrency;
-    const { swaps } = isBuy ? this.baseSwaps : this.quoteSwaps;
+  /**
+   * Creates a new Swap
+   * @param pairId pair of the Swap
+   * @param isBuy whether the order is a buy one
+   * @param invoice the invoice that should be paid
+   * @param refundPublicKey the public key for the refund
+   * @param swapOutputType what kind of adress should be returned
+   *
+   * @returns an onchain address
+   */
+  public createSwap = async (pairId: string, isBuy: boolean, invoice: string, refundPublicKey: Buffer, swapOutputType: SwapOutputType) => {
+    const { symbol, wallet, network, chainClient, lndClient, swaps } = this.getCurrency(pairId, isBuy);
 
     const { blocks } = await chainClient.getInfo();
     const { paymentHash } = await lndClient.decodePayReq(invoice);
 
-    this.logger.debug(`Creating new Swap on ${chainClient.chainType} with preimage hash: ${paymentHash}`);
+    this.logger.debug(`Creating new Swap on ${symbol} with preimage hash: ${paymentHash}`);
 
     const destinationKeys = wallet.getNewKeys();
 
     const redeemScript = pkRefundSwap(
-      getHexBuffer(paymentHash),
+      Buffer.from(paymentHash),
       destinationKeys.publicKey,
       refundPublicKey,
       blocks + 10,
@@ -100,6 +106,59 @@ class SwapManager {
     await chainClient.loadTxFiler(false, [address], []);
 
     return address;
+  }
+
+  /**
+   * Creates a new reverse Swap
+   * @param pairId pair of the Swap
+   * @param isBuy whether the order is a buy one
+   * @param destinationPublicKey the public key for the claiming
+   * @param amount the amount of the invoice
+   *
+   * @returns a Lightning invoice and the hash of a onchain transaction
+   */
+  public createReverseSwap = async (pairId: string, isBuy: boolean, destinationPublicKey: Buffer, amount: number):
+    Promise<{ invoice: string, txHash: string }> => {
+
+    const { symbol, wallet, network, chainClient, lndClient, reverseSwaps } = this.getCurrency(pairId, isBuy);
+
+    this.logger.debug(`Creating new reverse Swap on ${symbol} for public key: ${getHexString(destinationPublicKey)}`);
+
+    const { blocks } = await chainClient.getInfo();
+    const { rHash, paymentRequest } = await lndClient.addInvoice(amount);
+
+    const refundKeys = wallet.getNewKeys();
+    const redeemScript = pkRefundSwap(
+      Buffer.from(rHash as string),
+      destinationPublicKey,
+      refundKeys.publicKey,
+      blocks + 10,
+    );
+
+    const output = p2wshOutput(redeemScript);
+    const address = this.encodeAddress(
+      output,
+      network,
+    );
+
+    const { tx, vout } = wallet.sendToAddress(address, amount);
+
+    reverseSwaps.set(paymentRequest, {
+      redeemScript,
+      refundKeys,
+      output: {
+        vout,
+        txHash: tx.getHash(),
+        type: SwapOutputType.Bech32,
+        script: output,
+        value: amount,
+      },
+    });
+
+    return {
+      invoice: paymentRequest,
+      txHash: tx.getId(),
+    };
   }
 
   private bindCurrency = (currency: Currency, maps: SwapMaps) => {
@@ -177,13 +236,35 @@ class SwapManager {
     );
   }
 
+  private getCurrency = (pairId: string, isBuy: boolean) => {
+    const pair = this.pairMap.get(pairId);
+
+    if (!pair) {
+      throw Errors.PAIR_NOT_FOUND(pairId);
+    }
+
+    return isBuy ? this.currencies.get(pair.quote)! : this.currencies.get(pair.base)!;
+  }
+
+  private addToCurrencies = (currency: Currency) => {
+    if (!this.currencies.get(currency.symbol)) {
+      const swapMaps = this.initCurrencyMap();
+
+      this.currencies.set(currency.symbol, {
+        ...currency,
+        ...swapMaps,
+      });
+
+      this.bindCurrency(currency, swapMaps);
+    }
+  }
+
   private initCurrencyMap = (): SwapMaps => {
     return {
       swaps: new Map<Buffer, SwapDetails>(),
-      reverseSwaps: new Map<Buffer, ReverseSwapDetails>(),
+      reverseSwaps: new Map<string, ReverseSwapDetails>(),
     };
   }
 }
 
 export default SwapManager;
-export { Currency };

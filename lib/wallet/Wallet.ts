@@ -1,5 +1,8 @@
 import { BIP32 } from 'bip32';
+import { Transaction } from 'bitcoinjs-lib';
 
+// TODO: actually store funds and allow sending them
+// TODO: store network type and encode addresses here
 class Wallet {
 
   /**
@@ -23,6 +26,13 @@ class Wallet {
     this.highestIndex += 1;
 
     return this.getKeysByIndex(this.highestIndex);
+  }
+
+  public sendToAddress = (_address: string, _amount: number): { tx: Transaction, vout: number } => {
+    return {
+      tx: new Transaction(),
+      vout: 0,
+    };
   }
 }
 

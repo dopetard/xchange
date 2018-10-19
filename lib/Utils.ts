@@ -1,15 +1,16 @@
 import os from 'os';
 import path from 'path';
+import { Pair } from './consts/Types';
 
 /**
- * Get pair id of base and quote asset
+ * Get the pair id of a pair
  */
-export const getPairId = (base: string, quote: string): string => {
-  return `${base}/${quote}`;
+export const getPairId = (pair: Pair): string => {
+  return `${pair.base.symbol}/${pair.quote.symbol}`;
 };
 
 /**
- * Get base and quote asset of paid id
+ * Get the base and quote asset of a pair id
  */
 export const splitPairId = (pairId: string): { base: string, quote: string } => {
   const split = pairId.split('/');
