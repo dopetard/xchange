@@ -1,13 +1,14 @@
 import assert from 'assert';
 import { BIP32 } from 'bip32';
-import { address, Transaction, crypto, Network } from 'bitcoinjs-lib';
+import { address, Transaction, crypto } from 'bitcoinjs-lib';
 import Logger from '../Logger';
-import { getHexBuffer, getPairId, getHexString } from '../Utils';
+import { getHexBuffer, getPairId, getHexString, getScriptHashEncodeFunction } from '../Utils';
 import { pkRefundSwap } from './Submarine';
-import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2wpkhOutput } from './Scripts';
-import { constructClaimTransaction, SwapOutputType, SwapOutput } from './Claim';
-import { Pair, Currency } from '../consts/Types';
+import { p2wshOutput, p2wpkhOutput } from './Scripts';
+import { constructClaimTransaction } from './Claim';
+import { Pair, Currency, TransactionOutput } from '../consts/Types';
 import Errors from './Errors';
+import { OutputType } from '../consts/OutputType';
 
 type BaseSwapDetails = {
   redeemScript: Buffer;
@@ -16,12 +17,12 @@ type BaseSwapDetails = {
 type SwapDetails = BaseSwapDetails & {
   invoice: string;
   destinationKeys: BIP32;
-  outputType: SwapOutputType;
+  outputType: OutputType;
 };
 
 type ReverseSwapDetails = BaseSwapDetails & {
   refundKeys: BIP32;
-  output: SwapOutput;
+  output: TransactionOutput;
 };
 
 type SwapMaps = {
@@ -63,16 +64,17 @@ class SwapManager {
 
   /**
    * Creates a new Swap
+   *
    * @param pairId pair of the Swap
    * @param isBuy whether the order is a buy one
    * @param invoice the invoice that should be paid
    * @param refundPublicKey the public key for the refund
-   * @param swapOutputType what kind of adress should be returned
+   * @param outputType what kind of adress should be returned
    *
    * @returns an onchain address
    */
-  public createSwap = async (pairId: string, isBuy: boolean, invoice: string, refundPublicKey: Buffer, swapOutputType: SwapOutputType) => {
-    const { symbol, wallet, network, chainClient, lndClient, swaps } = this.getCurrency(pairId, isBuy);
+  public createSwap = async (pairId: string, isBuy: boolean, invoice: string, refundPublicKey: Buffer, outputType: OutputType) => {
+    const { symbol, wallet, chainClient, lndClient, swaps } = this.getCurrency(pairId, isBuy);
 
     const { blocks } = await chainClient.getInfo();
     const { paymentHash } = await lndClient.decodePayReq(invoice);
@@ -88,19 +90,15 @@ class SwapManager {
       blocks + 10,
     );
 
-    const encodeFuntion = this.getEncodeFunction(swapOutputType);
-    const output = encodeFuntion(redeemScript);
-
-    const address = this.encodeAddress(
-      output,
-      network,
-    );
+    const encodeFunction = getScriptHashEncodeFunction(outputType);
+    const output = encodeFunction(redeemScript);
+    const address = wallet.encodeAddress(output);
 
     swaps.set(output, {
       invoice,
+      outputType,
       redeemScript,
       destinationKeys,
-      outputType: swapOutputType,
     });
 
     await chainClient.loadTxFiler(false, [address], []);
@@ -110,6 +108,7 @@ class SwapManager {
 
   /**
    * Creates a new reverse Swap
+   *
    * @param pairId pair of the Swap
    * @param isBuy whether the order is a buy one
    * @param destinationPublicKey the public key for the claiming
@@ -120,7 +119,7 @@ class SwapManager {
   public createReverseSwap = async (pairId: string, isBuy: boolean, destinationPublicKey: Buffer, amount: number):
     Promise<{ invoice: string, txHash: string }> => {
 
-    const { symbol, wallet, network, chainClient, lndClient, reverseSwaps } = this.getCurrency(pairId, isBuy);
+    const { symbol, wallet, chainClient, lndClient, reverseSwaps } = this.getCurrency(pairId, isBuy);
 
     this.logger.debug(`Creating new reverse Swap on ${symbol} for public key: ${getHexString(destinationPublicKey)}`);
 
@@ -136,10 +135,7 @@ class SwapManager {
     );
 
     const output = p2wshOutput(redeemScript);
-    const address = this.encodeAddress(
-      output,
-      network,
-    );
+    const address = wallet.encodeAddress(output);
 
     const { tx, vout } = wallet.sendToAddress(address, amount);
 
@@ -149,7 +145,7 @@ class SwapManager {
       output: {
         vout,
         txHash: tx.getHash(),
-        type: SwapOutputType.Bech32,
+        type: OutputType.Bech32,
         script: output,
         value: amount,
       },
@@ -214,26 +210,6 @@ class SwapManager {
     );
 
     await currency.chainClient.sendRawTransaction(claimTx.toHex());
-  }
-
-  private getEncodeFunction = (outputType: SwapOutputType) => {
-    switch (outputType) {
-      case SwapOutputType.Bech32:
-        return p2wshOutput;
-
-      case SwapOutputType.Compatibility:
-        return p2shP2wshOutput;
-
-      case SwapOutputType.Legacy:
-        return p2shOutput;
-    }
-  }
-
-  private encodeAddress = (outputScript: Buffer, network: Network): string => {
-    return address.fromOutputScript(
-      outputScript,
-      network,
-    );
   }
 
   private getCurrency = (pairId: string, isBuy: boolean) => {

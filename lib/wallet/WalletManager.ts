@@ -93,6 +93,7 @@ class WalletManager {
   private writeWallet = (filename: string) => {
     WalletManager.writeWalletFile(filename, {
       master: this.masterNode.toBase58(),
+      // TODO: update "this.walletsInfo"
       wallets: this.walletsInfo,
     });
   }

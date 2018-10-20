@@ -66,6 +66,19 @@ export const p2shOutput = (scriptHex: Buffer) => {
 };
 
 /**
+ * Get a P2SH nested P2WPKH output script
+ *
+ * @param scriptHex redeem script hex Buffer
+ *
+ * @returns P2SH output script Buffer
+ */
+export const p2shP2wpkhOutput = (hash: Buffer) => {
+  const witness = p2wpkhOutput(hash);
+
+  return p2shOutput(witness);
+};
+
+/**
  * Get a P2SH nested P2WSH output script
  *
  * @param scriptHex redeem script hex Buffer

@@ -1,6 +1,8 @@
 import os from 'os';
 import path from 'path';
 import { Pair } from './consts/Types';
+import { OutputType } from './consts/OutputType';
+import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2wpkhOutput, p2pkhOutput, p2shP2wpkhOutput } from './swap/Scripts';
 
 /**
  * Get the pair id of a pair
@@ -193,5 +195,31 @@ export const getServiceDataDir = (service: string) => {
       return path.join(homeDir, capitalizeFirstLetter(serviceDir));
 
     default: return path.join(homeDir, `.${serviceDir}`);
+  }
+};
+
+export const getPubKeyHashEncodeFuntion = (outputType: OutputType) => {
+  switch (outputType) {
+    case OutputType.Bech32:
+      return p2wpkhOutput;
+
+    case OutputType.Compatibility:
+      return p2shP2wpkhOutput;
+
+    case OutputType.Legacy:
+      return p2pkhOutput;
+  }
+};
+
+export const getScriptHashEncodeFunction = (outputType: OutputType) => {
+  switch (outputType) {
+    case OutputType.Bech32:
+      return p2wshOutput;
+
+    case OutputType.Compatibility:
+      return p2shP2wshOutput;
+
+    case OutputType.Legacy:
+      return p2shOutput;
   }
 };
