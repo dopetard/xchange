@@ -15,6 +15,8 @@ cache:
     - "node_modules"
 
 script:
+  - npm config set msvs_version 2013 --global
+  - npm config set python C:\Python27\python.exe
   - npm run compile
   - npm run lint
   - npm run test
