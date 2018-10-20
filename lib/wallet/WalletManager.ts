@@ -5,11 +5,13 @@ import exitHook from 'exit-hook';
 import Errors from './Errors';
 import Wallet from './Wallet';
 import { splitDerivationPath } from '../Utils';
-import { ChainType } from 'lib/consts/ChainType';
+import { ChainType } from '../consts/ChainType';
+import ChainClient from '../chain/ChainClient';
+import { Network } from 'bitcoinjs-lib';
 
 type WalletInfo = {
-  coin: string;
   derivationPath: string;
+  network: Network;
   highestUsedIndex: number;
 };
 
@@ -19,13 +21,17 @@ type WalletFile = {
   wallets: Map<string, WalletInfo>;
 };
 
+type Coin = {
+  chain: ChainType;
+  client: ChainClient;
+  network: Network;
+};
+
 // TODO: recovery with existing mnemonic
-// TODO: prefix of different networks (testnet, regtest, simnet)
 class WalletManager {
   public wallets = new Map<string, Wallet>();
 
-  private walletsInfo: Map<string, WalletInfo>;
-  private masterNode: BIP32;
+  private masterNode: string;
 
   // TODO: support for BIP44
   private static readonly derivationPath = 'm/0';
@@ -37,27 +43,32 @@ class WalletManager {
    * @param walletPath where information about the wallets should be stored
    * @param writeOnExit whether the wallet should be written to the disk when exiting
    */
-  constructor(coins: ChainType[], walletPath: string, writeOnExit = true) {
+  constructor(coins: Coin[], walletPath: string, writeOnExit = true) {
     const walletFile = this.loadWallet(walletPath);
 
-    this.walletsInfo = walletFile.wallets;
-    this.masterNode = bip32.fromBase58(walletFile.master);
+    this.masterNode = walletFile.master;
+    const walletsInfo = walletFile.wallets;
 
     coins.forEach((coin) => {
-      let walletInfo = this.walletsInfo.get(coin);
+      let walletInfo = walletsInfo.get(coin.chain);
 
       // Generate new sub wallet information if it doesn't exist
       if (!walletInfo) {
         walletInfo = {
-          coin,
-          derivationPath: `${WalletManager.derivationPath}/${this.getHighestDepthIndex(2) + 1}`,
           highestUsedIndex: 0,
+          network: coin.network,
+          derivationPath: `${WalletManager.derivationPath}/${this.getHighestDepthIndex(walletsInfo, 2) + 1}`,
         };
-
-        this.walletsInfo.set(coin, walletInfo);
       }
 
-      this.wallets.set(coin, new Wallet(this.masterNode, walletInfo.derivationPath, walletInfo.highestUsedIndex));
+      this.wallets.set(coin.chain, new Wallet(
+        bip32.fromBase58(this.masterNode, walletInfo.network),
+        coin.chain,
+        walletInfo.derivationPath,
+        walletInfo.network,
+        coin.client,
+        walletInfo.highestUsedIndex,
+      ));
     });
 
     if (writeOnExit) {
@@ -70,7 +81,7 @@ class WalletManager {
   /**
    * Initiates a new WalletManager with a mnemonic
    */
-  public static fromMnemonic = (mnemonic: string, coins: ChainType[], walletPath: string, writeOnExit = true) => {
+  public static fromMnemonic = (mnemonic: string, coins: Coin[], walletPath: string, writeOnExit = true) => {
     if (!bip39.validateMnemonic(mnemonic)) {
       throw(Errors.INVALID_MNEMONIC(mnemonic));
     }
@@ -91,10 +102,19 @@ class WalletManager {
   }
 
   private writeWallet = (filename: string) => {
+    const walletsInfo = new Map<string, WalletInfo>();
+
+    this.wallets.forEach((wallet) => {
+      walletsInfo.set(wallet.coin, {
+        derivationPath: wallet.derivationPath,
+        highestUsedIndex: wallet.highestUsedIndex,
+        network: wallet.network,
+      });
+    });
+
     WalletManager.writeWalletFile(filename, {
-      master: this.masterNode.toBase58(),
-      // TODO: update "this.walletsInfo"
-      wallets: this.walletsInfo,
+      master: this.masterNode,
+      wallets: walletsInfo,
     });
   }
 
@@ -112,14 +132,14 @@ class WalletManager {
     throw(Errors.NOT_INITIALIZED());
   }
 
-  private getHighestDepthIndex = (depth: number): number => {
+  private getHighestDepthIndex = (walletsInfo: Map<string, WalletInfo>, depth: number): number => {
     if (depth === 0) {
       throw(Errors.INVALID_DEPTH_INDEX(depth));
     }
 
     let highestIndex = -1;
 
-    this.walletsInfo.forEach((info) => {
+    walletsInfo.forEach((info) => {
       const split = splitDerivationPath(info.derivationPath);
       const index = split.sub[depth - 1];
 

@@ -6,7 +6,7 @@ import Errors from './Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
-import { ChainType } from 'lib/consts/ChainType';
+import { ChainType } from '../consts/ChainType';
 
 // TODO: error handling
 

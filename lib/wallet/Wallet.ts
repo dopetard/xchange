@@ -1,14 +1,23 @@
 import { BIP32 } from 'bip32';
 import FastPriorityQueue from 'fastpriorityqueue';
-import { Transaction, Network, address, crypto, TransactionBuilder } from 'bitcoinjs-lib';
-import ChainClient from 'lib/chain/ChainClient';
-import { OutputType } from 'lib/consts/OutputType';
+import { Transaction, Network, address, crypto, TransactionBuilder, ECPair } from 'bitcoinjs-lib';
+import ChainClient from '../chain/ChainClient';
+import { OutputType } from '../consts/OutputType';
 import { TransactionOutput } from '../consts/Types';
 import { getPubKeyHashEncodeFuntion } from '../Utils';
 import Errors from './Errors';
+import LndClient from '../lightning/LndClient';
 
 type UTXO = TransactionOutput & {
   keys: BIP32;
+};
+
+type Currency = {
+  symbol: string;
+  wallet: Wallet;
+  network: Network;
+  chainClient: ChainClient;
+  lndClient: LndClient;
 };
 
 // TODO: more advanced UTXO management
@@ -29,6 +38,7 @@ class Wallet {
    */
   constructor(
     private masterNode: BIP32,
+    public readonly coin: string,
     public readonly derivationPath: string,
     public readonly network: Network,
     private chainClient: ChainClient,
@@ -165,7 +175,8 @@ class Wallet {
 
     // Sign the transaction
     toSpend.forEach((spend, index) => {
-      builder.sign(index, spend.keys);
+      const keys = ECPair.fromPrivateKey(spend.keys.privateKey, { network: this.network });
+      builder.sign(index, keys);
     });
 
     return {
@@ -176,3 +187,4 @@ class Wallet {
 }
 
 export default Wallet;
+export { Currency };

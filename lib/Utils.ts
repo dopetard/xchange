@@ -1,25 +1,24 @@
 import os from 'os';
 import path from 'path';
-import { Pair } from './consts/Types';
 import { OutputType } from './consts/OutputType';
 import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2wpkhOutput, p2pkhOutput, p2shP2wpkhOutput } from './swap/Scripts';
 
 /**
  * Get the pair id of a pair
  */
-export const getPairId = (pair: Pair): string => {
-  return `${pair.base.symbol}/${pair.quote.symbol}`;
+export const getPairId = (quoteSymbol: string, baseSymbol: string): string => {
+  return `${quoteSymbol}/${baseSymbol}`;
 };
 
 /**
- * Get the base and quote asset of a pair id
+ * Get the quote and base asset of a pair id
  */
-export const splitPairId = (pairId: string): { base: string, quote: string } => {
+export const splitPairId = (pairId: string): { quote: string, base: string } => {
   const split = pairId.split('/');
 
   return {
-    base: split[0],
-    quote: split[1],
+    quote: split[0],
+    base: split[1],
   };
 };
 

@@ -1,14 +1,15 @@
 import assert from 'assert';
 import { BIP32 } from 'bip32';
-import { address, Transaction, crypto } from 'bitcoinjs-lib';
+import { Transaction, crypto } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import { getHexBuffer, getPairId, getHexString, getScriptHashEncodeFunction } from '../Utils';
 import { pkRefundSwap } from './Submarine';
 import { p2wshOutput, p2wpkhOutput } from './Scripts';
 import { constructClaimTransaction } from './Claim';
-import { Pair, Currency, TransactionOutput } from '../consts/Types';
+import { TransactionOutput } from '../consts/Types';
 import Errors from './Errors';
 import { OutputType } from '../consts/OutputType';
+import { Currency } from '../wallet/Wallet';
 
 type BaseSwapDetails = {
   redeemScript: Buffer;
@@ -23,6 +24,11 @@ type SwapDetails = BaseSwapDetails & {
 type ReverseSwapDetails = BaseSwapDetails & {
   refundKeys: BIP32;
   output: TransactionOutput;
+};
+
+type Pair = {
+  quote: Currency;
+  base: Currency;
 };
 
 type SwapMaps = {
@@ -40,18 +46,18 @@ type SwapMaps = {
 class SwapManager {
 
   private currencies = new Map<string, Currency & SwapMaps>();
-  private pairMap = new Map<string, { base: string, quote: string }>();
+  private pairMap = new Map<string, { quote: string, base: string }>();
 
   private claimPromises: Promise<void>[] = [];
 
   constructor(private logger: Logger, private pairs: Pair[]) {
     this.pairs.forEach((pair) => {
       const entry = {
-        base: pair.base.symbol,
         quote: pair.quote.symbol,
+        base: pair.base.symbol,
       };
 
-      this.pairMap.set(getPairId(pair), entry);
+      this.pairMap.set(getPairId(pair.quote.symbol, pair.base.symbol), entry);
 
       this.addToCurrencies(pair.base);
       this.addToCurrencies(pair.quote);
@@ -185,7 +191,7 @@ class SwapManager {
     this.logger.info(`Claiming swap output ${vout} of ${chainClient.chainType} transaction ${txHash}`);
     assert(details.invoice);
 
-    const payInvoice = await lndClient.payInvoice(details.invoice!);
+    const payInvoice = await lndClient.payInvoice(details.invoice);
 
     if (payInvoice.paymentError !== '') {
       // TODO: retry and show error to the user
@@ -244,3 +250,4 @@ class SwapManager {
 }
 
 export default SwapManager;
+export { Pair };

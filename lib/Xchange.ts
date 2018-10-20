@@ -8,10 +8,11 @@ import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
 import WalletManager from './wallet/WalletManager';
-import SwapManager, { Currency } from './swap/SwapManager';
+import SwapManager from './swap/SwapManager';
 import ChainClient from './chain/ChainClient';
 import XudClient from './xud/XudClient';
 import Networks from './consts/Networks';
+import { Currency } from './wallet/Wallet';
 
 // TODO: trading pairs with already existing currencies like XUD
 class Walli {
@@ -34,32 +35,46 @@ class Walli {
 
     this.xudClient = new XudClient(this.logger, this.config.xud);
 
+    const bitcoin = this.currencies.get('BTC')!;
+    const litecoin = this.currencies.get('LTC')!;
+
+    const coins = [
+      {
+        chain: ChainType[bitcoin.symbol],
+        client: bitcoin.chainClient,
+        network: bitcoin.network,
+      },
+      {
+        chain: ChainType[litecoin.symbol],
+        client: litecoin.chainClient,
+        network: litecoin.network,
+      },
+    ];
+
     if (fs.existsSync(this.config.walletpath)) {
-      this.walletManager = new WalletManager([ChainType.BTC, ChainType.LTC], this.config.walletpath);
+      this.walletManager = new WalletManager(coins, this.config.walletpath);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.warn(`generated new mnemonic: ${mnemonic}`);
 
-      this.walletManager = WalletManager.fromMnemonic(mnemonic, [ChainType.BTC, ChainType.LTC], this.config.walletpath);
+      this.walletManager = WalletManager.fromMnemonic(mnemonic, coins, this.config.walletpath);
     }
 
     this.parseCurrencies();
 
     this.swapManager = new SwapManager(
       this.logger,
-      this.currencies.get('BTC')!,
-      this.currencies.get('LTC')!,
+      [{
+        quote: litecoin,
+        base: bitcoin,
+      }],
     );
 
     this.service = new Service({
       logger: this.logger,
-      walletManager: this.walletManager,
       swapManager: this.swapManager,
-      btcdClient: this.currencies.get('BTC')!.chainClient,
-      ltcdClient: this.currencies.get('LTC')!.chainClient,
-      lndbtcClient: this.currencies.get('BTC')!.lndClient,
-      lndltcClient: this.currencies.get('LTC')!.lndClient,
       xudClient: this.xudClient,
+      currencies: Array.from(this.currencies.values()),
     });
 
     this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);
@@ -128,6 +143,7 @@ class Walli {
       this.currencies.set(currency.symbol, {
         chainClient,
         lndClient,
+        symbol: currency.symbol,
         network: Networks[currency.network],
         wallet: this.walletManager.wallets.get(currency.symbol)!,
       });
