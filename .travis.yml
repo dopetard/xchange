@@ -15,8 +15,9 @@ cache:
     - "node_modules"
 
 before_install:
-  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then npm config set msvs_version 2015 --global;
-  - if [[ "$TRAVIS_OS_NAME" == "windows" ]]; then npm config set python C:\Python27\python.exe;
+- os: windows
+          - then npm config set msvs_version 2015 --global
+          - then npm config set python C:\Python27\python.exe
 
 script:
   - npm run compile
