@@ -16,8 +16,8 @@ cache:
 
 before_install:
 - os: windows
-          - then npm config set msvs_version 2015 --global
-          - then npm config set python C:\Python27\python.exe
+          - npm config set msvs_version 2015 --global
+          - npm config set python C:\Python27\python.exe
 
 script:
   - npm run compile
