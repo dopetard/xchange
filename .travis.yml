@@ -1,5 +1,9 @@
 language: node_js
 
+os:
+  - linux
+  - windows
+
 node_js:
   - "node"
 
@@ -10,7 +14,16 @@ cache:
   directories:
     - "node_modules"
 
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then choco install python2; fi
+  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then npm config set python C:/Python27/python.exe --global; fi
+  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then npm config set msvs_version 2017 --global; fi
+
+install:
+  - npm install
+
 script:
   - npm run compile
   - npm run lint
-  - npm run test
+  - npm run test:unit
+  - if [[ "$TRAVIS_OS_NAME" != 'windows' ]]; then npm run test:int; fi
