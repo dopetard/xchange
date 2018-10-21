@@ -25,4 +25,5 @@ install:
 script:
   - npm run compile
   - npm run lint
-  - npm run test
+  - npm run test:unit
+  - if [[ "$TRAVIS_OS_NAME" != 'windows' ]]; then npm run test:int; fi
