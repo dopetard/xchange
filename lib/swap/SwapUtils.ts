@@ -61,32 +61,11 @@ export const encodeSignature = (flag: number, signature: Buffer) => {
 };
 
 /**
- * Convert an array of ScriptElement to a formed pushdata script
- *
- * @param elements array of ScriptElement
- *
- * @returns a formed pushdata script
- */
-export const toPushdataScript = (elements: ScriptElement[]): Buffer => {
-  const buffers: Buffer[] = [];
-
-  elements.forEach((element) => {
-    if (Buffer.isBuffer(element)) {
-      buffers.push(Buffer.concat([varuint.encode(element.length), element]));
-    } else {
-      buffers.push(new Bn(element, 10).toArrayLike(Buffer));
-    }
-  });
-
-  return Buffer.concat(buffers);
-};
-
-/**
  * Convert an array of ScriptElement to a formed script
  *
  * @param elements array of ScriptElement
  *
- * @returns a script buffer
+ * @returns a script Buffer
  */
 export const scriptBuffersToScript = (elements: ScriptElement[]): Buffer => {
   const buffers: Buffer[] = [];
@@ -96,6 +75,27 @@ export const scriptBuffersToScript = (elements: ScriptElement[]): Buffer => {
       buffers.push(Buffer.concat([varuint.encode(element.length), element]));
     } else {
       buffers.push(getHexBuffer(element.toString(16)));
+    }
+  });
+
+  return Buffer.concat(buffers);
+};
+
+/**
+ * Convert an array of ScriptElement to a formed pushdata script
+ *
+ * @param elements array of ScriptElement
+ *
+ * @returns a script Buffer
+ */
+export const toPushdataScript = (elements: ScriptElement[]): Buffer => {
+  const buffers: Buffer[] = [];
+
+  elements.forEach((element) => {
+    if (Buffer.isBuffer(element)) {
+      buffers.push(Buffer.concat([varuint.encode(element.length), element]));
+    } else {
+      buffers.push(new Bn(element, 10).toArrayLike(Buffer));
     }
   });
 

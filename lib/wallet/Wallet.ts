@@ -38,11 +38,10 @@ class Wallet {
    */
   constructor(
     private masterNode: BIP32,
-    public readonly coin: string,
     public readonly derivationPath: string,
+    private highestIndex: number,
     public readonly network: Network,
-    private chainClient: ChainClient,
-    private highestIndex: number) {
+    private chainClient: ChainClient) {
 
     this.chainClient.on('transaction.relevant', (txHex) => {
       const transaction = Transaction.fromHex(txHex);

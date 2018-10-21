@@ -57,7 +57,6 @@ export const capitalizeFirstLetter = (input: string) => {
 
 /**
  * Resolve '~' on Linux and Unix-Like systems
- * @returns the resolved path if the path starts with '~'
  */
 export const resolveHome = (filename: string) => {
   if (os.platform() !== 'win32') {
@@ -158,9 +157,9 @@ export const ms = (): number => {
 };
 
 /**
- * Split string into host and port.
+ * Split a string into host and port
+ *
  * @param listen string of format host:port
- * @returns {host: string, port: string}
  */
 export const splitListen = (listen: string) =>  {
   const split = listen.split(':');

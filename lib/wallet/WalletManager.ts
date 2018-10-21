@@ -23,8 +23,8 @@ type WalletFile = {
 
 type Coin = {
   chain: ChainType;
-  client: ChainClient;
   network: Network;
+  client: ChainClient;
 };
 
 // TODO: recovery with existing mnemonic
@@ -57,17 +57,16 @@ class WalletManager {
         walletInfo = {
           highestUsedIndex: 0,
           network: coin.network,
-          derivationPath: `${WalletManager.derivationPath}/${this.getHighestDepthIndex(walletsInfo, 2) + 1}`,
+          derivationPath: `${WalletManager.derivationPath}/${this.getHighestDepthIndex(2) + 1}`,
         };
       }
 
       this.wallets.set(coin.chain, new Wallet(
-        bip32.fromBase58(this.masterNode, walletInfo.network),
-        coin.chain,
+        bip32.fromBase58(this.masterNode),
         walletInfo.derivationPath,
+        walletInfo.highestUsedIndex,
         walletInfo.network,
         coin.client,
-        walletInfo.highestUsedIndex,
       ));
     });
 
@@ -104,8 +103,8 @@ class WalletManager {
   private writeWallet = (filename: string) => {
     const walletsInfo = new Map<string, WalletInfo>();
 
-    this.wallets.forEach((wallet) => {
-      walletsInfo.set(wallet.coin, {
+    this.wallets.forEach((wallet, coin) => {
+      walletsInfo.set(coin, {
         derivationPath: wallet.derivationPath,
         highestUsedIndex: wallet.highestUsedIndex,
         network: wallet.network,
@@ -132,14 +131,14 @@ class WalletManager {
     throw(Errors.NOT_INITIALIZED());
   }
 
-  private getHighestDepthIndex = (walletsInfo: Map<string, WalletInfo>, depth: number): number => {
+  private getHighestDepthIndex = (depth: number): number => {
     if (depth === 0) {
       throw(Errors.INVALID_DEPTH_INDEX(depth));
     }
 
     let highestIndex = -1;
 
-    walletsInfo.forEach((info) => {
+    this.wallets.forEach((info) => {
       const split = splitDerivationPath(info.derivationPath);
       const index = split.sub[depth - 1];
 
