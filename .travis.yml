@@ -1,24 +1,25 @@
 language: node_js
 
-os:
-  - linux
-  - windows
-
 node_js:
   - "node"
 
+matrix:
+  include:
+    - os: linux
+      cache:
+        directories:
+          - "node_modules"
+
+    - os: windows
+      before_install:
+        - choco install docker-compose
+        - & $Env:ProgramFiles\Docker\Docker\DockerCli.exe -SwitchLinuxEngine
+        - choco install python2
+        - npm config set python C:/Python27/python.exe --global
+        - npm config set msvs_version 2017 --global
+
 services:
   - docker
-
-cache:
-  directories:
-    - "node_modules"
-
-before_install:
-  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then choco install docker-compose; fi
-  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then choco install python2; fi
-  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then npm config set python C:/Python27/python.exe --global; fi
-  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then npm config set msvs_version 2017 --global; fi
 
 install:
   - npm install
