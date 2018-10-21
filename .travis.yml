@@ -15,9 +15,12 @@ cache:
     - "node_modules"
 
 before_install:
-- os: windows
-          - npm config set msvs_version 2015 --global
-          - npm config set python C:\Python27\python.exe
+  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then choco install python2; fi
+  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then npm config set python C:/Python27/python.exe --global; fi
+  - if [[ "$TRAVIS_OS_NAME" == 'windows' ]]; then npm config set msvs_version 2017 --global; fi
+
+install:
+  - npm install
 
 script:
   - npm run compile
