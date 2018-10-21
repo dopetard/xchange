@@ -3,6 +3,7 @@ import path from 'path';
 import Logger from '../../../lib/Logger';
 import LndClient from '../../../lib/lightning/LndClient';
 import { btcdClient, btcManager } from '../chain/ChainClient.spec';
+import { ChainType } from '../../../lib/consts/ChainType';
 
 describe('LndClient', () => {
   before(async () => {
@@ -65,10 +66,10 @@ export const lndBtcClient1 = new LndClient(Logger.disabledLogger, {
   certpath,
   host: 'localhost',
   port: 10009,
-});
+}, ChainType.BTC);
 
 export const lndBtcClient2 = new LndClient(Logger.disabledLogger, {
   certpath,
   host: 'localhost',
   port: 10010,
-});
+}, ChainType.LTC);

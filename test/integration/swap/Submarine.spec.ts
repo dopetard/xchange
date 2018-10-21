@@ -4,9 +4,10 @@ import { crypto, address } from 'bitcoinjs-lib';
 import { getHexBuffer } from '../../../lib/Utils';
 import { p2shOutput, p2wshOutput, p2shP2wshOutput } from '../../../lib/swap/Scripts';
 import { pkRefundSwap } from '../../../lib/swap/Submarine';
-import { constructClaimTransaction, SwapOutputType } from '../../../lib/swap/Claim';
+import { constructClaimTransaction } from '../../../lib/swap/Claim';
 import Networks from '../../../lib/consts/Networks';
 import { btcManager, btcdClient, btcKeys, btcAddress } from '../chain/ChainClient.spec';
+import { OutputType } from '../../../lib/consts/OutputType';
 
 describe('Submarine Swaps', () => {
   const preimage = getHexBuffer('b5b2dbb1f0663878ecbc20323b58b92c');
@@ -15,7 +16,7 @@ describe('Submarine Swaps', () => {
   const swapKeys = fromBase58('xprv9xgxR6htMdXUXGipynZp1janNrWNYJxaz2o4tH9fdtZqcF26BX5VB88GSM5KgZHWCyAyb8FZpQik2UET84CHfGWXFMG5zWWjmtDMgqYuo19');
 
   // Create, send funds to and claim a Submarine Swap
-  const executeSwap = async (outputFunction: (scriptHex: Buffer) => Buffer, swapOutputType: SwapOutputType) => {
+  const executeSwap = async (outputFunction: (scriptHex: Buffer) => Buffer, outputType: OutputType) => {
     const { blocks } = await btcdClient.getInfo();
 
     const redeemScript = pkRefundSwap(preimageHash, swapKeys.publicKey, btcKeys.publicKey, blocks + 1000);
@@ -29,7 +30,7 @@ describe('Submarine Swaps', () => {
     const swapOutput = {
       txHash: transaction.getHash(),
       vout: swapVout,
-      type: swapOutputType,
+      type: outputType,
       script: transactionOutput.script,
       value: transactionOutput.value,
     };
@@ -38,9 +39,9 @@ describe('Submarine Swaps', () => {
     const claimTransaction = constructClaimTransaction(
       preimage,
       swapKeys,
+      destinationScript,
       swapOutput,
       redeemScript,
-      destinationScript,
     );
 
     await btcManager.broadcastAndMine(claimTransaction.toHex());
@@ -51,15 +52,15 @@ describe('Submarine Swaps', () => {
   });
 
   it('should execute a P2WSH Submarine Swap', async () => {
-    await executeSwap(p2wshOutput, SwapOutputType.Bech32);
+    await executeSwap(p2wshOutput, OutputType.Bech32);
   });
 
   it('should execute a P2SH Submarine Swap', async () => {
-    await executeSwap(p2shOutput, SwapOutputType.Legacy);
+    await executeSwap(p2shOutput, OutputType.Legacy);
   });
 
   it('should execute a P2SH nested P2WSH Submarine Swap', async () => {
-    await executeSwap(p2shP2wshOutput, SwapOutputType.Compatibility);
+    await executeSwap(p2shP2wshOutput, OutputType.Compatibility);
   });
 
   after(async () => {
