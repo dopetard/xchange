@@ -115,8 +115,9 @@ export const btcAddress = 'msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs';
 export const ltcKeys = ECPair.fromWIF('cPnCzwHtVipcX7hb72mkkMMf4MSrknHbRnff2LDutSB8AxvxLaby', Networks.litecoinRegtest);
 export const ltcAddress = 'mysNm7METD1JffsC4E1ZW7EcPapmVm9AK4';
 
+const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
 export const btcdClient = new ChainClient({
-  host: 'localhost',
+  host,
   port: 18334,
   rpcuser: 'user',
   rpcpass: 'user',
@@ -124,7 +125,7 @@ export const btcdClient = new ChainClient({
 }, ChainType.BTC);
 
 export const ltcdClient = new ChainClient({
-  host: 'localhost',
+  host,
   port: 19334,
   rpcpass: 'user',
   rpcuser: 'user',
