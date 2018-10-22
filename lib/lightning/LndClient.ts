@@ -106,12 +106,12 @@ class LndClient extends EventEmitter implements LightningClient {
   }
 
   public connect = async () => {
-    if (this.isDisconnected()){
+    if (this.isDisconnected()) {
       this.lightning = new GrpcClient(this.uri, this.credentials);
 
       try {
         const response = await this.getInfo();
-        if(response.syncedToChain) {
+        if (response.syncedToChain) {
           this.setClientStatus(ClientStatus.Connected);
           this.subscribeInvoices();
           if (this.reconnectionTimer) {
@@ -122,12 +122,12 @@ class LndClient extends EventEmitter implements LightningClient {
           this.setClientStatus(ClientStatus.OutOfSync);
           this.logger.error(`lnd at ${this.uri} is out of sync with chain, retrying in ${LndClient.RECONNECT_TIMER} ms`);
           this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER);
-        } 
+        }
       } catch (error) {
         this.setClientStatus(ClientStatus.Disconnected);
         this.logger.error(`could not verify connection to lnd at ${this.uri}, error: ${JSON.stringify(error)},
         retrying in ${LndClient.RECONNECT_TIMER} ms`);
-        this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER); 
+        this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER);
       }
     }
   }
