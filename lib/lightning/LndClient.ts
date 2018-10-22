@@ -106,29 +106,25 @@ class LndClient extends EventEmitter implements LightningClient {
   }
 
   public connect = async () => {
-    if (this.status = ClientStatus.Disconnected){
+    if (this.isDisconnected()){
       this.lightning = new GrpcClient(this.uri, this.credentials);
-      this.subscribeInvoices();
 
       try {
         const response = await this.getLndInfo();
-        console.log('HERE1');
         if(response.syncedtochain) {
-          console.log('HERE2');
-          this.status = ClientStatus.Connected;
+          this.setClientStatus(ClientStatus.Connected);
+          this.subscribeInvoices();
           if (this.reconnectionTimer) {
             clearTimeout(this.reconnectionTimer);
             this.reconnectionTimer = undefined;
           }
         } else {
-          console.log('HERE3');
-          this.status = ClientStatus.OutOfSync;
+          this.setClientStatus(ClientStatus.OutOfSync);
           this.logger.error(`lnd at ${this.uri} is out of sync with chain, retrying in ${LndClient.RECONNECT_TIMER} ms`);
           this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER);
         } 
       } catch (error) {
-        console.log('HERE4');
-        this.status = ClientStatus.Disconnected
+        this.setClientStatus(ClientStatus.Disconnected);
         this.logger.error(`could not verify connection to lnd at ${this.uri}, error: ${JSON.stringify(error)},
         retrying in ${LndClient.RECONNECT_TIMER} ms`);
         this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER); 
@@ -294,6 +290,19 @@ class LndClient extends EventEmitter implements LightningClient {
           this.logger.error(`Invoice subscription ended: ${error}`);
         }
       });
+  }
+  public setClientStatus = (status: ClientStatus): void => {
+    this.status = status;
+  }
+
+  public isConnected(): boolean {
+    return this.status === ClientStatus.Connected;
+  }
+  public isDisconnected(): boolean {
+    return this.status === ClientStatus.Disconnected;
+  }
+  public isOutOfSync(): boolean {
+    return this.status === ClientStatus.OutOfSync;
   }
 }
 
