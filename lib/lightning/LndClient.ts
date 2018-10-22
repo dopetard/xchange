@@ -110,8 +110,8 @@ class LndClient extends EventEmitter implements LightningClient {
       this.lightning = new GrpcClient(this.uri, this.credentials);
 
       try {
-        const response = await this.getLndInfo();
-        if(response.syncedtochain) {
+        const response = await this.getInfo();
+        if(response.syncedToChain) {
           this.setClientStatus(ClientStatus.Connected);
           this.subscribeInvoices();
           if (this.reconnectionTimer) {
