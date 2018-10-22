@@ -33,7 +33,7 @@ type Pair = {
 
 type SwapMaps = {
   // A map between an output script and the SwapDetails
-  swaps: Map<Buffer, SwapDetails>;
+  swaps: Map<string, SwapDetails>;
 
   // A map between an invoice and the ReverseSwapDetails
   reverseSwaps: Map<string, ReverseSwapDetails>;
@@ -100,7 +100,7 @@ class SwapManager {
     const output = encodeFunction(redeemScript);
     const address = wallet.encodeAddress(output);
 
-    swaps.set(output, {
+    swaps.set(getHexString(output), {
       invoice,
       outputType,
       redeemScript,
@@ -143,7 +143,7 @@ class SwapManager {
     const output = p2wshOutput(redeemScript);
     const address = wallet.encodeAddress(output);
 
-    const { tx, vout } = wallet.sendToAddress(address, amount);
+    const { tx, vout } = await wallet.sendToAddress(address, amount);
 
     reverseSwaps.set(paymentRequest, {
       redeemScript,
@@ -168,10 +168,11 @@ class SwapManager {
       const transaction = Transaction.fromHex(transactionHex);
 
       transaction.outs.forEach((output, vout) => {
-        const swapDetails = maps.swaps.get(output.script);
+        const hexScript = getHexString(output.script);
+        const swapDetails = maps.swaps.get(hexScript);
 
         if (swapDetails) {
-          maps.swaps.delete(output.script);
+          maps.swaps.delete(hexScript);
           this.claimPromises.push(this.claimSwap(
             currency,
             transaction.getHash(),
@@ -243,7 +244,7 @@ class SwapManager {
 
   private initCurrencyMap = (): SwapMaps => {
     return {
-      swaps: new Map<Buffer, SwapDetails>(),
+      swaps: new Map<string, SwapDetails>(),
       reverseSwaps: new Map<string, ReverseSwapDetails>(),
     };
   }

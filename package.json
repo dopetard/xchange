@@ -15,7 +15,7 @@
     "docker-start": "docker-compose -f test/integration/docker-compose.yml up -d",
     "docker-stop": "docker-compose -f test/integration/docker-compose.yml down -v",
     "test": "npm run test:unit && npm run test:int",
-    "test:int": "npm run docker-start && mocha -r ts-node/register test/integration/chain/*.spec.ts test/integration/lightning/*.spec.ts test/integration/swap/*.spec.ts && npm run docker-stop",
+    "test:int": "npm run docker-start && mocha -r ts-node/register test/integration/chain/*.spec.ts test/integration/lightning/*.spec.ts test/integration/swap/*.spec.ts test/integration/wallet/*.spec.ts && npm run docker-stop",
     "test:unit": "mocha -r ts-node/register test/unit/*.spec.ts test/unit/swap/*.spec.ts test/unit/wallet/*.spec.ts"
   },
   "bin": {

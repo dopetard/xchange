@@ -89,8 +89,13 @@ class LndClient extends EventEmitter implements LightningClient {
     throw(Errors.COULD_NOT_FIND_FILES(this.chainType));
   }
 
+  /**
+   * Returns a boolean determines whether LND is ready or not
+   */
   public connect = async () => {
-    this.subscribeInvoices();
+    const info = await this.getInfo();
+
+    return info.syncedToChain;
   }
 
   /** End all subscriptions and reconnection attempts. */

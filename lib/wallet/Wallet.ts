@@ -4,7 +4,7 @@ import { Transaction, Network, address, crypto, TransactionBuilder, ECPair } fro
 import ChainClient from '../chain/ChainClient';
 import { OutputType } from '../consts/OutputType';
 import { TransactionOutput } from '../consts/Types';
-import { getPubKeyHashEncodeFuntion } from '../Utils';
+import { getPubKeyHashEncodeFuntion, getHexString } from '../Utils';
 import Errors from './Errors';
 import LndClient from '../lightning/LndClient';
 
@@ -21,9 +21,11 @@ type Currency = {
 };
 
 // TODO: more advanced UTXO management
+// TODO: save UTXOs to disk
+// TODO: multiple transaction to same output
 class Wallet {
 
-  private relevantOutputs = new Map<Buffer, { keys: BIP32, type: OutputType }>();
+  private relevantOutputs = new Map<string, { keys: BIP32, type: OutputType }>();
 
   private utxos = new FastPriorityQueue(Wallet.getUTXOComparator());
 
@@ -47,9 +49,11 @@ class Wallet {
       const transaction = Transaction.fromHex(txHex);
 
       transaction.outs.forEach((output, vout) => {
-        const outputInfo = this.relevantOutputs.get(output.script);
+        const hexScript = getHexString(output.script);
+        const outputInfo = this.relevantOutputs.get(hexScript);
 
         if (outputInfo) {
+          this.relevantOutputs.delete(hexScript);
           this.utxos.add({
             vout,
             txHash: transaction.getHash(),
@@ -99,15 +103,16 @@ class Wallet {
    *
    * @param type ouput type of the address
    */
-  public getNewAddress = (type: OutputType) => {
+  public getNewAddress = async (type: OutputType) => {
     const keys = this.getNewKeys();
 
     const encodeFunction = getPubKeyHashEncodeFuntion(type);
     const output = encodeFunction(crypto.hash160(keys.publicKey));
+    const address = this.encodeAddress(output);
 
-    this.listenToOutput(output, keys, type);
+    await this.listenToOutput(output, keys, type, address);
 
-    return this.encodeAddress(output);
+    return address;
   }
 
   /**
@@ -127,8 +132,24 @@ class Wallet {
    *
    * @param output a P2WPKH, P2SH nested P2WPKH or P2PKH ouput
    */
-  public listenToOutput = (output: Buffer, keys: BIP32, type: OutputType) => {
-    this.relevantOutputs.set(output, { keys, type });
+  public listenToOutput = async (output: Buffer, keys: BIP32, type: OutputType, address?: string) => {
+    this.relevantOutputs.set(getHexString(output), { keys, type });
+
+    const chainAddress = address ? address : this.encodeAddress(output);
+    await this.chainClient.loadTxFiler(false, [chainAddress], []);
+  }
+
+  /**
+   * Get the balance of the wallet
+   */
+  public getBalance = () => {
+    let balance = 0;
+
+    this.utxos.forEach((utxo) => {
+      balance += utxo.value;
+    });
+
+    return balance;
   }
 
   // TODO: fee estimation
@@ -139,7 +160,7 @@ class Wallet {
    *
    * @returns the transaction itself and the vout of the addres
    */
-  public sendToAddress = (address: string, amount: number): { tx: Transaction, vout: number } => {
+  public sendToAddress = async (address: string, amount: number): Promise<{ tx: Transaction, vout: number }> => {
     let missingAmount = amount + 1000;
     const toSpend: UTXO[] = [];
 
@@ -169,7 +190,7 @@ class Wallet {
 
     // If there is anything left from the value of the UTXOs send it to a new change address
     if (missingAmount !== 0) {
-      builder.addOutput(this.getNewAddress(OutputType.Bech32), missingAmount * -1);
+      builder.addOutput(await this.getNewAddress(OutputType.Bech32), missingAmount * -1);
     }
 
     // Sign the transaction

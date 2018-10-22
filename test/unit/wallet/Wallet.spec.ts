@@ -49,7 +49,7 @@ describe('Wallet', () => {
     expect(wallet.encodeAddress(output)).to.be.equal(address);
   });
 
-  it('should get a new address', () => {
+  it('should get a new address', async () => {
     incrementIndex();
 
     const outputType = OutputType.Bech32;
@@ -59,6 +59,6 @@ describe('Wallet', () => {
     const outputScript = encodeFunction(crypto.hash160(keys.publicKey));
     const outputAddress = address.fromOutputScript(outputScript, network);
 
-    expect(wallet.getNewAddress(outputType)).to.be.equal(outputAddress);
+    expect(await wallet.getNewAddress(outputType)).to.be.equal(outputAddress);
   });
 });
