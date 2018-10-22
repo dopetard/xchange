@@ -17,9 +17,16 @@ type LndConfig = {
   macaroonpath?: string;
 };
 
+enum ClientStatus {
+  Disconnected,
+  Connected,
+  OutOfSync,
+}
+
 /** General information about the state of this lnd client. */
 type Info = {
   version?: string;
+  syncedtochain?: boolean;
   chainsList?: string[];
   channels?: ChannelCount;
   blockheight?: number;
@@ -49,13 +56,18 @@ interface LndClient {
 /** A class representing a client to interact with lnd. */
 class LndClient extends EventEmitter implements LightningClient {
   public static readonly serviceName = 'LND';
-
+  private status = ClientStatus.Disconnected;
   private readonly disconnectedError = Errors.IS_DISCONNECTED(LndClient.serviceName);
+  private reconnectionTimer?: NodeJS.Timer;
+
+  private uri!: string;
+  private credentials!: grpc.ChannelCredentials;
 
   private lightning!: GrpcClient | LightningMethodIndex;
   private meta!: grpc.Metadata;
   private invoiceSubscription?: ClientReadableStream<lndrpc.InvoiceSubscription>;
 
+  private static RECONNECT_TIMER = 5000;
   /**
    * Create an lnd client.
    * @param config the lnd configuration
@@ -66,10 +78,10 @@ class LndClient extends EventEmitter implements LightningClient {
     const { host, port, certpath, macaroonpath } = config;
 
     if (fs.existsSync(certpath)) {
-      const uri = `${host}:${port}`;
+      this.uri = `${host}:${port}`;
 
       const lndCert = fs.readFileSync(certpath);
-      const credentials = grpc.credentials.createSsl(lndCert);
+      this.credentials = grpc.credentials.createSsl(lndCert);
 
       this.meta = new grpc.Metadata();
 
@@ -82,7 +94,7 @@ class LndClient extends EventEmitter implements LightningClient {
         }
       }
 
-      this.lightning = new GrpcClient(uri, credentials);
+      // this.lightning = new GrpcClient(uri, credentials);
     } else {
       this.throwFilesNotFound();
     }
@@ -94,7 +106,34 @@ class LndClient extends EventEmitter implements LightningClient {
   }
 
   public connect = async () => {
-    this.subscribeInvoices();
+    if (this.status = ClientStatus.Disconnected){
+      this.lightning = new GrpcClient(this.uri, this.credentials);
+      this.subscribeInvoices();
+
+      try {
+        const response = await this.getLndInfo();
+        console.log('HERE1');
+        if(response.syncedtochain) {
+          console.log('HERE2');
+          this.status = ClientStatus.Connected;
+          if (this.reconnectionTimer) {
+            clearTimeout(this.reconnectionTimer);
+            this.reconnectionTimer = undefined;
+          }
+        } else {
+          console.log('HERE3');
+          this.status = ClientStatus.OutOfSync;
+          this.logger.error(`lnd at ${this.uri} is out of sync with chain, retrying in ${LndClient.RECONNECT_TIMER} ms`);
+          this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER);
+        } 
+      } catch (error) {
+        console.log('HERE4');
+        this.status = ClientStatus.Disconnected
+        this.logger.error(`could not verify connection to lnd at ${this.uri}, error: ${JSON.stringify(error)},
+        retrying in ${LndClient.RECONNECT_TIMER} ms`);
+        this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER); 
+      }
+    }
   }
 
   /** End all subscriptions and reconnection attempts. */
@@ -122,6 +161,7 @@ class LndClient extends EventEmitter implements LightningClient {
     let blockheight: number | undefined;
     let uris: string[] | undefined;
     let version: string | undefined;
+    let syncedtochain: boolean | undefined;
     try {
       const lnd = await this.getInfo();
       channels = {
@@ -132,8 +172,10 @@ class LndClient extends EventEmitter implements LightningClient {
       blockheight = lnd.blockHeight,
       uris = lnd.urisList,
       version = lnd.version;
+      syncedtochain = lnd.syncedToChain;
       return {
         version,
+        syncedtochain,
         chainsList,
         channels,
         blockheight,
@@ -143,6 +185,7 @@ class LndClient extends EventEmitter implements LightningClient {
       this.logger.error(`LND error: ${err}`);
       return {
         version,
+        syncedtochain,
         chainsList,
         channels,
         blockheight,

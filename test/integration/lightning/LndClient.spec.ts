@@ -14,10 +14,6 @@ describe('LndClient', () => {
   let lndBtc2PubKey: string;
 
   it('LndClients should connect', async () => {
-    // TODO: make this dynamic
-    // Sleep for 5 seconds to let the LNDs sync
-    await sleep(5);
-
     await lndBtcClient1.connect();
     await lndBtcClient2.connect();
 
