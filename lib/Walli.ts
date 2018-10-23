@@ -32,8 +32,8 @@ class Walli {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logpath, this.config.loglevel);
 
-    this.btcdClient = new ChainClient(this.config.btcd, ChainType.BTC);
-    this.ltcdClient = new ChainClient(this.config.ltcd, ChainType.LTC);
+    this.btcdClient = new ChainClient(this.config.btcd, this.logger, ChainType.BTC);
+    this.ltcdClient = new ChainClient(this.config.ltcd, this.logger, ChainType.LTC);
     this.lndClient = new LndClient(this.logger, this.config.lnd);
     this.xudClient = new XudClient(this.logger, this.config.xud);
 

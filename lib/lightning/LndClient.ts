@@ -1,11 +1,12 @@
 import fs from 'fs';
 import grpc, { ClientReadableStream } from 'grpc';
-import { EventEmitter } from 'events';
+import BaseClient from '../BaseClient';
 import Logger from '../Logger';
 import Errors from '../consts/Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
+import { ClientStatus } from '../consts/ClientStatus';
 
 // TODO: error handling
 
@@ -16,12 +17,6 @@ type LndConfig = {
   certpath: string;
   macaroonpath?: string;
 };
-
-enum ClientStatus {
-  Disconnected,
-  Connected,
-  OutOfSync,
-}
 
 /** General information about the state of this lnd client. */
 type Info = {
@@ -54,11 +49,9 @@ interface LndClient {
 }
 
 /** A class representing a client to interact with lnd. */
-class LndClient extends EventEmitter implements LightningClient {
+class LndClient extends BaseClient implements LightningClient {
   public static readonly serviceName = 'LND';
-  private status = ClientStatus.Disconnected;
   private readonly disconnectedError = Errors.IS_DISCONNECTED(LndClient.serviceName);
-  private reconnectionTimer?: NodeJS.Timer;
 
   private uri!: string;
   private credentials!: grpc.ChannelCredentials;
@@ -67,7 +60,6 @@ class LndClient extends EventEmitter implements LightningClient {
   private meta!: grpc.Metadata;
   private invoiceSubscription?: ClientReadableStream<lndrpc.InvoiceSubscription>;
 
-  private static RECONNECT_TIMER = 5000;
   /**
    * Create an lnd client.
    * @param config the lnd configuration
@@ -108,7 +100,6 @@ class LndClient extends EventEmitter implements LightningClient {
   public connect = async () => {
     if (this.isDisconnected()) {
       this.lightning = new GrpcClient(this.uri, this.credentials);
-
       try {
         const response = await this.getInfo();
         if (response.syncedToChain) {
@@ -120,14 +111,14 @@ class LndClient extends EventEmitter implements LightningClient {
           }
         } else {
           this.setClientStatus(ClientStatus.OutOfSync);
-          this.logger.error(`lnd at ${this.uri} is out of sync with chain, retrying in ${LndClient.RECONNECT_TIMER} ms`);
-          this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER);
+          this.logger.error(`lnd at ${this.uri} is out of sync with chain, retrying in ${this.RECONNECT_TIMER} ms`);
+          this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
         }
       } catch (error) {
         this.setClientStatus(ClientStatus.Disconnected);
         this.logger.error(`could not verify connection to lnd at ${this.uri}, error: ${JSON.stringify(error)},
-        retrying in ${LndClient.RECONNECT_TIMER} ms`);
-        this.reconnectionTimer = setTimeout(this.connect, LndClient.RECONNECT_TIMER);
+        retrying in ${this.RECONNECT_TIMER} ms`);
+        this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
       }
     }
   }
@@ -290,19 +281,6 @@ class LndClient extends EventEmitter implements LightningClient {
           this.logger.error(`Invoice subscription ended: ${error}`);
         }
       });
-  }
-  public setClientStatus = (status: ClientStatus): void => {
-    this.status = status;
-  }
-
-  public isConnected(): boolean {
-    return this.status === ClientStatus.Connected;
-  }
-  public isDisconnected(): boolean {
-    return this.status === ClientStatus.Disconnected;
-  }
-  public isOutOfSync(): boolean {
-    return this.status === ClientStatus.OutOfSync;
   }
 }
 
