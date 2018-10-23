@@ -1,5 +1,5 @@
 interface BaseClient {
-  connect(): Promise<void>;
+  connect(): Promise<any>;
 }
 
 export default BaseClient;

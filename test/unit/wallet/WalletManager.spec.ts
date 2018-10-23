@@ -1,16 +1,27 @@
-import fs from 'fs';
 import { expect } from 'chai';
+import { mock } from 'ts-mockito';
+import fs from 'fs';
 import bip32 from 'bip32';
 import bip39 from 'bip39';
-import WalletManager from '../../lib/wallet/WalletManager';
-import WalletErrors from '../../lib/wallet/Errors';
+import WalletManager from '../../../lib/wallet/WalletManager';
+import WalletErrors from '../../../lib/wallet/Errors';
+import { ChainType } from '../../../lib/consts/ChainType';
+import Networks from '../../../lib/consts/Networks';
+import ChainClient from '../../../lib/chain/ChainClient';
 
 describe('WalletManager', () => {
   const mnemonic = bip39.generateMnemonic();
   const coins = [
-    'BTC',
-    'LTC',
-    'DOGE',
+    {
+      chain: ChainType.BTC,
+      network: Networks.bitcoinRegtest,
+      client: mock(ChainClient),
+    },
+    {
+      chain: ChainType.LTC,
+      network: Networks.litecoinRegtest,
+      client: mock(ChainClient),
+    },
   ];
   const walletPath = 'wallet.dat';
 
@@ -26,18 +37,17 @@ describe('WalletManager', () => {
     removeWalletFile();
   });
 
-  it('shoule not initiate without wallet file', () => {
+  it('should not initialize without wallet file', () => {
     expect(() => new WalletManager(coins, walletPath, false)).to.throw(WalletErrors.NOT_INITIALIZED().message);
   });
 
-  it('should initiate a new wallet for each coin', () => {
+  it('should initialize a new wallet for each coin', () => {
     walletManager = WalletManager.fromMnemonic(mnemonic, coins, walletPath, false);
 
     coins.forEach((coin, index) => {
-      const wallet = walletManager.wallets.get(coin);
+      const wallet = walletManager.wallets.get(coin.chain);
 
       expect(wallet).to.not.be.undefined;
-
       const { derivationPath, highestUsedIndex } = wallet!;
 
       expect(derivationPath).to.be.equal(`m/0/${index}`);
@@ -52,7 +62,7 @@ describe('WalletManager', () => {
 
     const walletInfo = walletManager['loadWallet'](walletPath);
     expect(walletInfo.master).to.be.equal(bip32.fromSeed(bip39.mnemonicToSeed(mnemonic)).toBase58());
-    expect(walletInfo.wallets).to.be.deep.equal(walletManager['walletsInfo']);
+    expect(walletInfo.wallets.size).to.be.deep.equal(2);
   });
 
   it('should read wallet from the disk', () => {

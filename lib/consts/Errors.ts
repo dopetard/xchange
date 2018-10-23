@@ -7,8 +7,8 @@ export default {
     message: `${clientName} is disconnected`,
     code: concatErrorCode(ErrorCodePrefix.General, 1),
   }),
-  COULD_NOT_PARSE_CONFIG: (configType: string, error: string): Error => ({
-    message: `could not parse ${configType} config: ${error}`,
+  COULD_NOT_PARSE_CONFIG: (filename: string, error: string): Error => ({
+    message: `could not parse ${filename} config: ${error}`,
     code: concatErrorCode(ErrorCodePrefix.General, 2),
   }),
 };

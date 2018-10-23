@@ -1,4 +1,4 @@
 export enum ChainType {
-  LTC = 'LTC',
   BTC = 'BTC',
+  LTC = 'LTC',
 }

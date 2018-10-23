@@ -13,7 +13,7 @@ interface ChainClientEvents {
 class ChainClient extends EventEmitter implements ChainClientInterface, ChainClientEvents {
   private rpcClient: RpcClient;
 
-  constructor(config: RpcConfig, public readonly serviceName: ChainType) {
+  constructor(config: RpcConfig, public readonly chainType: ChainType) {
     super();
 
     this.rpcClient = new RpcClient(config);

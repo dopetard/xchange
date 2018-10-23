@@ -3,6 +3,7 @@ import path from 'path';
 import Logger from '../../../lib/Logger';
 import LndClient from '../../../lib/lightning/LndClient';
 import { btcdClient, btcManager } from '../chain/ChainClient.spec';
+import { ChainType } from '../../../lib/consts/ChainType';
 
 describe('LndClient', () => {
   before(async () => {
@@ -14,12 +15,7 @@ describe('LndClient', () => {
   let lndBtc2PubKey: string;
 
   it('LndClients should connect', async () => {
-    // TODO: make this dynamic
-    // Sleep for 5 seconds to let the LNDs sync
-    await sleep(5);
-
-    await lndBtcClient1.connect();
-    await lndBtcClient2.connect();
+    await connectPromise();
 
     // Connect the LNDs to eachother
     const lndBtc2Info = await lndBtcClient2.getInfo();
@@ -32,10 +28,9 @@ describe('LndClient', () => {
     const btcAddress = await lndBtcClient1.newAddress();
     const btcTxn = btcManager.constructTransaction(btcAddress.address, channelCapacity * 10);
 
-    await btcManager.broadcastAndMine(btcTxn.toHex()),
+    await btcManager.broadcastAndMine(btcTxn.toHex());
 
-    // Sleep for 1 seconds to let LND sync
-    await sleep(2);
+    await connectPromise();
   }).timeout(10000);
 
   it('LndClients should open a channel to eachother', async () => {
@@ -53,9 +48,37 @@ describe('LndClient', () => {
   });
 });
 
-const sleep = (seconds: number) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, seconds * 1000);
+const connectPromise = async () => {
+  return new Promise((resolve, reject) => {
+    let iteration = 0;
+
+    const interval = setInterval(async () => {
+      try {
+        const ready1 = await lndBtcClient1.connect();
+        const ready2 = await lndBtcClient2.connect();
+
+        if (ready1 && ready2) {
+          // To make sure the LNDs are *really* synced
+          try {
+            await lndBtcClient1.connectPeer('', '');
+            await lndBtcClient2.connectPeer('', '');
+          } catch (error) {
+            if (error.details !== 'pubkey string is empty') {
+              throw('');
+            }
+          }
+
+          clearInterval(interval);
+          resolve();
+        }
+      } catch (err) {}
+
+      iteration += 1;
+
+      if (iteration > 50) {
+        reject('LNDs are not connecting');
+      }
+    }, 500);
   });
 };
 
@@ -65,10 +88,10 @@ export const lndBtcClient1 = new LndClient(Logger.disabledLogger, {
   certpath,
   host: 'localhost',
   port: 10009,
-});
+}, ChainType.BTC);
 
 export const lndBtcClient2 = new LndClient(Logger.disabledLogger, {
   certpath,
   host: 'localhost',
   port: 10010,
-});
+}, ChainType.LTC);

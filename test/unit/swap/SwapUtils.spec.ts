@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { Transaction, crypto } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
 import { getHexString, getHexBuffer } from '../../../lib/Utils';
-import { encodeSignature, toPushdataScript } from '../../../lib/swap/SwapUtils';
+import { encodeSignature, toPushdataScript, scriptBuffersToScript } from '../../../lib/swap/SwapUtils';
 import { publicKeyHash } from './Scripts.spec';
 
 describe('SwapUtils', () => {
@@ -47,17 +47,31 @@ describe('SwapUtils', () => {
     });
   });
 
+  it('should get formed script', () => {
+    const testData = {
+      args: {
+        elements: [
+          getHexBuffer(publicKeyHash),
+          ops.OP_PUSHDATA1,
+        ],
+      },
+      result: '1400000000000000000000000000000000000000004c',
+    };
+
+    const result = scriptBuffersToScript(testData.args.elements);
+    expect(getHexString(result)).to.be.equal(testData.result);
+  });
+
   it('should get formed pushdata script', () => {
     const testData = {
       args: {
         elements: [
-          ops.OP_DUP,
           ops.OP_HASH160,
           crypto.hash160(getHexBuffer(publicKeyHash)),
           ops.OP_EQUALVERIFY,
         ],
       },
-      result: '76a914944f997c5553a6f3e1028e707c71b5fa0dd3afa788',
+      result: 'a914944f997c5553a6f3e1028e707c71b5fa0dd3afa788',
     };
 
     const result = toPushdataScript(testData.args.elements);

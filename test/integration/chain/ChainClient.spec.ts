@@ -116,6 +116,7 @@ export const ltcKeys = ECPair.fromWIF('cPnCzwHtVipcX7hb72mkkMMf4MSrknHbRnff2LDut
 export const ltcAddress = 'mysNm7METD1JffsC4E1ZW7EcPapmVm9AK4';
 
 const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
+
 export const btcdClient = new ChainClient({
   host,
   port: 18334,
@@ -132,5 +133,5 @@ export const ltcdClient = new ChainClient({
   certpath: path.join('docker', 'data', 'rpc.cert'),
 }, ChainType.LTC);
 
-export let btcManager;
-export let ltcManager;
+export let btcManager: UtxoManager;
+export let ltcManager: UtxoManager;
