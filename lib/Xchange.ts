@@ -3,7 +3,6 @@ import { Arguments } from 'yargs';
 import { generateMnemonic } from 'bip39';
 import Logger from './Logger';
 import Config, { ConfigType } from './Config';
-import { ChainType } from './consts/ChainType';
 import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
@@ -15,7 +14,7 @@ import Networks from './consts/Networks';
 import { Currency } from './wallet/Wallet';
 
 // TODO: trading pairs with already existing currencies like XUD
-class Walli {
+class Xchange {
   private config: ConfigType;
   private logger: Logger;
 
@@ -35,35 +34,25 @@ class Walli {
 
     this.xudClient = new XudClient(this.logger, this.config.xud);
 
-    const bitcoin = this.currencies.get('BTC')!;
-    const litecoin = this.currencies.get('LTC')!;
+    this.parseCurrencies();
 
-    const coins = [
-      {
-        chain: ChainType[bitcoin.symbol],
-        client: bitcoin.chainClient,
-        network: bitcoin.network,
-      },
-      {
-        chain: ChainType[litecoin.symbol],
-        client: litecoin.chainClient,
-        network: litecoin.network,
-      },
-    ];
+    const walletCurrencies = Array.from(this.currencies.values());
 
     if (fs.existsSync(this.config.walletpath)) {
-      this.walletManager = new WalletManager(coins, this.config.walletpath);
+      this.walletManager = new WalletManager(walletCurrencies, this.config.walletpath);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.warn(`generated new mnemonic: ${mnemonic}`);
 
-      this.walletManager = WalletManager.fromMnemonic(mnemonic, coins, this.config.walletpath);
+      this.walletManager = WalletManager.fromMnemonic(mnemonic, walletCurrencies, this.config.walletpath);
     }
 
-    this.parseCurrencies();
+    const bitcoin = this.currencies.get('BTC')!;
+    const litecoin = this.currencies.get('LTC')!;
 
     this.swapManager = new SwapManager(
       this.logger,
+      this.walletManager,
       [{
         quote: litecoin,
         base: bitcoin,
@@ -104,9 +93,9 @@ class Walli {
       await client.connect();
 
       const info = await client.getInfo();
-      this.logger.verbose(`${client.chainType} chain status: ${info.blocks} blocks`);
+      this.logger.verbose(`${client.symbol} chain status: ${info.blocks} blocks`);
     } catch (error) {
-      this.logCouldNotConnect(`${client.chainType} chain client`, error);
+      this.logCouldNotConnect(`${client.symbol} chain client`, error);
     }
   }
 
@@ -115,9 +104,9 @@ class Walli {
       await client.connect();
 
       const info = await client.getInfo();
-      this.logger.verbose(`${client.chainType} LND status: ${JSON.stringify(info, undefined, 2)}`);
+      this.logger.verbose(`${client.symbol} LND status: ${JSON.stringify(info, undefined, 2)}`);
     } catch (error) {
-      this.logCouldNotConnect(`${client.chainType} LND`, error);
+      this.logCouldNotConnect(`${client.symbol} LND`, error);
     }
   }
 
@@ -135,18 +124,19 @@ class Walli {
   // TODO: support for more currencies
   private parseCurrencies = () => {
     this.config.currencies.forEach((currency) => {
-      const type = currency.symbol === 'BTC' ? ChainType.BTC : ChainType.LTC;
+      try {
+        const chainClient = new ChainClient(currency.chain, currency.symbol);
+        const lndClient = new LndClient(this.logger, currency.lnd!, currency.symbol);
 
-      const chainClient = new ChainClient(currency.chainclient, type);
-      const lndClient = new LndClient(this.logger, currency.lndclient!, type);
-
-      this.currencies.set(currency.symbol, {
-        chainClient,
-        lndClient,
-        symbol: currency.symbol,
-        network: Networks[currency.network],
-        wallet: this.walletManager.wallets.get(currency.symbol)!,
-      });
+        this.currencies.set(currency.symbol, {
+          chainClient,
+          lndClient,
+          symbol: currency.symbol,
+          network: Networks[currency.network],
+        });
+      } catch (error) {
+        this.logger.warn(`Could not initialize currency ${currency.symbol}: ${error.message}`);
+      }
     });
   }
 
@@ -155,4 +145,4 @@ class Walli {
   }
 }
 
-export default Walli;
+export default Xchange;

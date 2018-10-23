@@ -10,7 +10,6 @@ import { LndConfig } from './lightning/LndClient';
 import { GrpcConfig } from './grpc/GrpcServer';
 import { XudConfig } from './xud/XudClient';
 import Errors from './consts/Errors';
-import Networks from './consts/Networks';
 
 type ServiceOptions = {
   datadir?: string;
@@ -20,8 +19,8 @@ type ServiceOptions = {
 type CurrencyConfig = {
   symbol: string,
   network: string;
-  chainclient: RpcConfig & ServiceOptions;
-  lndclient?: LndConfig & ServiceOptions;
+  chain: RpcConfig & ServiceOptions;
+  lnd?: LndConfig & ServiceOptions;
 };
 
 type ConfigType = {
@@ -79,7 +78,7 @@ class Config {
         {
           symbol: 'BTC',
           network: 'bitcoinTestnet',
-          chainclient: {
+          chain: {
             host: '127.0.0.1',
             port: 18334,
             datadir: getServiceDataDir('btcd'),
@@ -87,7 +86,7 @@ class Config {
             rpcpass: 'user',
             rpcuser: 'user',
           },
-          lndclient: {
+          lnd: {
             host: '127.0.0.1',
             port: 10009,
             datadir: getServiceDataDir('lnd'),
@@ -98,7 +97,7 @@ class Config {
         {
           symbol: 'LTC',
           network: 'litecoinTestnet',
-          chainclient: {
+          chain: {
             host: '127.0.0.1',
             port: 19334,
             datadir: getServiceDataDir('ltcd'),
@@ -106,7 +105,7 @@ class Config {
             rpcpass: 'user',
             rpcuser: 'user',
           },
-          lndclient: {
+          lnd: {
             host: '127.0.0.1',
             port: 11009,
             datadir: getServiceDataDir('lnd'),

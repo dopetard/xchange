@@ -6,7 +6,6 @@ import Errors from './Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
-import { ChainType } from '../consts/ChainType';
 
 // TODO: error handling
 
@@ -57,7 +56,7 @@ class LndClient extends EventEmitter implements LightningClient {
    * Create an lnd client.
    * @param config the lnd configuration
    */
-  constructor(private logger: Logger, config: LndConfig, public readonly chainType: ChainType) {
+  constructor(private logger: Logger, config: LndConfig, public readonly symbol: string) {
     super();
 
     const { host, port, certpath, macaroonpath } = config;
@@ -86,7 +85,7 @@ class LndClient extends EventEmitter implements LightningClient {
   }
 
   private throwFilesNotFound = () => {
-    throw(Errors.COULD_NOT_FIND_FILES(this.chainType));
+    throw(Errors.COULD_NOT_FIND_FILES(this.symbol));
   }
 
   /**

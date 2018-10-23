@@ -10,6 +10,7 @@ import { TransactionOutput } from '../consts/Types';
 import Errors from './Errors';
 import { OutputType } from '../consts/OutputType';
 import { Currency } from '../wallet/Wallet';
+import WalletManager from '../wallet/WalletManager';
 
 type BaseSwapDetails = {
   redeemScript: Buffer;
@@ -44,13 +45,12 @@ type SwapMaps = {
 // TODO: fees for the Xchange to collect
 // TODO: automatically refund failed swaps
 class SwapManager {
-
   private currencies = new Map<string, Currency & SwapMaps>();
   private pairMap = new Map<string, { quote: string, base: string }>();
 
   private claimPromises: Promise<void>[] = [];
 
-  constructor(private logger: Logger, private pairs: Pair[]) {
+  constructor(private logger: Logger, private walletManager: WalletManager, private pairs: Pair[]) {
     this.pairs.forEach((pair) => {
       const entry = {
         quote: pair.quote.symbol,
@@ -187,9 +187,9 @@ class SwapManager {
   }
 
   private claimSwap = async (currency: Currency, txHash: Buffer, swapScript: Buffer, swapValue: number, vout: number, details: SwapDetails) => {
-    const { chainClient, lndClient } = currency;
+    const { symbol, chainClient, lndClient } = currency;
 
-    this.logger.info(`Claiming swap output ${vout} of ${chainClient.chainType} transaction ${txHash}`);
+    this.logger.info(`Claiming swap output ${vout} of ${symbol} transaction ${txHash}`);
     assert(details.invoice);
 
     const payInvoice = await lndClient.payInvoice(details.invoice);
@@ -216,7 +216,7 @@ class SwapManager {
       details.redeemScript,
     );
 
-    await currency.chainClient.sendRawTransaction(claimTx.toHex());
+    await chainClient.sendRawTransaction(claimTx.toHex());
   }
 
   private getCurrency = (pairId: string, isBuy: boolean) => {
@@ -226,7 +226,12 @@ class SwapManager {
       throw Errors.PAIR_NOT_FOUND(pairId);
     }
 
-    return isBuy ? this.currencies.get(pair.quote)! : this.currencies.get(pair.base)!;
+    const symbol =  isBuy ? pair.quote : pair.base;
+
+    return {
+      ...this.currencies.get(symbol)!,
+      wallet: this.walletManager.wallets.get(symbol)!,
+    };
   }
 
   private addToCurrencies = (currency: Currency) => {
