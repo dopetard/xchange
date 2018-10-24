@@ -61,9 +61,10 @@ class Xchange {
 
     this.service = new Service({
       logger: this.logger,
-      swapManager: this.swapManager,
+      currencies: this.currencies,
       xudClient: this.xudClient,
-      currencies: Array.from(this.currencies.values()),
+      swapManager: this.swapManager,
+      walletManager: this.walletManager,
     });
 
     this.grpcServer = new GrpcServer(this.logger, this.service, this.config.grpc);

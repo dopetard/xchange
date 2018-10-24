@@ -2,7 +2,6 @@ import { expect } from 'chai';
 import path from 'path';
 import { ECPair, TransactionBuilder, Transaction, Network } from 'bitcoinjs-lib';
 import ChainClient from '../../../lib/chain/ChainClient';
-import { ChainType } from '../../../lib/consts/ChainType';
 import Networks from '../../../lib/consts/Networks';
 
 describe('ChainClient', () => {
@@ -123,7 +122,7 @@ export const btcdClient = new ChainClient({
   rpcuser: 'user',
   rpcpass: 'user',
   certpath: path.join('docker', 'data', 'rpc.cert'),
-}, ChainType.BTC);
+}, 'BTC');
 
 export const ltcdClient = new ChainClient({
   host,
@@ -131,7 +130,7 @@ export const ltcdClient = new ChainClient({
   rpcpass: 'user',
   rpcuser: 'user',
   certpath: path.join('docker', 'data', 'rpc.cert'),
-}, ChainType.LTC);
+}, 'LTC');
 
 export let btcManager: UtxoManager;
 export let ltcManager: UtxoManager;

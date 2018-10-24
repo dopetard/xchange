@@ -3,8 +3,8 @@ import errorCodesPrefix from '../consts/ErrorCodesPrefix';
 import { concatErrorCode } from '../Utils';
 
 export default {
-  PAIR_NOT_FOUND: (pairId: string): Error => ({
-    message: `could not find pair ${pairId}`,
-    code: concatErrorCode(errorCodesPrefix.Swap, 0),
+  CURRENCY_NOT_FOUND: (currency: string): Error => ({
+    message: `could not find currency ${currency}`,
+    code: concatErrorCode(errorCodesPrefix.Service, 0),
   }),
 };

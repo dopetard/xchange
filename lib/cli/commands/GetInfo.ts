@@ -1,6 +1,6 @@
 import { Arguments } from 'yargs';
 import { callback, loadXchangeClient } from '../Command';
-import { GetInfoRequest } from '../../proto/xchange_pb';
+import { GetInfoRequest } from '../../proto/xchangerpc_pb';
 
 export const command = 'getinfo';
 

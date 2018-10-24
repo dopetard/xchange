@@ -4,14 +4,18 @@ import { Info as LndInfo } from '../lightning/LndClient';
 import XudClient, { XudInfo } from '../xud/XudClient';
 import SwapManager from '../swap/SwapManager';
 import { Currency } from '../wallet/Wallet';
+import WalletManager from '../wallet/WalletManager';
+import { OutputType } from '../consts/OutputType';
+import Errors from './Errors';
 
 const packageJson = require('../../package.json');
 
 type ServiceComponents = {
   logger: Logger;
-  swapManager: SwapManager;
   xudClient: XudClient;
-  currencies: Currency[];
+  currencies: Map<string, Currency>;
+  walletManager: WalletManager;
+  swapManager: SwapManager;
 };
 
 type CurrencyInfo = {
@@ -65,6 +69,29 @@ class Service {
       xudInfo,
       currencies: currencyInfos,
     };
+  }
+
+  /**
+   * Get a new address for the specified coin
+   */
+  public newAddress = async (args: { currency: string, type: number }): Promise<string> => {
+    const { walletManager } = this.serviceComponents;
+
+    const wallet = walletManager.wallets.get(args.currency);
+
+    if (!wallet) {
+      throw Errors.CURRENCY_NOT_FOUND(args.currency);
+    }
+
+    const getOutputType = (type: number) => {
+      switch (type) {
+        case 0: return OutputType.Bech32;
+        case 1: return OutputType.Compatibility;
+        default: return OutputType.Legacy;
+      }
+    };
+
+    return wallet.getNewAddress(getOutputType(args.type));
   }
 }
 
