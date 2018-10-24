@@ -1,22 +1,24 @@
 import os from 'os';
 import path from 'path';
+import { OutputType } from './consts/OutputType';
+import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2wpkhOutput, p2pkhOutput, p2shP2wpkhOutput } from './swap/Scripts';
 
 /**
- * Get pair id of base and quote asset
+ * Get the pair id of a pair
  */
-export const getPairId = (base: string, quote: string): string => {
-  return `${base}/${quote}`;
+export const getPairId = (quoteSymbol: string, baseSymbol: string): string => {
+  return `${quoteSymbol}/${baseSymbol}`;
 };
 
 /**
- * Get base and quote asset of paid id
+ * Get the quote and base asset of a pair id
  */
-export const splitPairId = (pairId: string): { base: string, quote: string } => {
+export const splitPairId = (pairId: string): { quote: string, base: string } => {
   const split = pairId.split('/');
 
   return {
-    base: split[0],
-    quote: split[1],
+    quote: split[0],
+    base: split[1],
   };
 };
 
@@ -55,7 +57,6 @@ export const capitalizeFirstLetter = (input: string) => {
 
 /**
  * Resolve '~' on Linux and Unix-Like systems
- * @returns the resolved path if the path starts with '~'
  */
 export const resolveHome = (filename: string) => {
   if (os.platform() !== 'win32') {
@@ -156,9 +157,9 @@ export const ms = (): number => {
 };
 
 /**
- * Split string into host and port.
+ * Split a string into host and port
+ *
  * @param listen string of format host:port
- * @returns {host: string, port: string}
  */
 export const splitListen = (listen: string) =>  {
   const split = listen.split(':');
@@ -178,9 +179,9 @@ export const getSystemHomeDir = (): string => {
   }
 };
 
+// TODO: support for Geth/Parity and Raiden
 /**
- * Get service data directory.
- * TODO: support for Geth/Parity and Raiden
+ * Get the data directory of a service
  */
 export const getServiceDataDir = (service: string) => {
   const homeDir = getSystemHomeDir();
@@ -192,5 +193,31 @@ export const getServiceDataDir = (service: string) => {
       return path.join(homeDir, capitalizeFirstLetter(serviceDir));
 
     default: return path.join(homeDir, `.${serviceDir}`);
+  }
+};
+
+export const getPubKeyHashEncodeFuntion = (outputType: OutputType) => {
+  switch (outputType) {
+    case OutputType.Bech32:
+      return p2wpkhOutput;
+
+    case OutputType.Compatibility:
+      return p2shP2wpkhOutput;
+
+    case OutputType.Legacy:
+      return p2pkhOutput;
+  }
+};
+
+export const getScriptHashEncodeFunction = (outputType: OutputType) => {
+  switch (outputType) {
+    case OutputType.Bech32:
+      return p2wshOutput;
+
+    case OutputType.Compatibility:
+      return p2shP2wshOutput;
+
+    case OutputType.Legacy:
+      return p2shOutput;
   }
 };

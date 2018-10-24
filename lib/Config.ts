@@ -11,71 +11,61 @@ import { GrpcConfig } from './grpc/GrpcServer';
 import { XudConfig } from './xud/XudClient';
 import Errors from './consts/Errors';
 
-type ServiceConfigOption = {
-  configpath: string;
+type ServiceOptions = {
+  datadir?: string;
+  configpath?: string;
+};
+
+type CurrencyConfig = {
+  symbol: string,
+  network: string;
+  chain: RpcConfig & ServiceOptions;
+  lnd?: LndConfig & ServiceOptions;
 };
 
 type ConfigType = {
-  wallidir: string;
+  datadir: string;
+
   configpath: string;
   logpath: string;
   loglevel: string;
   walletpath: string;
+
   grpc: GrpcConfig;
-  btcd: RpcConfig & ServiceConfigOption;
-  ltcd: RpcConfig & ServiceConfigOption;
-  xud: XudConfig & ServiceConfigOption;
-  lnd: LndConfig & ServiceConfigOption;
+
+  xud: XudConfig & ServiceOptions;
+
+  currencies: CurrencyConfig[];
 };
 
 class Config {
   private config: ConfigType;
 
-  private walliDir: string;
-  private btcdDir: string;
-  private ltcdDir: string;
+  private dataDir: string;
   private xudDir: string;
-  private lndDir: string;
 
   /**
    * The constructor sets the default values
    */
   constructor() {
-    this.walliDir = getServiceDataDir('walli');
-    this.btcdDir = getServiceDataDir('btcd');
-    this.ltcdDir = getServiceDataDir('ltcd');
+    this.dataDir = getServiceDataDir('xchange');
     this.xudDir = getServiceDataDir('xud');
-    this.lndDir = getServiceDataDir('lnd');
 
-    const { configpath, walletpath, logpath } = this.getWalliDirPaths(this.walliDir);
+    const { configpath, walletpath, logpath } = this.getDataDirPaths(this.dataDir);
 
     this.config = {
       configpath,
-      walletpath,
       logpath,
-      wallidir: this.walliDir,
+      walletpath,
+
+      datadir: this.dataDir,
       loglevel: this.getDefaultLogLevel(),
+
       grpc: {
         host: '127.0.0.1',
         port: 9000,
-        certpath: path.join(this.walliDir, 'tls.cert'),
-        keypath: path.join(this.walliDir, 'tls.key'),
-      },
-      btcd: {
-        host: '127.0.0.1',
-        port: 18334,
-        rpcuser: 'user',
-        rpcpass: 'user',
-        configpath: path.join(this.btcdDir, 'btcd.conf'),
-        certpath: path.join(this.btcdDir, 'rpc.cert'),
-      },
-      ltcd: {
-        host: '127.0.0.1',
-        port: 19334,
-        rpcuser: 'user',
-        rpcpass: 'user',
-        configpath: path.join(this.ltcdDir, 'ltcd.conf'),
-        certpath: path.join(this.ltcdDir, 'rpc.cert'),
+        certpath: path.join(this.dataDir, 'tls.cert'),
+        keypath: path.join(this.dataDir, 'tls.key'),
       },
       xud: {
         host: '127.0.0.1',
@@ -83,35 +73,70 @@ class Config {
         configpath: path.join(this.xudDir, 'xud.conf'),
         certpath: path.join(this.xudDir, 'tls.cert'),
       },
-      lnd: {
-        host: '127.0.0.1',
-        port: 10009,
-        certpath: path.join(this.lndDir, 'tls.cert'),
-        // The macaroon for the Bitcoin testnet is hardcoded for now
-        macaroonpath: path.join(this.lndDir, 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
-        configpath: path.join(this.lndDir, 'lnd.conf'),
-      },
+
+      currencies: [
+        {
+          symbol: 'BTC',
+          network: 'bitcoinTestnet',
+          chain: {
+            host: '127.0.0.1',
+            port: 18334,
+            datadir: getServiceDataDir('btcd'),
+            certpath: '',
+            rpcpass: 'user',
+            rpcuser: 'user',
+          },
+          lnd: {
+            host: '127.0.0.1',
+            port: 10009,
+            datadir: getServiceDataDir('lnd'),
+            certpath: path.join(getServiceDataDir('lnd'), 'tls.cert'),
+            macaroonpath: path.join(getServiceDataDir('lnd'), 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
+          },
+        },
+        {
+          symbol: 'LTC',
+          network: 'litecoinTestnet',
+          chain: {
+            host: '127.0.0.1',
+            port: 19334,
+            datadir: getServiceDataDir('ltcd'),
+            certpath: '',
+            rpcpass: 'user',
+            rpcuser: 'user',
+          },
+          lnd: {
+            host: '127.0.0.1',
+            port: 11009,
+            datadir: getServiceDataDir('lnd'),
+            certpath: path.join(getServiceDataDir('lnd'), 'tls.cert'),
+            macaroonpath: path.join(getServiceDataDir('lnd'), 'data', 'chain', 'litecoin', 'testnet', 'admin.macaroon'),
+          },
+        },
+      ],
     };
   }
 
+  // TODO: get path of the certificate, macaroon and config based on the data directory of the service
   // TODO: verify logLevel exists; depends on Logger.ts:8
   /**
-   * This loads arguments specified by the user either from a TOML config file or from command line arguments
+   * This loads arguments specified by the user either with a TOML config file or via command line arguments
    */
   public load = (args: Arguments): ConfigType => {
-    if (!fs.existsSync(this.config.wallidir)) {
-      fs.mkdirSync(this.config.wallidir);
+    if (args.datadir) {
+      this.config.datadir = resolveHome(args.datadir);
+      deepMerge(this.config, this.getDataDirPaths(this.config.datadir));
     }
 
-    if (args && args.walliDir) {
-      this.config.wallidir = resolveHome(args.walliDir);
-      deepMerge(this.config, this.getWalliDirPaths(this.config.wallidir));
+    if (!fs.existsSync(this.config.datadir)) {
+      fs.mkdirSync(this.config.datadir);
     }
 
-    const walliConfigFile = this.resolveConfigPath(args.configPath, this.config.configpath);
+    const xchangeConfigFile = this.resolveConfigPath(args.configPath, this.config.configpath);
 
-    if (fs.existsSync(walliConfigFile)) {
-      this.parseTomlConfig(walliConfigFile, this.config);
+    if (fs.existsSync(xchangeConfigFile)) {
+      const tomlConfig = this.parseTomlConfig(xchangeConfigFile);
+      deepMerge(this.config, tomlConfig);
     }
 
     const grpcCert = args.grpc ? args.grpc.certpath : this.config.grpc.certpath;
@@ -121,41 +146,16 @@ class Config {
       this.generateCertificate(grpcCert, grpcKey);
     }
 
-    const btcdConfigFile = args.btcd ? this.resolveConfigPath(args.btcd.configpath, this.config.btcd.configpath) : this.config.btcd.configpath;
-    const ltcdConfigFile = args.ltcd ? this.resolveConfigPath(args.ltcd.configpath, this.config.ltcd.configpath) : this.config.ltcd.configpath;
-    const lndConfigFile = args.lnd ? this.resolveConfigPath(args.lnd.configpath, this.config.lnd.configpath) : this.config.lnd.configpath;
-    const xudConfigFile = args.xud ? this.resolveConfigPath(args.xud.configpath, this.config.xud.configpath) : this.config.xud.configpath;
+    if (args.currencies) {
 
-    this.parseIniConfig(
-      btcdConfigFile,
-      this.config.btcd,
-      false,
-    );
-
-    this.parseIniConfig(
-      ltcdConfigFile,
-      this.config.ltcd,
-      false,
-    );
-
-    this.parseTomlConfig(
-      xudConfigFile,
-      this.config.xud,
-    );
-
-    this.parseIniConfig(
-      lndConfigFile,
-      this.config.lnd,
-      true,
-    );
-
-    if (args) {
-      deepMerge(this.config, args);
     }
+
+    deepMerge(this.config, args);
 
     return this.config;
   }
 
+  // TODO: don't use "deepMerge" in "parseIniConfig"
   private parseIniConfig = (filename: string, mergeTarget: any, isLndConfig: boolean) => {
     if (fs.existsSync(filename)) {
       try {
@@ -184,22 +184,22 @@ class Config {
     }
   }
 
-  private parseTomlConfig = (filename: string, mergeTarget: any) => {
+  private parseTomlConfig = (filename: string): any => {
     if (fs.existsSync(filename)) {
       try {
         const tomlFile = fs.readFileSync(filename, 'utf-8');
-        const parsedConfig = toml.parse(tomlFile);
-        deepMerge(mergeTarget, parsedConfig);
+        return toml.parse(tomlFile);
       } catch (error) {
         throw Errors.COULD_NOT_PARSE_CONFIG(filename, error);
       }
     }
   }
-  private getWalliDirPaths = (walliDir: string): { configpath: string, walletpath: string, logpath: string } => {
+
+  private getDataDirPaths = (dataDir: string): { configpath: string, walletpath: string, logpath: string } => {
     return {
-      configpath: path.join(walliDir, 'walli.conf'),
-      walletpath: path.join(walliDir, 'wallet.dat'),
-      logpath: path.join(walliDir, 'walli.log'),
+      configpath: path.join(dataDir, 'xchange.conf'),
+      walletpath: path.join(dataDir, 'xchange.dat'),
+      logpath: path.join(dataDir, 'xchange.log'),
     };
   }
 
@@ -225,7 +225,7 @@ class Config {
     const attributes = [
       {
         name: 'organizationName',
-        value: 'Walli autogenerated certificate',
+        value: 'Xchange autogenerated certificate',
       },
     ];
 

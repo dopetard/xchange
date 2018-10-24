@@ -1,7 +1,17 @@
 language: node_js
 
 node_js:
-  - "node"
+  - "v10.12.0"
+
+matrix:
+  include:
+    - os: linux
+
+    - os: windows
+      before_install:
+        - choco install python2
+        - npm config set python C:/Python27/python.exe --global
+        - npm config set msvs_version 2017 --global
 
 matrix:
   include:

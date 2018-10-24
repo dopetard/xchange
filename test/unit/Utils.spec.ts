@@ -1,14 +1,15 @@
 import { expect } from 'chai';
+import os from 'os';
 import * as utils from '../../lib/Utils';
 
 describe('Utils', () => {
   const base = 'LTC';
   const quote = 'BTC';
 
-  const pairId = `${base}/${quote}`;
+  const pairId = `${quote}/${base}`;
 
   it('should concat pairId', () => {
-    expect(utils.getPairId(base, quote)).to.be.equal(pairId);
+    expect(utils.getPairId(quote, base)).to.be.equal(pairId);
   });
 
   it('should split pairId', () => {
@@ -16,11 +17,6 @@ describe('Utils', () => {
       base,
       quote,
     });
-  });
-
-  it('should check whether it is an object', () => {
-    expect(utils.isObject({})).to.be.true;
-    expect(utils.isObject([])).to.be.false;
   });
 
   it('should split derivation path', () => {
@@ -38,10 +34,48 @@ describe('Utils', () => {
     });
   });
 
+  it('should concat error code', () => {
+    const prefix = 0;
+    const code = 1;
+
+    expect(utils.concatErrorCode(prefix, code)).to.be.equal(`${prefix}.${code}`);
+  });
+
+  it('should capitalize the first letter', () => {
+    const input = 'test123';
+    const result = input.charAt(0).toUpperCase() + input.slice(1);
+
+    expect(utils.capitalizeFirstLetter(input)).to.be.equal(result);
+  });
+
+  it('should resolve home', () => {
+    const input = '~.xchange';
+
+    if (os.platform() !== 'win32') {
+      expect(utils.resolveHome(input).charAt(0)).to.be.equal('/');
+    } else {
+      expect(utils.resolveHome(input)).to.be.equal(input);
+    }
+  });
+
   it('should get a hex encoded Buffers and strings', () => {
     const string = 'test';
 
     expect(utils.getHexBuffer(string)).to.be.deep.equal(Buffer.from(string, 'hex'));
     expect(utils.getHexString(Buffer.from(string))).to.be.equal(Buffer.from(string).toString('hex'));
+  });
+
+  it('should check whether it is an object', () => {
+    expect(utils.isObject({})).to.be.true;
+    expect(utils.isObject([])).to.be.false;
+  });
+
+  it('should split host and port', () => {
+    const host = 'localhost';
+    const port = '9000';
+
+    const input = `${host}:${port}`;
+
+    expect(utils.splitListen(input)).to.be.deep.equal({ host, port });
   });
 });

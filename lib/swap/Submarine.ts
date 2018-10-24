@@ -2,7 +2,7 @@
  * This file is based on the repository github.com/submarineswaps/swaps-service created by Alex Bosworth
  */
 
-import { script, crypto } from 'bitcoinjs-lib';
+import { script } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
 import * as bip65 from 'bip65';
 import { toPushdataScript } from './SwapUtils';

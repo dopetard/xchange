@@ -1,0 +1,66 @@
+syntax = "proto3";
+
+package xchangerpc;
+
+service Xchange {
+  rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);
+
+  rpc NewAddress (NewAddressRequest) returns (NewAddressResponse);
+}
+
+enum OutputType {
+  BECH32 = 0;
+  COMPATIBILITY = 1;
+  LEGACY = 2;
+}
+
+message NewAddressRequest {
+  string currency = 1;
+  OutputType type = 2;
+}
+
+message NewAddressResponse {
+  string address = 1;
+}
+
+message GetInfoRequest {}
+message GetInfoResponse {
+  string version = 1;
+  XudInfo xudInfo = 2;
+  repeated CurrencyInfo chains = 3;
+}
+
+message XudInfo {
+  string version = 1;
+  string nodepubkey = 2;
+  bool lndbtc = 3;
+  bool lndltc = 4;
+  bool raiden = 5;
+}
+
+message CurrencyInfo {
+  string symbol = 1;
+  ChainInfo chain = 2;
+  LndInfo lnd = 3;
+}
+
+message ChainInfo {
+  int32 version = 1;
+  int32 protocolversion = 2;
+  int32 blocks = 3;
+  int32 connections = 5;
+  bool testnet = 8;
+}
+
+message LndInfo {
+  string version = 1;
+  LndChannels lndChannels = 3;
+  int32 blockheight = 4;
+  string error = 6;
+}
+
+message LndChannels {
+  int32 active = 1;
+  int32 inactive = 2;
+  int32 pending = 3;
+}

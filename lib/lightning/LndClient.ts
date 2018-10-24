@@ -2,7 +2,7 @@ import fs from 'fs';
 import grpc, { ClientReadableStream } from 'grpc';
 import BaseClient from '../BaseClient';
 import Logger from '../Logger';
-import Errors from '../consts/Errors';
+import Errors from './Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
@@ -51,8 +51,6 @@ interface LndClient {
 /** A class representing a client to interact with lnd. */
 class LndClient extends BaseClient implements LightningClient {
   public static readonly serviceName = 'LND';
-  private readonly disconnectedError = Errors.IS_DISCONNECTED(LndClient.serviceName);
-
   private uri!: string;
   private credentials!: grpc.ChannelCredentials;
 
@@ -64,7 +62,7 @@ class LndClient extends BaseClient implements LightningClient {
    * Create an lnd client.
    * @param config the lnd configuration
    */
-  constructor(private logger: Logger, config: LndConfig) {
+  constructor(private logger: Logger, config: LndConfig, public readonly symbol: string) {
     super();
 
     const { host, port, certpath, macaroonpath } = config;
@@ -85,18 +83,18 @@ class LndClient extends BaseClient implements LightningClient {
           this.throwFilesNotFound();
         }
       }
-
-      // this.lightning = new GrpcClient(uri, credentials);
     } else {
       this.throwFilesNotFound();
     }
   }
 
   private throwFilesNotFound = () => {
-    this.logger.error('could not find required files for LND');
-    throw(this.disconnectedError);
+    throw(Errors.COULD_NOT_FIND_FILES(this.symbol));
   }
 
+  /**
+   * Returns a boolean determines whether LND is ready or not
+   */
   public connect = async () => {
     if (this.isDisconnected()) {
       this.lightning = new GrpcClient(this.uri, this.credentials);
@@ -111,12 +109,12 @@ class LndClient extends BaseClient implements LightningClient {
           }
         } else {
           this.setClientStatus(ClientStatus.OutOfSync);
-          this.logger.error(`lnd at ${this.uri} is out of sync with chain, retrying in ${this.RECONNECT_TIMER} ms`);
+          this.logger.error(`${LndClient.serviceName} at ${this.uri} is out of sync with chain, retrying in ${this.RECONNECT_TIMER} ms`);
           this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
         }
       } catch (error) {
         this.setClientStatus(ClientStatus.Disconnected);
-        this.logger.error(`could not verify connection to lnd at ${this.uri}, error: ${JSON.stringify(error)},
+        this.logger.error(`could not verify connection to ${LndClient.serviceName} at ${this.uri}, error: ${JSON.stringify(error)},
         retrying in ${this.RECONNECT_TIMER} ms`);
         this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
       }

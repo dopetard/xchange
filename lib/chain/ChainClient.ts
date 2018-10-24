@@ -1,6 +1,5 @@
 import BaseClient from '../BaseClient';
 import Logger from '../Logger';
-import { ChainType } from '../consts/ChainType';
 import RpcClient, { RpcConfig } from '../RpcClient';
 import { ClientStatus } from '../consts/ClientStatus';
 import ChainClientInterface, { Info, Block } from './ChainClientInterface';
@@ -16,15 +15,16 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
   private rpcClient: RpcClient;
   private uri: string;
 
-  constructor(config: RpcConfig, private logger: Logger, public readonly serviceName: ChainType) {
+  constructor(private logger: Logger, config: RpcConfig, public readonly symbol: string) {
     super();
 
     this.rpcClient = new RpcClient(config);
-    this.rpcClient.on('error', error => this.emit('error', error));
     this.uri = `${config.host}:${config.port}`;
+    this.bindWs();
   }
 
   private bindWs = () => {
+    this.rpcClient.on('error', error => this.emit('error', error));
     this.rpcClient.on('message.orphan', (data) => {
       if (data.method === 'relevanttxaccepted') {
         const transactions = data.params;
@@ -43,7 +43,6 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
         const info = await this.getInfo();
         if (info.blocks) {
           await this.rpcClient.connect();
-          this.bindWs();
           this.setClientStatus(ClientStatus.Connected);
           if (this.reconnectionTimer) {
             clearTimeout(this.reconnectionTimer);
@@ -51,12 +50,12 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
           }
         } else {
           this.setClientStatus(ClientStatus.Disconnected);
-          this.logger.error(`${this.serviceName} at ${this.uri} is not able to connect, retrying in ${this.RECONNECT_TIMER} ms`);
+          this.logger.error(`${this.symbol} at ${this.uri} is not able to connect, retrying in ${this.RECONNECT_TIMER} ms`);
           this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
         }
       } catch (error) {
         this.setClientStatus(ClientStatus.Disconnected);
-        this.logger.error(`could not verify connection to lnd at ${this.uri}, error: ${JSON.stringify(error)},
+        this.logger.error(`could not verify connection to ${this.symbol} at ${this.uri}, error: ${JSON.stringify(error)},
         retrying in ${this.RECONNECT_TIMER} ms`);
         this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
       }

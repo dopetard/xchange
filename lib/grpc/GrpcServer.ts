@@ -4,7 +4,7 @@ import Logger from '../Logger';
 import Errors from './Errors';
 import GrpcService from './GrpcService';
 import Service from '../service/Service';
-import { WalliService } from '../proto/wallirpc_grpc_pb';
+import { XchangeService } from '../proto/xchangerpc_grpc_pb';
 import assert from 'assert';
 
 type GrpcConfig = {
@@ -25,9 +25,8 @@ class GrpcServer {
     this.grpcConfig = grpcConfig;
 
     const grpcService = new GrpcService(service);
-    this.server.addService(WalliService, {
+    this.server.addService(XchangeService, {
       getInfo: grpcService.getInfo,
-      createSubmarine: grpcService.createSubmarine,
     });
   }
 

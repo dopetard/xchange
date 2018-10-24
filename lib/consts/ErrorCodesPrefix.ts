@@ -1,9 +1,11 @@
 enum ErrorCodePrefix {
   General = 0,
   Grpc = 1,
-  Wallet = 2,
-  Lnd = 3,
-  Btcd = 4,
+  Service = 2,
+  Wallet = 3,
+  Chain = 4,
+  Lnd = 5,
+  Swap = 6,
 }
 
 export default ErrorCodePrefix;

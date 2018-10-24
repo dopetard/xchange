@@ -1,14 +1,11 @@
 import { EventEmitter } from 'events';
 import { ClientStatus } from './consts/ClientStatus';
 
-export interface IBaseClient {
-  connect(): Promise<void>;
-}
-
 class BaseClient extends EventEmitter {
   protected status = ClientStatus.Disconnected;
   protected RECONNECT_TIMER = 5000;
   protected reconnectionTimer?: NodeJS.Timer;
+
   constructor() {
     super();
   }

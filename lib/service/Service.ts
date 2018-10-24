@@ -1,69 +1,97 @@
 import Logger from '../Logger';
-import WalletManager from '../wallet/WalletManager';
-import ChainClient from '../chain/ChainClient';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
-import LndClient, { Info as LndInfo } from '../lightning/LndClient';
-import SwapManager from '../swap/SwapManager';
-import Networks from '../consts/Networks';
+import { Info as LndInfo } from '../lightning/LndClient';
 import XudClient, { XudInfo } from '../xud/XudClient';
-import { getHexBuffer } from '../Utils';
+import SwapManager from '../swap/SwapManager';
+import { Currency } from '../wallet/Wallet';
+import WalletManager from '../wallet/WalletManager';
+import { OutputType } from '../consts/OutputType';
+import Errors from './Errors';
 
 const packageJson = require('../../package.json');
 
 type ServiceComponents = {
-  logger: Logger,
-  walletManager: WalletManager,
-  swapManager: SwapManager,
-  btcdClient: ChainClient,
-  ltcdClient: ChainClient,
-  lndClient: LndClient,
-  xudClient: XudClient,
+  logger: Logger;
+  xudClient: XudClient;
+  currencies: Map<string, Currency>;
+  walletManager: WalletManager;
+  swapManager: SwapManager;
 };
 
-type WalliInfo = {
-  version: string,
-  btcdInfo: ChainInfo,
-  ltcdInfo: ChainInfo,
-  lndInfo: LndInfo,
-  xudInfo: XudInfo,
+type CurrencyInfo = {
+  symbol: string;
+  chainInfo: ChainInfo;
+  lndInfo: LndInfo;
 };
 
-// TODO: refunds for Submarine Swaps
+type XchangeInfo = {
+  version: string;
+  xudInfo: XudInfo;
+  currencies: CurrencyInfo[];
+};
+
 class Service {
 
   constructor(private serviceComponents: ServiceComponents) {}
 
   /**
-   * Get general information about walli-server and the nodes it is connected to
+   * Get general information about the Xchange instance and the nodes it is connected to
    */
-  public getInfo = async (): Promise<WalliInfo> => {
-    const { btcdClient, ltcdClient, lndClient, xudClient } = this.serviceComponents;
+  public getInfo = async (): Promise<XchangeInfo> => {
+    const { xudClient, currencies } = this.serviceComponents;
     const version = packageJson.version;
-    const info = await Promise.all([
-      btcdClient.getInfo(),
-      ltcdClient.getInfo(),
-      lndClient.getLndInfo(),
-      xudClient.getXudInfo(),
-    ]);
 
-    // TODO: refactor this and make more readable
+    const currencyInfos: CurrencyInfo[] = [];
+
+    const getCurrencyInfo = async (currency: Currency) => {
+      const chainInfo = await currency.chainClient.getInfo();
+      const lndInfo = await currency.lndClient.getLndInfo();
+
+      currencyInfos.push({
+        chainInfo,
+        lndInfo,
+        symbol: currency.symbol,
+      });
+    };
+
+    const currenciesPromises: Promise<void>[] = [];
+
+    currencies.forEach((currency) => {
+      currenciesPromises.push(getCurrencyInfo(currency));
+    });
+
+    await Promise.all(currenciesPromises);
+
+    const xudInfo = await xudClient.getXudInfo();
+
     return {
       version,
-      btcdInfo: info[0],
-      ltcdInfo: info[1],
-      lndInfo:  info[2],
-      xudInfo:  info[3],
+      xudInfo,
+      currencies: currencyInfos,
     };
   }
 
   /**
-   * Create a Submarine Swap
+   * Get a new address for the specified coin
    */
-  public createSubmarine = async (args: { invoice: string }) => {
-    return this.serviceComponents.swapManager.createSwap(
-      args.invoice,
-      getHexBuffer('02fcba7ecf41bc7e1be4ee122d9d22e3333671eb0a3a87b5cdf099d59874e1940f'),
-    );
+  public newAddress = async (args: { currency: string, type: number }): Promise<string> => {
+    const { walletManager } = this.serviceComponents;
+
+    const wallet = walletManager.wallets.get(args.currency);
+
+    if (!wallet) {
+      throw Errors.CURRENCY_NOT_FOUND(args.currency);
+    }
+
+    const getOutputType = (type: number) => {
+      switch (type) {
+        case 0: return OutputType.Bech32;
+        case 1: return OutputType.Compatibility;
+        default: return OutputType.Legacy;
+      }
+    };
+
+    return wallet.getNewAddress(getOutputType(args.type));
   }
 }
 
