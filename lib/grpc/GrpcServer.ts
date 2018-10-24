@@ -4,7 +4,7 @@ import Logger from '../Logger';
 import Errors from './Errors';
 import GrpcService from './GrpcService';
 import Service from '../service/Service';
-import { XchangeService } from '../proto/xchange_grpc_pb';
+import { XchangeService } from '../proto/xchangerpc_grpc_pb';
 import assert from 'assert';
 
 type GrpcConfig = {

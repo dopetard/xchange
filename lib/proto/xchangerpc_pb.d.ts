@@ -5,6 +5,52 @@
 
 import * as jspb from "google-protobuf";
 
+export class NewAddressRequest extends jspb.Message { 
+    getCurrency(): string;
+    setCurrency(value: string): void;
+
+    getType(): OutputType;
+    setType(value: OutputType): void;
+
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): NewAddressRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: NewAddressRequest): NewAddressRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: NewAddressRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): NewAddressRequest;
+    static deserializeBinaryFromReader(message: NewAddressRequest, reader: jspb.BinaryReader): NewAddressRequest;
+}
+
+export namespace NewAddressRequest {
+    export type AsObject = {
+        currency: string,
+        type: OutputType,
+    }
+}
+
+export class NewAddressResponse extends jspb.Message { 
+    getAddress(): string;
+    setAddress(value: string): void;
+
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): NewAddressResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: NewAddressResponse): NewAddressResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: NewAddressResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): NewAddressResponse;
+    static deserializeBinaryFromReader(message: NewAddressResponse, reader: jspb.BinaryReader): NewAddressResponse;
+}
+
+export namespace NewAddressResponse {
+    export type AsObject = {
+        address: string,
+    }
+}
+
 export class GetInfoRequest extends jspb.Message { 
 
     serializeBinary(): Uint8Array;
@@ -228,4 +274,10 @@ export namespace LndChannels {
         inactive: number,
         pending: number,
     }
+}
+
+export enum OutputType {
+    BECH32 = 0,
+    COMPATIBILITY = 1,
+    LEGACY = 2,
 }

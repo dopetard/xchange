@@ -1,5 +1,4 @@
 import { EventEmitter } from 'events';
-import { ChainType } from '../consts/ChainType';
 import RpcClient, { RpcConfig } from '../RpcClient';
 import ChainClientInterface, { Info, Block } from './ChainClientInterface';
 
@@ -13,7 +12,7 @@ interface ChainClientEvents {
 class ChainClient extends EventEmitter implements ChainClientInterface, ChainClientEvents {
   private rpcClient: RpcClient;
 
-  constructor(config: RpcConfig, public readonly chainType: ChainType) {
+  constructor(config: RpcConfig, public readonly symbol: string) {
     super();
 
     this.rpcClient = new RpcClient(config);

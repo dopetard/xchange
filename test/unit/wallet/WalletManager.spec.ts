@@ -5,22 +5,28 @@ import bip32 from 'bip32';
 import bip39 from 'bip39';
 import WalletManager from '../../../lib/wallet/WalletManager';
 import WalletErrors from '../../../lib/wallet/Errors';
-import { ChainType } from '../../../lib/consts/ChainType';
 import Networks from '../../../lib/consts/Networks';
 import ChainClient from '../../../lib/chain/ChainClient';
+import LndClient from '../../../lib/lightning/LndClient';
 
 describe('WalletManager', () => {
   const mnemonic = bip39.generateMnemonic();
+
+  const chainClient = mock(ChainClient);
+  const lndClient = mock(LndClient);
+
   const coins = [
     {
-      chain: ChainType.BTC,
+      chainClient,
+      lndClient,
+      symbol: 'BTC',
       network: Networks.bitcoinRegtest,
-      client: mock(ChainClient),
     },
     {
-      chain: ChainType.LTC,
+      chainClient,
+      lndClient,
+      symbol: 'LTC',
       network: Networks.litecoinRegtest,
-      client: mock(ChainClient),
     },
   ];
   const walletPath = 'wallet.dat';
@@ -45,7 +51,7 @@ describe('WalletManager', () => {
     walletManager = WalletManager.fromMnemonic(mnemonic, coins, walletPath, false);
 
     coins.forEach((coin, index) => {
-      const wallet = walletManager.wallets.get(coin.chain);
+      const wallet = walletManager.wallets.get(coin.symbol);
 
       expect(wallet).to.not.be.undefined;
       const { derivationPath, highestUsedIndex } = wallet!;

@@ -1,12 +1,10 @@
 import fs from 'fs';
-import bip32, { BIP32 } from 'bip32';
+import bip32 from 'bip32';
 import bip39 from 'bip39';
 import exitHook from 'exit-hook';
 import Errors from './Errors';
-import Wallet from './Wallet';
+import Wallet, { Currency } from './Wallet';
 import { splitDerivationPath } from '../Utils';
-import { ChainType } from '../consts/ChainType';
-import ChainClient from '../chain/ChainClient';
 import { Network } from 'bitcoinjs-lib';
 
 type WalletInfo = {
@@ -19,12 +17,6 @@ type WalletFile = {
   // Base58 encoded master node
   master: string;
   wallets: Map<string, WalletInfo>;
-};
-
-type Coin = {
-  chain: ChainType;
-  network: Network;
-  client: ChainClient;
 };
 
 // TODO: recovery with existing mnemonic
@@ -43,14 +35,14 @@ class WalletManager {
    * @param walletPath where information about the wallets should be stored
    * @param writeOnExit whether the wallet should be written to the disk when exiting
    */
-  constructor(coins: Coin[], walletPath: string, writeOnExit = true) {
+  constructor(coins: Currency[], walletPath: string, writeOnExit = true) {
     const walletFile = this.loadWallet(walletPath);
 
     this.masterNode = walletFile.master;
     const walletsInfo = walletFile.wallets;
 
     coins.forEach((coin) => {
-      let walletInfo = walletsInfo.get(coin.chain);
+      let walletInfo = walletsInfo.get(coin.symbol);
 
       // Generate new sub wallet information if it doesn't exist
       if (!walletInfo) {
@@ -61,12 +53,12 @@ class WalletManager {
         };
       }
 
-      this.wallets.set(coin.chain, new Wallet(
+      this.wallets.set(coin.symbol, new Wallet(
         bip32.fromBase58(this.masterNode),
         walletInfo.derivationPath,
         walletInfo.highestUsedIndex,
         walletInfo.network,
-        coin.client,
+        coin.chainClient,
       ));
     });
 
@@ -80,7 +72,7 @@ class WalletManager {
   /**
    * Initiates a new WalletManager with a mnemonic
    */
-  public static fromMnemonic = (mnemonic: string, coins: Coin[], walletPath: string, writeOnExit = true) => {
+  public static fromMnemonic = (mnemonic: string, coins: Currency[], walletPath: string, writeOnExit = true) => {
     if (!bip39.validateMnemonic(mnemonic)) {
       throw(Errors.INVALID_MNEMONIC(mnemonic));
     }

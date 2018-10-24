@@ -3,7 +3,7 @@ import path from 'path';
 import grpc from 'grpc';
 import { Arguments } from 'yargs';
 import { getServiceDataDir } from '../Utils';
-import { XchangeClient } from '../proto/xchange_grpc_pb';
+import { XchangeClient } from '../proto/xchangerpc_grpc_pb';
 
 interface GrpcResponse {
   toObject: Function;

@@ -14,7 +14,6 @@ type UTXO = TransactionOutput & {
 
 type Currency = {
   symbol: string;
-  wallet: Wallet;
   network: Network;
   chainClient: ChainClient;
   lndClient: LndClient;
