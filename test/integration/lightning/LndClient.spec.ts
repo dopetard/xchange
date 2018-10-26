@@ -14,12 +14,7 @@ describe('LndClient', () => {
   let lndBtc2PubKey: string;
 
   it('LndClients should connect', async () => {
-<<<<<<< HEAD
-    await lndBtcClient1.connect();
-    await lndBtcClient2.connect();
-=======
     await connectPromise();
->>>>>>> 107a71f46c65c35913c7fdabed38aab45ece3f72
 
     // Connect the LNDs to eachother
     const lndBtc2Info = await lndBtcClient2.getInfo();
@@ -87,15 +82,16 @@ const connectPromise = async () => {
 };
 
 const certpath = path.join('docker', 'data', 'lnd', 'tls.cert');
+const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
 
 export const lndBtcClient1 = new LndClient(Logger.disabledLogger, {
   certpath,
-  host: 'localhost',
+  host,
   port: 10009,
 }, 'BTC');
 
 export const lndBtcClient2 = new LndClient(Logger.disabledLogger, {
   certpath,
-  host: 'localhost',
+  host,
   port: 10010,
 }, 'LTC');

@@ -95,7 +95,7 @@ class LndClient extends BaseClient implements LightningClient {
   /**
    * Returns a boolean determines whether LND is ready or not
    */
-  public connect = async () => {
+  public connect = async (): Promise<boolean> => {
     if (this.isDisconnected()) {
       this.lightning = new GrpcClient(this.uri, this.credentials);
       try {
@@ -107,18 +107,22 @@ class LndClient extends BaseClient implements LightningClient {
             clearTimeout(this.reconnectionTimer);
             this.reconnectionTimer = undefined;
           }
+          return true;
         } else {
           this.setClientStatus(ClientStatus.OutOfSync);
           this.logger.error(`${LndClient.serviceName} at ${this.uri} is out of sync with chain, retrying in ${this.RECONNECT_TIMER} ms`);
           this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
+          return false;
         }
       } catch (error) {
         this.setClientStatus(ClientStatus.Disconnected);
         this.logger.error(`could not verify connection to ${LndClient.serviceName} at ${this.uri}, error: ${JSON.stringify(error)},
         retrying in ${this.RECONNECT_TIMER} ms`);
         this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
+        return false;
       }
     }
+    return false;
   }
 
   /** End all subscriptions and reconnection attempts. */

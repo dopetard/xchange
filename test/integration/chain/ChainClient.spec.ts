@@ -1,4 +1,5 @@
 import { expect } from 'chai';
+import Logger from '../../../lib/Logger';
 import path from 'path';
 import { ECPair, TransactionBuilder, Transaction, Network } from 'bitcoinjs-lib';
 import ChainClient from '../../../lib/chain/ChainClient';
@@ -115,8 +116,8 @@ export const ltcKeys = ECPair.fromWIF('cPnCzwHtVipcX7hb72mkkMMf4MSrknHbRnff2LDut
 export const ltcAddress = 'mysNm7METD1JffsC4E1ZW7EcPapmVm9AK4';
 
 const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
-
-export const btcdClient = new ChainClient({
+const logger = new Logger('./test', 'debug');
+export const btcdClient = new ChainClient(logger, {
   host,
   port: 18334,
   rpcuser: 'user',
@@ -124,7 +125,7 @@ export const btcdClient = new ChainClient({
   certpath: path.join('docker', 'data', 'rpc.cert'),
 }, 'BTC');
 
-export const ltcdClient = new ChainClient({
+export const ltcdClient = new ChainClient(logger, {
   host,
   port: 19334,
   rpcpass: 'user',
