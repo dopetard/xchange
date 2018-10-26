@@ -27,6 +27,7 @@ class GrpcServer {
     const grpcService = new GrpcService(service);
     this.server.addService(XchangeService, {
       getInfo: grpcService.getInfo,
+      newAddress: grpcService.newAddress,
     });
   }
 

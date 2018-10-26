@@ -12,7 +12,6 @@ import { XudConfig } from './xud/XudClient';
 import Errors from './consts/Errors';
 
 type ServiceOptions = {
-  datadir?: string;
   configpath?: string;
 };
 
@@ -22,7 +21,6 @@ type CurrencyConfig = {
   chain: RpcConfig & ServiceOptions;
   lnd?: LndConfig & ServiceOptions;
 };
-
 type ConfigType = {
   datadir: string;
 
@@ -81,15 +79,13 @@ class Config {
           chain: {
             host: '127.0.0.1',
             port: 18334,
-            datadir: getServiceDataDir('btcd'),
-            certpath: '',
-            rpcpass: 'user',
-            rpcuser: 'user',
+            certpath: path.join(getServiceDataDir('btcd'), 'rpc.cert'),
+            rpcpass: 'kek',
+            rpcuser: 'kek',
           },
           lnd: {
             host: '127.0.0.1',
             port: 10009,
-            datadir: getServiceDataDir('lnd'),
             certpath: path.join(getServiceDataDir('lnd'), 'tls.cert'),
             macaroonpath: path.join(getServiceDataDir('lnd'), 'data', 'chain', 'bitcoin', 'testnet', 'admin.macaroon'),
           },
@@ -100,15 +96,13 @@ class Config {
           chain: {
             host: '127.0.0.1',
             port: 19334,
-            datadir: getServiceDataDir('ltcd'),
-            certpath: '',
-            rpcpass: 'user',
-            rpcuser: 'user',
+            certpath: path.join(getServiceDataDir('ltcd'), 'rpc.cert'),
+            rpcpass: 'kek',
+            rpcuser: 'kek',
           },
           lnd: {
             host: '127.0.0.1',
             port: 11009,
-            datadir: getServiceDataDir('lnd'),
             certpath: path.join(getServiceDataDir('lnd'), 'tls.cert'),
             macaroonpath: path.join(getServiceDataDir('lnd'), 'data', 'chain', 'litecoin', 'testnet', 'admin.macaroon'),
           },
