@@ -90,24 +90,28 @@ class Xchange {
   }
 
   private connectChainClient = async (client: ChainClient) => {
+    const service = `${client.symbol} chain`;
+
     try {
       await client.connect();
 
       const info = await client.getInfo();
-      this.logger.verbose(`${client.symbol} chain status: ${info.blocks} blocks`);
+      this.logStatus(service, info);
     } catch (error) {
-      this.logCouldNotConnect(`${client.symbol} chain client`, error);
+      this.logCouldNotConnect(service, error);
     }
   }
 
   private connectLnd = async (client: LndClient) => {
+    const service = `${client.symbol} LND`;
+
     try {
       await client.connect();
 
       const info = await client.getInfo();
-      this.logger.verbose(`${client.symbol} LND status: ${JSON.stringify(info, undefined, 2)}`);
+      this.logStatus(service, info);
     } catch (error) {
-      this.logCouldNotConnect(`${client.symbol} LND`, error);
+      this.logCouldNotConnect(service, error);
     }
   }
 
@@ -116,7 +120,7 @@ class Xchange {
       await this.xudClient.connect();
 
       const info = await this.xudClient.getXudInfo();
-      this.logger.verbose(`XUD status: ${JSON.stringify(info)}`);
+      this.logStatus('XUD', info);
     } catch (error) {
       this.logCouldNotConnect(XudClient.serviceName, error);
     }
@@ -139,6 +143,10 @@ class Xchange {
         this.logger.warn(`Could not initialize currency ${currency.symbol}: ${error.message}`);
       }
     });
+  }
+
+  private logStatus = (service: string, status: Object) => {
+    this.logger.verbose(`${service} status: ${JSON.stringify(status, undefined, 2)}`);
   }
 
   private logCouldNotConnect = (service: string, error: any) => {

@@ -80,8 +80,8 @@ class Config {
             host: '127.0.0.1',
             port: 18334,
             certpath: path.join(getServiceDataDir('btcd'), 'rpc.cert'),
-            rpcpass: 'kek',
-            rpcuser: 'kek',
+            rpcuser: 'user',
+            rpcpass: 'user',
           },
           lnd: {
             host: '127.0.0.1',
@@ -97,8 +97,8 @@ class Config {
             host: '127.0.0.1',
             port: 19334,
             certpath: path.join(getServiceDataDir('ltcd'), 'rpc.cert'),
-            rpcpass: 'kek',
-            rpcuser: 'kek',
+            rpcuser: 'user',
+            rpcpass: 'user',
           },
           lnd: {
             host: '127.0.0.1',
@@ -173,7 +173,7 @@ class Config {
           deepMerge(mergeTarget, configClient);
         }
       } catch (error) {
-        throw Errors.COULD_NOT_PARSE_CONFIG(filename, error);
+        throw Errors.COULD_NOT_PARSE_CONFIG(filename, JSON.stringify(error));
       }
     }
   }
@@ -184,7 +184,7 @@ class Config {
         const tomlFile = fs.readFileSync(filename, 'utf-8');
         return toml.parse(tomlFile);
       } catch (error) {
-        throw Errors.COULD_NOT_PARSE_CONFIG(filename, error);
+        throw Errors.COULD_NOT_PARSE_CONFIG(filename, JSON.stringify(error));
       }
     }
   }

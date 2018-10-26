@@ -70,6 +70,7 @@ class GrpcService {
       getInfoResponse.currencies.forEach((currency) => {
         const currencyInfo = new xchangerpc.CurrencyInfo();
 
+        currencyInfo.setSymbol(currency.symbol);
         currencyInfo.setChain(createChainClientInfo(currency.chainInfo));
         currencyInfo.setLnd(createLndInfo(currency.lndInfo));
 
