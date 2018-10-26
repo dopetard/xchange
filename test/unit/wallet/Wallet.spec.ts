@@ -6,7 +6,7 @@ import bip39 from 'bip39';
 import Networks from '../../../lib/consts/Networks';
 import Wallet from '../../../lib/wallet/Wallet';
 import ChainClient from '../../../lib/chain/ChainClient';
-import { OutputType } from '../../../lib/consts/OutputType';
+import { OutputType } from '../../../lib/consts/Enums';
 import { getPubKeyHashEncodeFuntion, getHexBuffer } from '../../../lib/Utils';
 
 describe('Wallet', () => {

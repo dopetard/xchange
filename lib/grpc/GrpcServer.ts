@@ -28,6 +28,7 @@ class GrpcServer {
     this.server.addService(XchangeService, {
       getInfo: grpcService.getInfo,
       newAddress: grpcService.newAddress,
+      createSwap: grpcService.createSwap,
     });
   }
 

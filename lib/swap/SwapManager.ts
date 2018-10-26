@@ -8,9 +8,10 @@ import { p2wshOutput, p2wpkhOutput } from './Scripts';
 import { constructClaimTransaction } from './Claim';
 import { TransactionOutput } from '../consts/Types';
 import Errors from './Errors';
-import { OutputType } from '../consts/OutputType';
+import { OutputType } from '../consts/Enums';
 import { Currency } from '../wallet/Wallet';
 import WalletManager from '../wallet/WalletManager';
+import { OrderSide } from '../proto/xchangerpc_pb';
 
 type BaseSwapDetails = {
   redeemScript: Buffer;
@@ -69,18 +70,18 @@ class SwapManager {
   }
 
   /**
-   * Creates a new Swap
+   * Creates a new Swap from the chain to Lightning
    *
    * @param pairId pair of the Swap
-   * @param isBuy whether the order is a buy one
+   * @param orderSide whether the order is a buy or sell one
    * @param invoice the invoice that should be paid
    * @param refundPublicKey the public key for the refund
    * @param outputType what kind of adress should be returned
    *
    * @returns an onchain address
    */
-  public createSwap = async (pairId: string, isBuy: boolean, invoice: string, refundPublicKey: Buffer, outputType: OutputType) => {
-    const { symbol, wallet, chainClient, lndClient, swaps } = this.getCurrency(pairId, isBuy);
+  public createSwap = async (pairId: string, orderSide: OrderSide, invoice: string, refundPublicKey: Buffer, outputType: OutputType) => {
+    const { symbol, wallet, chainClient, lndClient, swaps } = this.getCurrency(pairId, orderSide);
 
     const { blocks } = await chainClient.getInfo();
     const { paymentHash } = await lndClient.decodePayReq(invoice);
@@ -113,19 +114,19 @@ class SwapManager {
   }
 
   /**
-   * Creates a new reverse Swap
+   * Creates a new reverse Swap from Lightning to the chain
    *
    * @param pairId pair of the Swap
-   * @param isBuy whether the order is a buy one
+   * @param orderSide whether the order is a buy or sell one
    * @param destinationPublicKey the public key for the claiming
    * @param amount the amount of the invoice
    *
    * @returns a Lightning invoice and the hash of a onchain transaction
    */
-  public createReverseSwap = async (pairId: string, isBuy: boolean, destinationPublicKey: Buffer, amount: number):
+  public createReverseSwap = async (pairId: string, orderSide: OrderSide, destinationPublicKey: Buffer, amount: number):
     Promise<{ invoice: string, txHash: string }> => {
 
-    const { symbol, wallet, chainClient, lndClient, reverseSwaps } = this.getCurrency(pairId, isBuy);
+    const { symbol, wallet, chainClient, lndClient, reverseSwaps } = this.getCurrency(pairId, orderSide);
 
     this.logger.debug(`Creating new reverse Swap on ${symbol} for public key: ${getHexString(destinationPublicKey)}`);
 
@@ -219,14 +220,14 @@ class SwapManager {
     await chainClient.sendRawTransaction(claimTx.toHex());
   }
 
-  private getCurrency = (pairId: string, isBuy: boolean) => {
+  private getCurrency = (pairId: string, orderSide: OrderSide) => {
     const pair = this.pairMap.get(pairId);
 
     if (!pair) {
       throw Errors.PAIR_NOT_FOUND(pairId);
     }
 
-    const symbol =  isBuy ? pair.quote : pair.base;
+    const symbol = orderSide === OrderSide.BUY ? pair.quote : pair.base;
 
     return {
       ...this.currencies.get(symbol)!,

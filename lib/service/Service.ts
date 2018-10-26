@@ -5,8 +5,10 @@ import XudClient, { XudInfo } from '../xud/XudClient';
 import SwapManager from '../swap/SwapManager';
 import { Currency } from '../wallet/Wallet';
 import WalletManager from '../wallet/WalletManager';
-import { OutputType } from '../consts/OutputType';
+import { OutputType } from '../consts/Enums';
 import Errors from './Errors';
+import { OrderSide } from '../proto/xchangerpc_pb';
+import { getHexBuffer } from '../Utils';
 
 const packageJson = require('../../package.json');
 
@@ -30,12 +32,13 @@ type XchangeInfo = {
   currencies: CurrencyInfo[];
 };
 
+// TODO: "invalid argument" errors
 class Service {
 
   constructor(private serviceComponents: ServiceComponents) {}
 
   /**
-   * Get general information about the Xchange instance and the nodes it is connected to
+   * Gets general information about the Xchange instance and the nodes it is connected to
    */
   public getInfo = async (): Promise<XchangeInfo> => {
     const { xudClient, currencies } = this.serviceComponents;
@@ -72,7 +75,7 @@ class Service {
   }
 
   /**
-   * Get a new address for the specified coin
+   * Gets a new address for the specified coin
    */
   public newAddress = async (args: { currency: string, type: number }): Promise<string> => {
     const { walletManager } = this.serviceComponents;
@@ -83,15 +86,40 @@ class Service {
       throw Errors.CURRENCY_NOT_FOUND(args.currency);
     }
 
-    const getOutputType = (type: number) => {
-      switch (type) {
-        case 0: return OutputType.Bech32;
-        case 1: return OutputType.Compatibility;
-        default: return OutputType.Legacy;
-      }
-    };
+    return wallet.getNewAddress(this.getOutputType(args.type));
+  }
 
-    return wallet.getNewAddress(getOutputType(args.type));
+  /**
+   * Creates a new Swap from the chain to Lightning
+   */
+  public createSwap = async (args: { pairId: string, side: number, invoice: string, refundPublicKey: string, outputType: number }):
+    Promise<string> => {
+
+    const { swapManager } = this.serviceComponents;
+
+    const orderSide = this.getOrderSide(args.side);
+    const outputType = this.getOutputType(args.outputType);
+
+    const refundPublicKey = getHexBuffer(args.refundPublicKey);
+
+    return await swapManager.createSwap(args.pairId, orderSide, args.invoice, refundPublicKey, outputType);
+  }
+
+  private getOrderSide = (side: number) => {
+    switch (side) {
+      case 0: return OrderSide.BUY;
+      case 1: return OrderSide.SELL;
+
+      default: throw Errors.ORDER_SIDE_NOT_FOUND(side);
+    }
+  }
+
+  private getOutputType = (type: number) => {
+    switch (type) {
+      case 0: return OutputType.Bech32;
+      case 1: return OutputType.Compatibility;
+      default: return OutputType.Legacy;
+    }
   }
 }
 

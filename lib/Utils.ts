@@ -1,6 +1,6 @@
 import os from 'os';
 import path from 'path';
-import { OutputType } from './consts/OutputType';
+import { OutputType } from './consts/Enums';
 import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2wpkhOutput, p2pkhOutput, p2shP2wpkhOutput } from './swap/Scripts';
 
 /**

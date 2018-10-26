@@ -7,7 +7,7 @@ import { Transaction, crypto, script, ECPair } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
 import * as varuint from 'varuint-bitcoin';
 import { encodeSignature, scriptBuffersToScript } from './SwapUtils';
-import { OutputType } from '../consts/OutputType';
+import { OutputType } from '../consts/Enums';
 import { TransactionOutput } from '../consts/Types';
 
 // TODO: claiming with multiple UTXOs

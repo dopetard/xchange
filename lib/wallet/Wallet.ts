@@ -2,7 +2,7 @@ import { BIP32 } from 'bip32';
 import FastPriorityQueue from 'fastpriorityqueue';
 import { Transaction, Network, address, crypto, TransactionBuilder, ECPair } from 'bitcoinjs-lib';
 import ChainClient from '../chain/ChainClient';
-import { OutputType } from '../consts/OutputType';
+import { OutputType } from '../consts/Enums';
 import { TransactionOutput } from '../consts/Types';
 import { getPubKeyHashEncodeFuntion, getHexString } from '../Utils';
 import Errors from './Errors';

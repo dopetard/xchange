@@ -6,6 +6,8 @@ service Xchange {
   rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);
 
   rpc NewAddress (NewAddressRequest) returns (NewAddressResponse);
+
+  rpc CreateSwap (CreateSwapRequest) returns (CreateSwapResponse);
 }
 
 enum OutputType {
@@ -14,13 +16,9 @@ enum OutputType {
   LEGACY = 2;
 }
 
-message NewAddressRequest {
-  string currency = 1;
-  OutputType type = 2;
-}
-
-message NewAddressResponse {
-  string address = 1;
+enum OrderSide {
+  BUY = 0;
+  SELL = 1;
 }
 
 message GetInfoRequest {}
@@ -63,4 +61,25 @@ message LndChannels {
   int32 active = 1;
   int32 inactive = 2;
   int32 pending = 3;
+}
+
+message NewAddressRequest {
+  string currency = 1;
+  OutputType type = 2;
+}
+
+message NewAddressResponse {
+  string address = 1;
+}
+
+message CreateSwapRequest {
+  string pair_id = 1;
+  OrderSide side = 2;
+  string invoice = 3;
+  string refund_public_key = 4;
+  OutputType output_type = 5; 
+}
+
+message CreateSwapResponse {
+  string address = 1;
 }

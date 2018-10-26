@@ -98,6 +98,19 @@ class GrpcService {
       callback(error, null);
     }
   }
+
+  public createSwap: grpc.handleUnaryCall<xchangerpc.CreateSwapRequest, xchangerpc.CreateSwapResponse> = async (call, callback) => {
+    try {
+      const address = await this.service.createSwap(call.request.toObject());
+
+      const response = new xchangerpc.CreateSwapResponse();
+      response.setAddress(address);
+
+      callback(null, response);
+    } catch (error) {
+      callback(error, null);
+    }
+  }
 }
 
 export default GrpcService;

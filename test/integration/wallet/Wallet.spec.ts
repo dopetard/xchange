@@ -3,7 +3,7 @@ import bip32 from 'bip32';
 import bip39 from 'bip39';
 import Wallet from '../../../lib/wallet/Wallet';
 import Networks from '../../../lib/consts/Networks';
-import { OutputType } from '../../../lib/consts/OutputType';
+import { OutputType } from '../../../lib/consts/Enums';
 import { btcdClient, btcManager } from '../chain/ChainClient.spec';
 
 describe('Wallet', () => {
