@@ -21,7 +21,7 @@ describe('LndClient', () => {
     await lndBtcClient1.connectPeer(lndBtc2Info.identityPubkey, 'lnd:9735');
 
     lndBtc2PubKey = lndBtc2Info.identityPubkey;
-  }).timeout(10000);
+  }).timeout(30000);
 
   it('LndClients should fund get funds', async () => {
     const btcAddress = await lndBtcClient1.newAddress();

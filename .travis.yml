@@ -20,8 +20,6 @@ matrix:
     - os: windows
       before_install:
         - choco install docker-compose
-        - cd C:\Program Files\Docker\
-        - DockerCli.exe -SwitchLinuxEngine
         - choco install python2
         - npm config set python C:/Python27/python.exe --global
         - npm config set msvs_version 2017 --global
