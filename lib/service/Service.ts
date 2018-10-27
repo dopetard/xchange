@@ -38,7 +38,7 @@ class Service {
   constructor(private serviceComponents: ServiceComponents) {}
 
   /**
-   * Gets general information about the Xchange instance and the nodes it is connected to
+   * Gets general information about this Xchange instance and the nodes it is connected to
    */
   public getInfo = async (): Promise<XchangeInfo> => {
     const { xudClient, currencies } = this.serviceComponents;
@@ -75,7 +75,32 @@ class Service {
   }
 
   /**
-   * Gets a new address for the specified coin
+   * Gets the balance for either all wallets or just a single one if specified
+   */
+  public getBalance = (args: { currency: string }): Map<string, number> => {
+    const { walletManager } = this.serviceComponents;
+
+    const result = new Map<string, number>();
+
+    if (args.currency !== '') {
+      const wallet = walletManager.wallets.get(args.currency);
+
+      if (!wallet) {
+        throw Errors.CURRENCY_NOT_FOUND(args.currency);
+      }
+
+      result.set(args.currency, wallet.getBalance());
+    } else {
+      walletManager.wallets.forEach((wallet, currency) => {
+        result.set(currency, wallet.getBalance());
+      });
+    }
+
+    return result;
+  }
+
+  /**
+   * Gets a new address of a specified wallet. The "type" parameter is optional and defaults to "OutputType.LEGACY"
    */
   public newAddress = async (args: { currency: string, type: number }): Promise<string> => {
     const { walletManager } = this.serviceComponents;
