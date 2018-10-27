@@ -22,6 +22,8 @@ describe('Wallet', () => {
     btcdClient,
   );
 
+  let walletBalance: number;
+
   it('should recognize transactions to its addresses', async () => {
     const addresses: { address: string, amount: number }[] = [];
     let expectedBalance = 0;
@@ -61,7 +63,24 @@ describe('Wallet', () => {
     await balancePromise;
 
     expect(wallet.getBalance()).to.be.equal(expectedBalance);
+
+    walletBalance = expectedBalance;
   }).timeout(5000);
+
+  it('should spend UTXOs', async () => {
+    expect(walletBalance).to.not.be.undefined;
+
+    const destinationAddress = await wallet.getNewAddress(OutputType.Bech32);
+    const destinationAmount = walletBalance - 1000;
+
+    const { tx, vout } = await wallet.sendToAddress(destinationAddress, destinationAmount);
+
+    await btcdClient.sendRawTransaction(tx.toHex());
+    await btcdClient.generate(1);
+
+    expect(vout).to.be.equal(0);
+    expect(wallet.getBalance()).to.be.equal(destinationAmount);
+  });
 
   after(async () => {
     await btcdClient.disconnect();

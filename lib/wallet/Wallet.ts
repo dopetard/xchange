@@ -152,6 +152,7 @@ class Wallet {
   }
 
   // TODO: fee estimation
+  // TODO: compatibility for nested Segwit addresses
   /** Sends a specific amount of funds to and address
    *
    * @param address address to which funds should be sent
@@ -172,16 +173,24 @@ class Wallet {
     });
 
     // Throw an error if the wallet doesn't have enough funds
-    if (missingAmount >= 0) {
+    if (missingAmount > 0) {
       throw Errors.NOT_ENOUGH_FUNDS(amount);
     }
+
+    // Remove the UTXOs that are going to be spent from the UTXOs of the wallet
+    this.utxos.removeMany((utxo: UTXO) => {
+      return toSpend.includes(utxo);
+    });
 
     const builder = new TransactionBuilder(this.network);
 
     // Add the UTXOs from before as inputs
-    toSpend.forEach((spend) => {
-      this.utxos.remove(spend);
-      builder.addInput(spend.txHash, spend.vout);
+    toSpend.forEach((utxo) => {
+      if (utxo.type === OutputType.Bech32) {
+        builder.addInput(utxo.txHash, utxo.vout, undefined, utxo.script);
+      } else {
+
+      }
     });
 
     // Add the requested ouput to the transaction
@@ -193,9 +202,14 @@ class Wallet {
     }
 
     // Sign the transaction
-    toSpend.forEach((spend, index) => {
-      const keys = ECPair.fromPrivateKey(spend.keys.privateKey, { network: this.network });
-      builder.sign(index, keys);
+    toSpend.forEach((utxo, index) => {
+      const keys = ECPair.fromPrivateKey(utxo.keys.privateKey, { network: this.network });
+
+      if (utxo.type === OutputType.Bech32) {
+        builder.sign(index, keys, undefined, undefined, utxo.value);
+      } else {
+        builder.sign(index, keys);
+      }
     });
 
     return {

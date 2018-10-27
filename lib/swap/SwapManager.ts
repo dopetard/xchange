@@ -12,12 +12,14 @@ import { OutputType } from '../consts/Enums';
 import { Currency } from '../wallet/Wallet';
 import WalletManager from '../wallet/WalletManager';
 import { OrderSide } from '../proto/xchangerpc_pb';
+import LndClient from 'lib/lightning/LndClient';
 
 type BaseSwapDetails = {
   redeemScript: Buffer;
 };
 
 type SwapDetails = BaseSwapDetails & {
+  lndClient: LndClient;
   invoice: string;
   destinationKeys: BIP32;
   outputType: OutputType;
@@ -102,6 +104,7 @@ class SwapManager {
     const address = wallet.encodeAddress(output);
 
     swaps.set(getHexString(output), {
+      lndClient,
       invoice,
       outputType,
       redeemScript,
@@ -176,6 +179,7 @@ class SwapManager {
           maps.swaps.delete(hexScript);
           this.claimPromises.push(this.claimSwap(
             currency,
+            swapDetails.lndClient,
             transaction.getHash(),
             output.script,
             output.value,
@@ -187,8 +191,10 @@ class SwapManager {
     });
   }
 
-  private claimSwap = async (currency: Currency, txHash: Buffer, swapScript: Buffer, swapValue: number, vout: number, details: SwapDetails) => {
-    const { symbol, chainClient, lndClient } = currency;
+  private claimSwap = async (currency: Currency, lndClient: LndClient,
+    txHash: Buffer, swapScript: Buffer, swapValue: number, vout: number, details: SwapDetails) => {
+
+    const { symbol, chainClient } = currency;
 
     this.logger.info(`Claiming swap output ${vout} of ${symbol} transaction ${txHash}`);
     assert(details.invoice);
