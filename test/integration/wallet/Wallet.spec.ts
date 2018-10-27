@@ -65,7 +65,7 @@ describe('Wallet', () => {
     expect(wallet.getBalance()).to.be.equal(expectedBalance);
 
     walletBalance = expectedBalance;
-  }).timeout(5000);
+  });
 
   it('should spend UTXOs', async () => {
     expect(walletBalance).to.not.be.undefined;
