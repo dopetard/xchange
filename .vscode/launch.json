@@ -6,7 +6,7 @@
       "request": "launch",
       "name": "Debug",
       "args": [
-        "bin/wallid"
+        "bin/xchanged"
       ],
       "runtimeArgs": [
         "--nolazy",

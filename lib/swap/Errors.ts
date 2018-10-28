@@ -1,10 +1,10 @@
 import { Error } from '../consts/Types';
-import errorCodesPrefix from '../consts/ErrorCodesPrefix';
+import { ErrorCodePrefix } from '../consts/Enums';
 import { concatErrorCode } from '../Utils';
 
 export default {
   PAIR_NOT_FOUND: (pairId: string): Error => ({
     message: `could not find pair ${pairId}`,
-    code: concatErrorCode(errorCodesPrefix.Swap, 0),
+    code: concatErrorCode(ErrorCodePrefix.Swap, 0),
   }),
 };

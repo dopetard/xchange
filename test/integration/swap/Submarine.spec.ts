@@ -7,7 +7,7 @@ import { pkRefundSwap } from '../../../lib/swap/Submarine';
 import { constructClaimTransaction } from '../../../lib/swap/Claim';
 import Networks from '../../../lib/consts/Networks';
 import { btcManager, btcdClient, btcKeys, btcAddress } from '../chain/ChainClient.spec';
-import { OutputType } from '../../../lib/consts/OutputType';
+import { OutputType } from '../../../lib/consts/Enums';
 
 describe('Submarine Swaps', () => {
   const preimage = getHexBuffer('b5b2dbb1f0663878ecbc20323b58b92c');

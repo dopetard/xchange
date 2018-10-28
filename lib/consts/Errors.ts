@@ -1,5 +1,5 @@
 import { concatErrorCode } from '../Utils';
-import ErrorCodePrefix from './ErrorCodesPrefix';
+import { ErrorCodePrefix } from './Enums';
 import { Error } from './Types';
 
 export default {

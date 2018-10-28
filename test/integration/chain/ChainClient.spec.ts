@@ -22,7 +22,7 @@ describe('ChainClient', () => {
       hash: transaction.getId(),
       value: transaction.outs[0].value,
     });
-  }).timeout(10000);
+  });
 
   it('LtcdClient should connect', async () => {
     await ltcdClient.connect();

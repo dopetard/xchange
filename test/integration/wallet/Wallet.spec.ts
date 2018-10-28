@@ -3,7 +3,7 @@ import bip32 from 'bip32';
 import bip39 from 'bip39';
 import Wallet from '../../../lib/wallet/Wallet';
 import Networks from '../../../lib/consts/Networks';
-import { OutputType } from '../../../lib/consts/OutputType';
+import { OutputType } from '../../../lib/consts/Enums';
 import { btcdClient, btcManager } from '../chain/ChainClient.spec';
 
 describe('Wallet', () => {
@@ -21,6 +21,8 @@ describe('Wallet', () => {
     Networks.bitcoinRegtest,
     btcdClient,
   );
+
+  let walletBalance: number;
 
   it('should recognize transactions to its addresses', async () => {
     const addresses: { address: string, amount: number }[] = [];
@@ -61,7 +63,24 @@ describe('Wallet', () => {
     await balancePromise;
 
     expect(wallet.getBalance()).to.be.equal(expectedBalance);
-  }).timeout(5000);
+
+    walletBalance = expectedBalance;
+  });
+
+  it('should spend UTXOs', async () => {
+    expect(walletBalance).to.not.be.undefined;
+
+    const destinationAddress = await wallet.getNewAddress(OutputType.Bech32);
+    const destinationAmount = walletBalance - 1000;
+
+    const { tx, vout } = await wallet.sendToAddress(destinationAddress, destinationAmount);
+
+    await btcdClient.sendRawTransaction(tx.toHex());
+    await btcdClient.generate(1);
+
+    expect(vout).to.be.equal(0);
+    expect(wallet.getBalance()).to.be.equal(destinationAmount);
+  });
 
   after(async () => {
     await btcdClient.disconnect();
