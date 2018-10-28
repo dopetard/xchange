@@ -5,7 +5,7 @@ import { fromBase58 } from 'bip32';
 import { address } from 'bitcoinjs-lib';
 import { getHexBuffer } from '../../../lib/Utils';
 import Networks from '../../../lib/consts/Networks';
-import { OutputType } from '../../../lib/consts/OutputType';
+import { OutputType } from '../../../lib/consts/Enums';
 
 // TODO: use valid values
 describe('Claim', () => {

@@ -98,20 +98,15 @@ class XudClient extends EventEmitter {
   }
 
   public getXudInfo = async (): Promise<XudInfo> => {
-    try {
-      const info = await this.getInfo();
-      return {
-        version: info.version,
-        nodepubkey: info.nodePubKey,
-        numpeers: info.numPeers,
-        lndbtc: info.lndbtc ? true : false,
-        lndltc: info.lndltc ? true : false,
-        raiden: info.raiden ? true : false,
-      };
-    } catch (error) {
-      this.logger.error(`XUD error: ${error}`);
-      return error;
-    }
+    const info = await this.getInfo();
+    return {
+      version: info.version,
+      nodepubkey: info.nodePubKey,
+      numpeers: info.numPeers,
+      lndbtc: info.lndbtc ? true : false,
+      lndltc: info.lndltc ? true : false,
+      raiden: info.raiden ? true : false,
+    };
   }
 
 }

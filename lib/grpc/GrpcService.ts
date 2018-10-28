@@ -70,6 +70,7 @@ class GrpcService {
       getInfoResponse.currencies.forEach((currency) => {
         const currencyInfo = new xchangerpc.CurrencyInfo();
 
+        currencyInfo.setSymbol(currency.symbol);
         currencyInfo.setChain(createChainClientInfo(currency.chainInfo));
         currencyInfo.setLnd(createLndInfo(currency.lndInfo));
 
@@ -85,11 +86,42 @@ class GrpcService {
     }
   }
 
+  public getBalance: grpc.handleUnaryCall<xchangerpc.GetBalanceRequest, xchangerpc.GetBalanceResponse> = async (call, callback) => {
+    try {
+      const balances = this.service.getBalance(call.request.toObject());
+
+      const response = new xchangerpc.GetBalanceResponse();
+
+      const responseMap: Map<string, number> = response.getBalancesMap();
+
+      balances.forEach((value, key) => {
+        responseMap.set(key, value);
+      });
+
+      callback(null, response);
+    } catch (error) {
+      callback(error, null);
+    }
+  }
+
   public newAddress: grpc.handleUnaryCall<xchangerpc.NewAddressRequest, xchangerpc.NewAddressResponse> = async (call, callback) => {
     try {
       const address = await this.service.newAddress(call.request.toObject());
 
       const response = new xchangerpc.NewAddressResponse();
+      response.setAddress(address);
+
+      callback(null, response);
+    } catch (error) {
+      callback(error, null);
+    }
+  }
+
+  public createSwap: grpc.handleUnaryCall<xchangerpc.CreateSwapRequest, xchangerpc.CreateSwapResponse> = async (call, callback) => {
+    try {
+      const address = await this.service.createSwap(call.request.toObject());
+
+      const response = new xchangerpc.CreateSwapResponse();
       response.setAddress(address);
 
       callback(null, response);

@@ -1,5 +1,5 @@
 import { Out } from 'bitcoinjs-lib';
-import { OutputType } from './OutputType';
+import { OutputType } from './Enums';
 
 export type Error = {
   message: string;
