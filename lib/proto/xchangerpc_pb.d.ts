@@ -324,8 +324,8 @@ export class CreateSwapRequest extends jspb.Message {
     getPairId(): string;
     setPairId(value: string): void;
 
-    getSide(): OrderSide;
-    setSide(value: OrderSide): void;
+    getOrderSide(): OrderSide;
+    setOrderSide(value: OrderSide): void;
 
     getInvoice(): string;
     setInvoice(value: string): void;
@@ -350,7 +350,7 @@ export class CreateSwapRequest extends jspb.Message {
 export namespace CreateSwapRequest {
     export type AsObject = {
         pairId: string,
-        side: OrderSide,
+        orderSide: OrderSide,
         invoice: string,
         refundPublicKey: string,
         outputType: OutputType,
@@ -375,6 +375,64 @@ export class CreateSwapResponse extends jspb.Message {
 export namespace CreateSwapResponse {
     export type AsObject = {
         address: string,
+    }
+}
+
+export class CreateReverseSwapRequest extends jspb.Message { 
+    getPairId(): string;
+    setPairId(value: string): void;
+
+    getOrderSide(): OrderSide;
+    setOrderSide(value: OrderSide): void;
+
+    getDestinationPublicKey(): string;
+    setDestinationPublicKey(value: string): void;
+
+    getAmount(): number;
+    setAmount(value: number): void;
+
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): CreateReverseSwapRequest.AsObject;
+    static toObject(includeInstance: boolean, msg: CreateReverseSwapRequest): CreateReverseSwapRequest.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: CreateReverseSwapRequest, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): CreateReverseSwapRequest;
+    static deserializeBinaryFromReader(message: CreateReverseSwapRequest, reader: jspb.BinaryReader): CreateReverseSwapRequest;
+}
+
+export namespace CreateReverseSwapRequest {
+    export type AsObject = {
+        pairId: string,
+        orderSide: OrderSide,
+        destinationPublicKey: string,
+        amount: number,
+    }
+}
+
+export class CreateReverseSwapResponse extends jspb.Message { 
+    getInvoice(): string;
+    setInvoice(value: string): void;
+
+    getTransactionHash(): string;
+    setTransactionHash(value: string): void;
+
+
+    serializeBinary(): Uint8Array;
+    toObject(includeInstance?: boolean): CreateReverseSwapResponse.AsObject;
+    static toObject(includeInstance: boolean, msg: CreateReverseSwapResponse): CreateReverseSwapResponse.AsObject;
+    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
+    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
+    static serializeBinaryToWriter(message: CreateReverseSwapResponse, writer: jspb.BinaryWriter): void;
+    static deserializeBinary(bytes: Uint8Array): CreateReverseSwapResponse;
+    static deserializeBinaryFromReader(message: CreateReverseSwapResponse, reader: jspb.BinaryReader): CreateReverseSwapResponse;
+}
+
+export namespace CreateReverseSwapResponse {
+    export type AsObject = {
+        invoice: string,
+        transactionHash: string,
     }
 }
 

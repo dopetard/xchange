@@ -130,7 +130,7 @@ class SwapManager {
    * @returns a Lightning invoice and the hash of a onchain transaction
    */
   public createReverseSwap = async (pairId: string, orderSide: OrderSide, destinationPublicKey: Buffer, amount: number):
-    Promise<{ invoice: string, txHash: string }> => {
+    Promise<{ invoice: string, transactionHash: string }> => {
 
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(pairId, orderSide);
 
@@ -166,7 +166,7 @@ class SwapManager {
 
     return {
       invoice: paymentRequest,
-      txHash: tx.getId(),
+      transactionHash: tx.getId(),
     };
   }
 
