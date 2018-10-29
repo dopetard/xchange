@@ -4,3 +4,9 @@ export const OutputTypeComponent = {
   choices: ['bech32', 'compatibility', 'legacy'],
   default: 'compatibility',
 };
+
+export const OrderSideComponent = {
+  describe: 'whether the order is a buy or sell one',
+  type: 'string',
+  choices: ['buy', 'sell'],
+};
