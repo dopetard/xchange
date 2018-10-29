@@ -9,6 +9,8 @@ import { OutputType } from '../consts/Enums';
 import Errors from './Errors';
 import { OrderSide } from '../proto/xchangerpc_pb';
 import { getHexBuffer } from '../Utils';
+import { constructClaimTransaction } from 'lib/swap/Claim';
+import { address, ECPair } from 'bitcoinjs-lib';
 
 const packageJson = require('../../package.json');
 
@@ -117,17 +119,68 @@ class Service {
   /**
    * Creates a new Swap from the chain to Lightning
    */
-  public createSwap = async (args: { pairId: string, side: number, invoice: string, refundPublicKey: string, outputType: number }):
+  public createSwap = async (args: { pairId: string, orderSide: number, invoice: string, refundPublicKey: string, outputType: number }):
     Promise<string> => {
 
     const { swapManager } = this.serviceComponents;
 
-    const orderSide = this.getOrderSide(args.side);
+    const orderSide = this.getOrderSide(args.orderSide);
     const outputType = this.getOutputType(args.outputType);
 
     const refundPublicKey = getHexBuffer(args.refundPublicKey);
 
     return await swapManager.createSwap(args.pairId, orderSide, args.invoice, refundPublicKey, outputType);
+  }
+
+  /**
+   * Creates a new Swap from Lightning to the chain
+   */
+  public createReverseSwap = async (args: { pairId: string, orderSide: number, claimPublicKey: string, amount: number }):
+    Promise<{ invoice: string, transactionHash: string }> => {
+
+    const { swapManager } = this.serviceComponents;
+
+    const orderSide = this.getOrderSide(args.orderSide);
+
+    const claimPublicKey = getHexBuffer(args.claimPublicKey);
+
+    return await swapManager.createReverseSwap(args.pairId, orderSide, claimPublicKey, args.amount);
+  }
+
+  /**
+   * Claims the onchain part of a reverse Swap
+   */
+  public claimSwap = async (args: { currency: string, invoice: string, preimage: string, claimPrivateKey: string, destinationAddress: string }):
+    Promise<string> => {
+
+    const { swapManager } = this.serviceComponents;
+
+    const currency = swapManager.currencies.get(args.currency);
+
+    if (!currency) {
+      throw Errors.CURRENCY_NOT_FOUND(args.currency);
+    }
+
+    const reverseSwapDetails = currency.reverseSwaps.get(args.invoice);
+
+    if (!reverseSwapDetails) {
+      throw Errors.SWAP_NOT_FOUND(args.invoice);
+    }
+
+    const destinationScript = address.toOutputScript(args.destinationAddress, currency.network);
+    const claimKeys = ECPair.fromPrivateKey(getHexBuffer(args.claimPrivateKey), { network: currency.network });
+
+    const claimTx = constructClaimTransaction(
+      getHexBuffer(args.preimage),
+      claimKeys,
+      destinationScript,
+      reverseSwapDetails.output,
+      reverseSwapDetails.redeemScript,
+    );
+
+    await currency.chainClient.sendRawTransaction(claimTx.toHex());
+
+    return claimTx.getId();
   }
 
   private getOrderSide = (side: number) => {

@@ -30,6 +30,8 @@ class GrpcServer {
       getBalance: grpcService.getBalance,
       newAddress: grpcService.newAddress,
       createSwap: grpcService.createSwap,
+      createReverseSwap: grpcService.createReverseSwap,
+      claimSwap: grpcService.claimSwap,
     });
   }
 

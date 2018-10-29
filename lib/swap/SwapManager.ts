@@ -21,7 +21,7 @@ type BaseSwapDetails = {
 type SwapDetails = BaseSwapDetails & {
   lndClient: LndClient;
   invoice: string;
-  destinationKeys: BIP32;
+  claimKeys: BIP32;
   outputType: OutputType;
 };
 
@@ -43,15 +43,19 @@ type SwapMaps = {
   reverseSwaps: Map<string, ReverseSwapDetails>;
 };
 
+// TODO: custom rates
 // TODO: configurable timeouts
 // TODO: verify values and amounts
 // TODO: fees for the Xchange to collect
 // TODO: automatically refund failed swaps
 class SwapManager {
-  private currencies = new Map<string, Currency & SwapMaps>();
+  public currencies = new Map<string, Currency & SwapMaps>();
+
   private pairMap = new Map<string, { quote: string, base: string }>();
 
   private claimPromises: Promise<void>[] = [];
+
+  private rates = new Map([['LTC/BTC', 0.008]]);
 
   constructor(private logger: Logger, private walletManager: WalletManager, private pairs: Pair[]) {
     this.pairs.forEach((pair) => {
@@ -83,35 +87,35 @@ class SwapManager {
    * @returns an onchain address
    */
   public createSwap = async (pairId: string, orderSide: OrderSide, invoice: string, refundPublicKey: Buffer, outputType: OutputType) => {
-    const { symbol, wallet, chainClient, lndClient, swaps } = this.getCurrency(pairId, orderSide);
+    const { sendingCurrency, receivingCurrency } = this.getCurrencies(pairId, orderSide);
 
-    const { blocks } = await chainClient.getInfo();
-    const { paymentHash } = await lndClient.decodePayReq(invoice);
+    const { blocks } = await receivingCurrency.chainClient.getInfo();
+    const { paymentHash } = await receivingCurrency.lndClient.decodePayReq(invoice);
 
-    this.logger.debug(`Creating new Swap on ${symbol} with preimage hash: ${paymentHash}`);
+    this.logger.debug(`Creating new Swap on ${pairId} with preimage hash: ${paymentHash}`);
 
-    const destinationKeys = wallet.getNewKeys();
+    const claimKeys = receivingCurrency.wallet.getNewKeys();
 
     const redeemScript = pkRefundSwap(
       Buffer.from(paymentHash),
-      destinationKeys.publicKey,
+      claimKeys.publicKey,
       refundPublicKey,
       blocks + 10,
     );
 
     const encodeFunction = getScriptHashEncodeFunction(outputType);
     const output = encodeFunction(redeemScript);
-    const address = wallet.encodeAddress(output);
+    const address = receivingCurrency.wallet.encodeAddress(output);
 
-    swaps.set(getHexString(output), {
-      lndClient,
+    receivingCurrency.swaps.set(getHexString(output), {
       invoice,
       outputType,
       redeemScript,
-      destinationKeys,
+      claimKeys,
+      lndClient: sendingCurrency.lndClient,
     });
 
-    await chainClient.loadTxFiler(false, [address], []);
+    await receivingCurrency.chainClient.loadTxFiler(false, [address], []);
 
     return address;
   }
@@ -121,35 +125,35 @@ class SwapManager {
    *
    * @param pairId pair of the Swap
    * @param orderSide whether the order is a buy or sell one
-   * @param destinationPublicKey the public key for the claiming
+   * @param claimPublicKey the public key of the private key needed for the claiming
    * @param amount the amount of the invoice
    *
    * @returns a Lightning invoice and the hash of a onchain transaction
    */
-  public createReverseSwap = async (pairId: string, orderSide: OrderSide, destinationPublicKey: Buffer, amount: number):
-    Promise<{ invoice: string, txHash: string }> => {
+  public createReverseSwap = async (pairId: string, orderSide: OrderSide, claimPublicKey: Buffer, amount: number):
+    Promise<{ invoice: string, transactionHash: string }> => {
 
-    const { symbol, wallet, chainClient, lndClient, reverseSwaps } = this.getCurrency(pairId, orderSide);
+    const { sendingCurrency, receivingCurrency } = this.getCurrencies(pairId, orderSide);
 
-    this.logger.debug(`Creating new reverse Swap on ${symbol} for public key: ${getHexString(destinationPublicKey)}`);
+    this.logger.debug(`Creating new reverse Swap on ${pairId} for public key: ${getHexString(claimPublicKey)}`);
 
-    const { blocks } = await chainClient.getInfo();
-    const { rHash, paymentRequest } = await lndClient.addInvoice(amount);
+    const { blocks } = await sendingCurrency.chainClient.getInfo();
+    const { rHash, paymentRequest } = await receivingCurrency.lndClient.addInvoice(amount);
 
-    const refundKeys = wallet.getNewKeys();
+    const refundKeys = sendingCurrency.wallet.getNewKeys();
     const redeemScript = pkRefundSwap(
       Buffer.from(rHash as string),
-      destinationPublicKey,
+      claimPublicKey,
       refundKeys.publicKey,
       blocks + 10,
     );
 
     const output = p2wshOutput(redeemScript);
-    const address = wallet.encodeAddress(output);
+    const address = sendingCurrency.wallet.encodeAddress(output);
 
-    const { tx, vout } = await wallet.sendToAddress(address, amount);
+    const { tx, vout } = await sendingCurrency.wallet.sendToAddress(address, amount * this.getRate(pairId, orderSide));
 
-    reverseSwaps.set(paymentRequest, {
+    sendingCurrency.reverseSwaps.set(paymentRequest, {
       redeemScript,
       refundKeys,
       output: {
@@ -163,7 +167,7 @@ class SwapManager {
 
     return {
       invoice: paymentRequest,
-      txHash: tx.getId(),
+      transactionHash: tx.getId(),
     };
   }
 
@@ -207,11 +211,11 @@ class SwapManager {
       return;
     }
 
-    const destinationScript = p2wpkhOutput(crypto.hash160(details.destinationKeys.publicKey));
+    const destinationScript = p2wpkhOutput(crypto.hash160(details.claimKeys.publicKey));
 
     const claimTx = constructClaimTransaction(
       getHexBuffer(payInvoice.paymentPreimage as string),
-      details.destinationKeys,
+      details.claimKeys,
       destinationScript,
       {
         txHash,
@@ -226,18 +230,37 @@ class SwapManager {
     await chainClient.sendRawTransaction(claimTx.toHex());
   }
 
-  private getCurrency = (pairId: string, orderSide: OrderSide) => {
+  private getRate = (pairId: string, orderSide: OrderSide) => {
+    const rate = this.rates.get(pairId);
+
+    if (!rate) {
+      throw Errors.PAIR_NOT_FOUND(pairId);
+    }
+
+    return orderSide === OrderSide.BUY ? 1 / rate : rate;
+  }
+
+  private getCurrencies = (pairId: string, orderSide: OrderSide) => {
     const pair = this.pairMap.get(pairId);
 
     if (!pair) {
       throw Errors.PAIR_NOT_FOUND(pairId);
     }
 
-    const symbol = orderSide === OrderSide.BUY ? pair.quote : pair.base;
+    const isBuy = orderSide === OrderSide.BUY;
+
+    const sendingSymbol = isBuy ? pair.base : pair.quote;
+    const receivingSymbol = isBuy ? pair.quote : pair.base;
 
     return {
-      ...this.currencies.get(symbol)!,
-      wallet: this.walletManager.wallets.get(symbol)!,
+      sendingCurrency: {
+        ...this.currencies.get(sendingSymbol)!,
+        wallet: this.walletManager.wallets.get(sendingSymbol)!,
+      },
+      receivingCurrency: {
+        ...this.currencies.get(receivingSymbol)!,
+        wallet: this.walletManager.wallets.get(receivingSymbol)!,
+      },
     };
   }
 
