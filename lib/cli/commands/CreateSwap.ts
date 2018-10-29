@@ -9,12 +9,12 @@ export const describe = 'create a new swap from the chain to Lightning';
 
 export const builder = {
   pair_id: {
-    describe: 'the traiding pair id of the order',
+    describe: 'traiding pair id of the order',
     type: 'string',
   },
   order_side: OrderSideComponent,
   invoice: {
-    describe: 'the invoice to pay',
+    describe: 'invoice to pay',
     type: 'string',
   },
   output_type: OutputTypeComponent,

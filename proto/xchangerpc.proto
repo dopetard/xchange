@@ -17,6 +17,10 @@ service Xchange {
 
   /* Creates a new Swap from Lightning to the chain */
   rpc CreateReverseSwap (CreateReverseSwapRequest) returns (CreateReverseSwapResponse);
+
+  // TODO: remove this temporary method
+  /* Claims the onchain part of a reverse Swap */
+  rpc ClaimSwap (ClaimSwapRequest) returns (ClaimSwapResponse);
 }
 
 enum OutputType {
@@ -101,11 +105,23 @@ message CreateSwapResponse {
 message CreateReverseSwapRequest {
   string pair_id = 1;
   OrderSide order_side = 2;
-  string destination_public_key = 3;
+  string claim_public_key = 3;
   // Amount of the invoice that will be returned
   int64 amount = 4;
 }
 message CreateReverseSwapResponse {
   string invoice = 1;
   string transaction_hash = 2;
+}
+
+message ClaimSwapRequest {
+  string currency = 1;
+  // The invoice that was paid by the user
+  string invoice = 2;
+  string preimage = 3;
+  string claim_private_key = 4;
+  string destination_address = 5;
+}
+message ClaimSwapResponse {
+  string transaction_hash = 1;
 }

@@ -18,14 +18,14 @@ import { TransactionOutput } from '../consts/Types';
  * Claim a Submarine Swap
  *
  * @param preimage the preimage of the transaction
- * @param destinationKeys the key pair of the swap address
+ * @param claimKeys the key pair needed to claim the swap
  * @param destinationScript the output script to which the funds should be sent
  * @param utxo the Swap UTXO to claim
  * @param redeemScript the redeem script of the swap
  *
  * @returns claim transaction
  */
-export const constructClaimTransaction = (preimage: Buffer, destinationKeys: ECPair | BIP32, destinationScript: Buffer, utxo: TransactionOutput,
+export const constructClaimTransaction = (preimage: Buffer, claimKeys: ECPair | BIP32, destinationScript: Buffer, utxo: TransactionOutput,
   redeemScript: Buffer): Transaction => {
 
   const tx = new Transaction();
@@ -41,7 +41,7 @@ export const constructClaimTransaction = (preimage: Buffer, destinationKeys: ECP
     // Construct the signed input scripts for P2SH inputs
     case OutputType.Legacy:
       const sigHash = tx.hashForSignature(0, redeemScript, Transaction.SIGHASH_ALL);
-      const signature = destinationKeys.sign(sigHash);
+      const signature = claimKeys.sign(sigHash);
 
       const inputScript = [
         encodeSignature(Transaction.SIGHASH_ALL, signature),
@@ -71,7 +71,7 @@ export const constructClaimTransaction = (preimage: Buffer, destinationKeys: ECP
   // Construct the signed witness for (nested) SegWit inputs
   if (utxo.type !== OutputType.Legacy) {
     const sigHash = tx.hashForWitnessV0(0, redeemScript, utxo.value, Transaction.SIGHASH_ALL);
-    const signature = script.signature.encode(destinationKeys.sign(sigHash), Transaction.SIGHASH_ALL);
+    const signature = script.signature.encode(claimKeys.sign(sigHash), Transaction.SIGHASH_ALL);
 
     tx.setWitness(0, [
       signature,

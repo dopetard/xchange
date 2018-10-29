@@ -21,7 +21,7 @@ type BaseSwapDetails = {
 type SwapDetails = BaseSwapDetails & {
   lndClient: LndClient;
   invoice: string;
-  destinationKeys: BIP32;
+  claimKeys: BIP32;
   outputType: OutputType;
 };
 
@@ -49,7 +49,8 @@ type SwapMaps = {
 // TODO: fees for the Xchange to collect
 // TODO: automatically refund failed swaps
 class SwapManager {
-  private currencies = new Map<string, Currency & SwapMaps>();
+  public currencies = new Map<string, Currency & SwapMaps>();
+
   private pairMap = new Map<string, { quote: string, base: string }>();
 
   private claimPromises: Promise<void>[] = [];
@@ -93,11 +94,11 @@ class SwapManager {
 
     this.logger.debug(`Creating new Swap on ${pairId} with preimage hash: ${paymentHash}`);
 
-    const destinationKeys = receivingCurrency.wallet.getNewKeys();
+    const claimKeys = receivingCurrency.wallet.getNewKeys();
 
     const redeemScript = pkRefundSwap(
       Buffer.from(paymentHash),
-      destinationKeys.publicKey,
+      claimKeys.publicKey,
       refundPublicKey,
       blocks + 10,
     );
@@ -110,7 +111,7 @@ class SwapManager {
       invoice,
       outputType,
       redeemScript,
-      destinationKeys,
+      claimKeys,
       lndClient: sendingCurrency.lndClient,
     });
 
@@ -124,17 +125,17 @@ class SwapManager {
    *
    * @param pairId pair of the Swap
    * @param orderSide whether the order is a buy or sell one
-   * @param destinationPublicKey the public key for the claiming
+   * @param claimPublicKey the public key of the private key needed for the claiming
    * @param amount the amount of the invoice
    *
    * @returns a Lightning invoice and the hash of a onchain transaction
    */
-  public createReverseSwap = async (pairId: string, orderSide: OrderSide, destinationPublicKey: Buffer, amount: number):
+  public createReverseSwap = async (pairId: string, orderSide: OrderSide, claimPublicKey: Buffer, amount: number):
     Promise<{ invoice: string, transactionHash: string }> => {
 
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(pairId, orderSide);
 
-    this.logger.debug(`Creating new reverse Swap on ${pairId} for public key: ${getHexString(destinationPublicKey)}`);
+    this.logger.debug(`Creating new reverse Swap on ${pairId} for public key: ${getHexString(claimPublicKey)}`);
 
     const { blocks } = await sendingCurrency.chainClient.getInfo();
     const { rHash, paymentRequest } = await receivingCurrency.lndClient.addInvoice(amount);
@@ -142,7 +143,7 @@ class SwapManager {
     const refundKeys = sendingCurrency.wallet.getNewKeys();
     const redeemScript = pkRefundSwap(
       Buffer.from(rHash as string),
-      destinationPublicKey,
+      claimPublicKey,
       refundKeys.publicKey,
       blocks + 10,
     );
@@ -210,11 +211,11 @@ class SwapManager {
       return;
     }
 
-    const destinationScript = p2wpkhOutput(crypto.hash160(details.destinationKeys.publicKey));
+    const destinationScript = p2wpkhOutput(crypto.hash160(details.claimKeys.publicKey));
 
     const claimTx = constructClaimTransaction(
       getHexBuffer(payInvoice.paymentPreimage as string),
-      details.destinationKeys,
+      details.claimKeys,
       destinationScript,
       {
         txHash,

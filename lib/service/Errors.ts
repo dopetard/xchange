@@ -11,4 +11,8 @@ export default {
     message: `could not find order side: ${side}`,
     code: concatErrorCode(ErrorCodePrefix.Service, 1),
   }),
+  SWAP_NOT_FOUND: (swapIdentifier: string): Error => ({
+    message: `could not find swap with identifier: ${swapIdentifier}`,
+    code: concatErrorCode(ErrorCodePrefix.Service, 2),
+  }),
 };
