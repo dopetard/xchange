@@ -122,7 +122,7 @@ class LndClient extends BaseClient implements LightningClient {
         return false;
       }
     }
-    return false;
+    return true;
   }
 
   /** End all subscriptions and reconnection attempts. */

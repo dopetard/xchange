@@ -41,7 +41,7 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
       await this.rpcClient.connect();
       try {
         const info = await this.getInfo();
-        if (info.blocks) {
+        if (info.version) {
           await this.rpcClient.connect();
           this.setClientStatus(ClientStatus.Connected);
           if (this.reconnectionTimer) {
