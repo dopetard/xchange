@@ -14,6 +14,7 @@ describe('LndClient', () => {
   let lndBtc2PubKey: string;
 
   it('LndClients should connect', async () => {
+    await connectPromise();
     // Connect the LNDs to eachother
     const lndBtc2Info = await lndBtcClient2.getInfo();
     await lndBtcClient1.connectPeer(lndBtc2Info.identityPubkey, 'lnd:9735');
