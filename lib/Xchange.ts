@@ -42,7 +42,7 @@ class Xchange {
       this.walletManager = new WalletManager(walletCurrencies, this.config.walletpath);
     } else {
       const mnemonic = generateMnemonic();
-      this.logger.warn(`generated new mnemonic: ${mnemonic}`);
+      this.logger.info(`generated new mnemonic: ${mnemonic}`);
 
       this.walletManager = WalletManager.fromMnemonic(mnemonic, walletCurrencies, this.config.walletpath);
     }

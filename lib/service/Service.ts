@@ -9,7 +9,7 @@ import { OutputType } from '../consts/Enums';
 import Errors from './Errors';
 import { OrderSide } from '../proto/xchangerpc_pb';
 import { getHexBuffer } from '../Utils';
-import { constructClaimTransaction } from 'lib/swap/Claim';
+import { constructClaimTransaction } from '../swap/Claim';
 import { address, ECPair } from 'bitcoinjs-lib';
 
 const packageJson = require('../../package.json');
