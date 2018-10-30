@@ -17,7 +17,15 @@ describe('LndClient', () => {
     await connectPromise();
     // Connect the LNDs to eachother
     const lndBtc2Info = await lndBtcClient2.getInfo();
-    await lndBtcClient1.connectPeer(lndBtc2Info.identityPubkey, 'lnd:9735');
+
+    try {
+      await lndBtcClient1.connectPeer(lndBtc2Info.identityPubkey, 'lnd:9735');
+    } catch (error) {
+      // Handle "already connected" errors gracefully
+      if (!error.details.startsWith('already connected to peer:')) {
+        throw error;
+      }
+    }
 
     lndBtc2PubKey = lndBtc2Info.identityPubkey;
   });
@@ -34,38 +42,60 @@ describe('LndClient', () => {
   it('LndClients should open a channel to eachother', async () => {
     expect(lndBtc2PubKey).to.not.be.undefined;
 
-    await lndBtcClient1.openChannel(lndBtc2PubKey, channelCapacity, channelCapacity / 2),
-    await btcdClient.generate(1);
+    const channelPromise = new Promise((resolve) => {
+      const interval = setInterval(async () => {
+        try {
+          await lndBtcClient1.openChannel(lndBtc2PubKey, channelCapacity, channelCapacity / 2),
+          await btcdClient.generate(1);
+
+          clearInterval(interval);
+          resolve();
+        } catch (error) {
+          // Don't throw an error if the problem is LND not being synced yet
+          if (error.details !== 'channels cannot be created before the wallet is fully synced') {
+            throw error;
+          }
+        }
+      }, 500);
+    });
+
+    await channelPromise;
   });
 
   after(async () => {
-    await lndBtcClient1.close();
-    await lndBtcClient2.close();
+    await lndBtcClient1.disconnect();
+    await lndBtcClient2.disconnect();
 
     await btcdClient.disconnect();
   });
 });
 
 const connectPromise = async () => {
-  const ready1 = await lndBtcClient1.connect();
-  const ready2 = await lndBtcClient2.connect();
+  return new Promise(async (resolve) => {
+    await lndBtcClient1.connect();
+    await lndBtcClient2.connect();
 
-  if (ready1 && ready2) {
-    // To make sure the LNDs are *really* synced
-    try {
-      await lndBtcClient1.connectPeer('', '');
-      await lndBtcClient2.connectPeer('', '');
-    } catch (error) {
-      if (error.details !== 'pubkey string is empty') {
-        throw('');
+    const interval = setInterval(async () => {
+      if (lndBtcClient1.isConnected() && lndBtcClient2.isConnected()) {
+        // To make sure the LNDs are *really* synced
+        try {
+          await lndBtcClient1.connectPeer('', '');
+          await lndBtcClient2.connectPeer('', '');
+        } catch (error) {
+          if (error.details === 'pubkey string is empty') {
+            clearInterval(interval);
+            resolve();
+          }
+        }
       }
-    }
-  }
+    }, 1000);
+  });
 };
 
 const certpath = path.join('docker', 'data', 'lnd', 'tls.cert');
 const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
 
+// TODO: the logger shouldn't print anything
 export const lndBtcClient1 = new LndClient(Logger.disabledLogger, {
   certpath,
   host,

@@ -96,37 +96,43 @@ class LndClient extends BaseClient implements LightningClient {
    * Returns a boolean determines whether LND is ready or not
    */
   public connect = async (): Promise<boolean> => {
-    if (this.isDisconnected()) {
+    if (!this.isConnected()) {
       this.lightning = new GrpcClient(this.uri, this.credentials);
+
       try {
         const response = await this.getInfo();
+
         if (response.syncedToChain) {
           this.setClientStatus(ClientStatus.Connected);
           this.subscribeInvoices();
-          if (this.reconnectionTimer) {
-            clearTimeout(this.reconnectionTimer);
-            this.reconnectionTimer = undefined;
-          }
+
+          this.clearReconnectTimer();
+
           return true;
         } else {
           this.setClientStatus(ClientStatus.OutOfSync);
-          this.logger.error(`${LndClient.serviceName} at ${this.uri} is out of sync with chain, retrying in ${this.RECONNECT_TIMER} ms`);
-          this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
+          this.logger.error(`${LndClient.serviceName} at ${this.uri} is out of sync with chain, retrying in ${this.RECONNECT_INTERVAL} ms`);
+          this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_INTERVAL);
+
           return false;
         }
       } catch (error) {
         this.setClientStatus(ClientStatus.Disconnected);
-        this.logger.error(`could not verify connection to ${LndClient.serviceName} at ${this.uri}, error: ${JSON.stringify(error)},
-        retrying in ${this.RECONNECT_TIMER} ms`);
-        this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
+        this.logger.error(`could not connect to ${LndClient.serviceName} ${this.symbol} at ${this.uri}` +
+        ` because: "${error.details}", retrying in ${this.RECONNECT_INTERVAL} ms`);
+        this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_INTERVAL);
+
         return false;
       }
     }
+
     return true;
   }
 
   /** End all subscriptions and reconnection attempts. */
-  public close = () => {
+  public disconnect = () => {
+    this.clearReconnectTimer();
+
     if (this.invoiceSubscription) {
       this.invoiceSubscription.cancel();
     }
@@ -270,6 +276,10 @@ class LndClient extends BaseClient implements LightningClient {
    * Subscribe to events for when invoices are settled.
    */
   private subscribeInvoices = (): void => {
+    if (this.invoiceSubscription) {
+      this.invoiceSubscription.cancel();
+    }
+
     this.invoiceSubscription = this.lightning.subscribeInvoices(new lndrpc.InvoiceSubscription(), this.meta)
       .on('data', (invoice: lndrpc.Invoice) => {
         this.logger.info(`invoice update: ${invoice.getRHash_asB64()}`);

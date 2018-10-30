@@ -20,6 +20,7 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
 
     this.rpcClient = new RpcClient(config);
     this.uri = `${config.host}:${config.port}`;
+
     this.bindWs();
   }
 
@@ -39,32 +40,33 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
   public connect = async () => {
     if (this.isDisconnected) {
       await this.rpcClient.connect();
+
       try {
         const info = await this.getInfo();
+
         if (info.version) {
-          await this.rpcClient.connect();
+          this.clearReconnectTimer();
           this.setClientStatus(ClientStatus.Connected);
-          if (this.reconnectionTimer) {
-            clearTimeout(this.reconnectionTimer);
-            this.reconnectionTimer = undefined;
-          }
+
         } else {
           this.setClientStatus(ClientStatus.Disconnected);
-          this.logger.error(`${this.symbol} at ${this.uri} is not able to connect, retrying in ${this.RECONNECT_TIMER} ms`);
-          this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
+          this.logger.error(`${this.symbol} at ${this.uri} is not able to connect, retrying in ${this.RECONNECT_INTERVAL} ms`);
+          this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_INTERVAL);
         }
       } catch (error) {
         this.setClientStatus(ClientStatus.Disconnected);
-        this.logger.error(`could not verify connection to ${this.symbol} at ${this.uri}, error: ${JSON.stringify(error)},
-        retrying in ${this.RECONNECT_TIMER} ms`);
-        this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_TIMER);
+        this.logger.error(`could not verify connection to chain ${this.symbol} chain at ${this.uri} because: ${JSON.stringify(error)}` +
+        ` retrying in ${this.RECONNECT_INTERVAL} ms`);
+        this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_INTERVAL);
       }
     }
   }
 
   public disconnect = async () => {
-    await this.rpcClient.close();
+    this.clearReconnectTimer();
     this.setClientStatus(ClientStatus.Disconnected);
+
+    await this.rpcClient.close();
   }
 
   public getInfo = (): Promise<Info> => {

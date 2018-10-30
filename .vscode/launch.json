@@ -25,7 +25,7 @@
       "args": [
           "--timeout",
           "999999",
-          "'${workspaceFolder}/{,!(node_modules)/}*/*.spec.ts'"
+          "'${workspaceFolder}/{,!(node_modules)/}*/**/*.spec.ts'"
       ],
       "runtimeArgs": [
         "--nolazy",

@@ -12,7 +12,7 @@ import { OutputType } from '../consts/Enums';
 import { Currency } from '../wallet/Wallet';
 import WalletManager from '../wallet/WalletManager';
 import { OrderSide } from '../proto/xchangerpc_pb';
-import LndClient from 'lib/lightning/LndClient';
+import LndClient from '../lightning/LndClient';
 
 type BaseSwapDetails = {
   redeemScript: Buffer;
