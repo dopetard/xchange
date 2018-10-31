@@ -116,8 +116,8 @@ export const ltcKeys = ECPair.fromWIF('cPnCzwHtVipcX7hb72mkkMMf4MSrknHbRnff2LDut
 export const ltcAddress = 'mysNm7METD1JffsC4E1ZW7EcPapmVm9AK4';
 
 const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
-const logger = new Logger('./test', 'debug');
-export const btcdClient = new ChainClient(logger, {
+
+export const btcdClient = new ChainClient(Logger.disabledLogger, {
   host,
   port: 18334,
   rpcuser: 'user',
@@ -125,7 +125,7 @@ export const btcdClient = new ChainClient(logger, {
   certpath: path.join('docker', 'data', 'rpc.cert'),
 }, 'BTC');
 
-export const ltcdClient = new ChainClient(logger, {
+export const ltcdClient = new ChainClient(Logger.disabledLogger, {
   host,
   port: 19334,
   rpcpass: 'user',
