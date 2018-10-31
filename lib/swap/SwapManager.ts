@@ -4,7 +4,7 @@ import { Transaction, crypto } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import { getHexBuffer, getPairId, getHexString, getScriptHashEncodeFunction, reverseString } from '../Utils';
 import { pkRefundSwap } from './Submarine';
-import { p2wshOutput, p2wpkhOutput } from './Scripts';
+import { p2wshOutput, p2wpkhOutput, p2shP2wshOutput } from './Scripts';
 import { constructClaimTransaction } from './Claim';
 import { TransactionOutput } from '../consts/Types';
 import Errors from './Errors';
@@ -142,13 +142,13 @@ class SwapManager {
 
     const refundKeys = sendingCurrency.wallet.getNewKeys();
     const redeemScript = pkRefundSwap(
-      Buffer.from(rHash as string),
+      Buffer.from(rHash as string, 'base64'),
       claimPublicKey,
       refundKeys.publicKey,
       blocks + 10,
     );
 
-    const output = p2wshOutput(redeemScript);
+    const output = p2shP2wshOutput(redeemScript);
     const address = sendingCurrency.wallet.encodeAddress(output);
     const sendingAmount = amount * this.getRate(pairId, orderSide);
 
@@ -162,7 +162,7 @@ class SwapManager {
       output: {
         vout,
         txHash: tx.getHash(),
-        type: OutputType.BECH32,
+        type: OutputType.COMPATIBILITY,
         script: output,
         value: sendingAmount,
       },

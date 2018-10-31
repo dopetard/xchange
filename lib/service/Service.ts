@@ -167,8 +167,8 @@ class Service {
       throw Errors.SWAP_NOT_FOUND(args.invoice);
     }
 
-    const destinationScript = address.toOutputScript(args.destinationAddress, currency.network);
     const claimKeys = ECPair.fromPrivateKey(getHexBuffer(args.claimPrivateKey), { network: currency.network });
+    const destinationScript = address.toOutputScript(args.destinationAddress, currency.network);
 
     const claimTx = constructClaimTransaction(
       getHexBuffer(args.preimage),
@@ -177,8 +177,6 @@ class Service {
       reverseSwapDetails.output,
       reverseSwapDetails.redeemScript,
     );
-
-    console.log(claimTx.toHex());
 
     await currency.chainClient.sendRawTransaction(claimTx.toHex());
 
