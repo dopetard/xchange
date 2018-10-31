@@ -2,11 +2,12 @@ import { BIP32 } from 'bip32';
 import FastPriorityQueue from 'fastpriorityqueue';
 import { Transaction, Network, address, crypto, TransactionBuilder, ECPair } from 'bitcoinjs-lib';
 import ChainClient from '../chain/ChainClient';
-import { OutputType } from '../consts/Enums';
+import { OutputType } from '../proto/xchangerpc_pb';
 import { TransactionOutput } from '../consts/Types';
 import { getPubKeyHashEncodeFuntion, getHexString } from '../Utils';
 import Errors from './Errors';
 import LndClient from '../lightning/LndClient';
+import Logger from 'lib/Logger';
 
 type UTXO = TransactionOutput & {
   keys: BIP32;
@@ -19,6 +20,8 @@ type Currency = {
   lndClient: LndClient;
 };
 
+// TODO: wait for funds being confirmed
+// TODO: fix coinbase transactions not being recognised
 // TODO: more advanced UTXO management
 // TODO: save UTXOs to disk
 // TODO: multiple transaction to same output
@@ -38,6 +41,7 @@ class Wallet {
    * @param highestIndex the highest index of a used address in the wallet
    */
   constructor(
+    private logger: Logger,
     private masterNode: BIP32,
     public readonly derivationPath: string,
     private highestIndex: number,
@@ -52,6 +56,8 @@ class Wallet {
         const outputInfo = this.relevantOutputs.get(hexScript);
 
         if (outputInfo) {
+          this.logger.debug(`Found UTXO of ${chainClient.symbol} wallet: ${transaction.getId()}:${vout} with value ${output.value}`);
+
           this.relevantOutputs.delete(hexScript);
           this.utxos.add({
             vout,
@@ -186,10 +192,10 @@ class Wallet {
 
     // Add the UTXOs from before as inputs
     toSpend.forEach((utxo) => {
-      if (utxo.type === OutputType.Bech32) {
+      if (utxo.type !== OutputType.LEGACY) {
         builder.addInput(utxo.txHash, utxo.vout, undefined, utxo.script);
       } else {
-
+        builder.addInput(utxo.txHash, utxo.vout);
       }
     });
 
@@ -198,14 +204,14 @@ class Wallet {
 
     // If there is anything left from the value of the UTXOs send it to a new change address
     if (missingAmount !== 0) {
-      builder.addOutput(await this.getNewAddress(OutputType.Bech32), missingAmount * -1);
+      builder.addOutput(await this.getNewAddress(OutputType.BECH32), missingAmount * -1);
     }
 
     // Sign the transaction
     toSpend.forEach((utxo, index) => {
       const keys = ECPair.fromPrivateKey(utxo.keys.privateKey, { network: this.network });
 
-      if (utxo.type === OutputType.Bech32) {
+      if (utxo.type !== OutputType.LEGACY) {
         builder.sign(index, keys, undefined, undefined, utxo.value);
       } else {
         builder.sign(index, keys);

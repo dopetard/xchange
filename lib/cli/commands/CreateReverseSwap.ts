@@ -2,6 +2,7 @@ import { Arguments } from 'yargs';
 import { callback, loadXchangeClient } from '../Command';
 import { OrderSideComponent } from '../BuilderComponents';
 import { CreateReverseSwapRequest } from '../../proto/xchangerpc_pb';
+import { getOrderSide } from '../Utils';
 
 export const command = 'createreverseswap <pair_id> <order_side> <claim_public_key> <amount>';
 
@@ -27,7 +28,7 @@ export const handler = (argv: Arguments) => {
   const request = new CreateReverseSwapRequest();
 
   request.setPairId(argv.pair_id);
-  request.setOrderSide(argv.order_side);
+  request.setOrderSide(getOrderSide(argv.order_side));
   request.setClaimPublicKey(argv.claim_public_key);
   request.setAmount(argv.amount);
 

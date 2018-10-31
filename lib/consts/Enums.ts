@@ -7,10 +7,3 @@ export enum ErrorCodePrefix {
   Lnd = 5,
   Swap = 6,
 }
-
-export enum OutputType {
-  Bech32,
-  // Nested SegWit
-  Compatibility,
-  Legacy,
-}

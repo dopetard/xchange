@@ -39,12 +39,12 @@ class Xchange {
     const walletCurrencies = Array.from(this.currencies.values());
 
     if (fs.existsSync(this.config.walletpath)) {
-      this.walletManager = new WalletManager(walletCurrencies, this.config.walletpath);
+      this.walletManager = new WalletManager(this.logger, walletCurrencies, this.config.walletpath);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.info(`generated new mnemonic: ${mnemonic}`);
 
-      this.walletManager = WalletManager.fromMnemonic(mnemonic, walletCurrencies, this.config.walletpath);
+      this.walletManager = WalletManager.fromMnemonic(this.logger, mnemonic, walletCurrencies, this.config.walletpath);
     }
 
     const bitcoin = this.currencies.get('BTC')!;

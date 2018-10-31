@@ -2,6 +2,7 @@ import { Arguments } from 'yargs';
 import { callback, loadXchangeClient } from '../Command';
 import { OutputTypeComponent, OrderSideComponent } from '../BuilderComponents';
 import { CreateSwapRequest } from '../../proto/xchangerpc_pb';
+import { getOutputType, getOrderSide } from '../Utils';
 
 export const command = 'createswap <pair_id> <order_side> <invoice> [output_type] [refund_public_key]';
 
@@ -28,9 +29,9 @@ export const handler = (argv: Arguments) => {
   const request = new CreateSwapRequest();
 
   request.setPairId(argv.pair_id);
-  request.setOrderSide(argv.order_side);
+  request.setOrderSide(getOrderSide(argv.order_side));
   request.setInvoice(argv.invoice);
-  request.setOutputType(argv.output_type);
+  request.setOutputType(getOutputType(argv.output_type));
   request.setRefundPublicKey(argv.refund_public_key);
 
   loadXchangeClient(argv).createSwap(request, callback);

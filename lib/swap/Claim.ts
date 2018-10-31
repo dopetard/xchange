@@ -7,7 +7,7 @@ import { Transaction, crypto, script, ECPair } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
 import * as varuint from 'varuint-bitcoin';
 import { encodeSignature, scriptBuffersToScript } from './SwapUtils';
-import { OutputType } from '../consts/Enums';
+import { OutputType } from '../proto/xchangerpc_pb';
 import { TransactionOutput } from '../consts/Types';
 
 // TODO: claiming with multiple UTXOs
@@ -39,7 +39,7 @@ export const constructClaimTransaction = (preimage: Buffer, claimKeys: ECPair | 
   // Add missing witness and scripts
   switch (utxo.type) {
     // Construct the signed input scripts for P2SH inputs
-    case OutputType.Legacy:
+    case OutputType.LEGACY:
       const sigHash = tx.hashForSignature(0, redeemScript, Transaction.SIGHASH_ALL);
       const signature = claimKeys.sign(sigHash);
 
@@ -55,7 +55,7 @@ export const constructClaimTransaction = (preimage: Buffer, claimKeys: ECPair | 
       break;
 
     // Construct the nested redeem script for nested SegWit inputs
-    case OutputType.Compatibility:
+    case OutputType.COMPATIBILITY:
       const nestedScript = [
         varuint.encode(ops.OP_0).toString('hex'),
         crypto.sha256(redeemScript),
@@ -69,7 +69,7 @@ export const constructClaimTransaction = (preimage: Buffer, claimKeys: ECPair | 
   }
 
   // Construct the signed witness for (nested) SegWit inputs
-  if (utxo.type !== OutputType.Legacy) {
+  if (utxo.type !== OutputType.LEGACY) {
     const sigHash = tx.hashForWitnessV0(0, redeemScript, utxo.value, Transaction.SIGHASH_ALL);
     const signature = script.signature.encode(claimKeys.sign(sigHash), Transaction.SIGHASH_ALL);
 

@@ -6,6 +6,7 @@ import Errors from './Errors';
 import Wallet, { Currency } from './Wallet';
 import { splitDerivationPath } from '../Utils';
 import { Network } from 'bitcoinjs-lib';
+import Logger from '../Logger';
 
 type WalletInfo = {
   derivationPath: string;
@@ -35,7 +36,7 @@ class WalletManager {
    * @param walletPath where information about the wallets should be stored
    * @param writeOnExit whether the wallet should be written to the disk when exiting
    */
-  constructor(coins: Currency[], walletPath: string, writeOnExit = true) {
+  constructor(logger: Logger, coins: Currency[], walletPath: string, writeOnExit = true) {
     const walletFile = this.loadWallet(walletPath);
 
     this.masterNode = walletFile.master;
@@ -54,6 +55,7 @@ class WalletManager {
       }
 
       this.wallets.set(coin.symbol, new Wallet(
+        logger,
         bip32.fromBase58(this.masterNode),
         walletInfo.derivationPath,
         walletInfo.highestUsedIndex,
@@ -72,7 +74,7 @@ class WalletManager {
   /**
    * Initiates a new WalletManager with a mnemonic
    */
-  public static fromMnemonic = (mnemonic: string, coins: Currency[], walletPath: string, writeOnExit = true) => {
+  public static fromMnemonic = (logger: Logger, mnemonic: string, coins: Currency[], walletPath: string, writeOnExit = true) => {
     if (!bip39.validateMnemonic(mnemonic)) {
       throw(Errors.INVALID_MNEMONIC(mnemonic));
     }
@@ -82,7 +84,7 @@ class WalletManager {
       wallets: new Map<string, WalletInfo>(),
     });
 
-    return new WalletManager(coins, walletPath, writeOnExit);
+    return new WalletManager(logger, coins, walletPath, writeOnExit);
   }
 
   private static writeWalletFile = (filename: string, walletFile: WalletFile) => {
