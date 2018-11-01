@@ -87,10 +87,12 @@ export const lndBtcClient1 = new LndClient(Logger.disabledLogger, {
   certpath,
   host: 'localhost',
   port: 10009,
+  macaroonpath: '',
 }, 'BTC');
 
 export const lndBtcClient2 = new LndClient(Logger.disabledLogger, {
   certpath,
   host: 'localhost',
   port: 10010,
+  macaroonpath: '',
 }, 'LTC');

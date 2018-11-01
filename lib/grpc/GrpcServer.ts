@@ -16,13 +16,9 @@ type GrpcConfig = {
 
 class GrpcServer {
   private server: Server;
-  private logger: Logger;
-  private grpcConfig: GrpcConfig;
 
-  constructor(logger: Logger, service: Service, grpcConfig: GrpcConfig) {
+  constructor(private logger: Logger, service: Service, private grpcConfig: GrpcConfig) {
     this.server = new grpc.Server();
-    this.logger = logger;
-    this.grpcConfig = grpcConfig;
 
     const grpcService = new GrpcService(service);
     this.server.addService(XchangeService, {
@@ -50,12 +46,10 @@ class GrpcServer {
     const bindCode = this.server.bind(`${host}:${port}`, serverCert);
 
     if (bindCode !== port) {
-      const error = Errors.COULD_NOT_BIND(host , port.toString());
-      throw(error);
+      throw Errors.COULD_NOT_BIND(host, port);
     } else {
       this.server.start();
       this.logger.info(`gRPC server listening on: ${host}:${port}`);
-      return true;
     }
   }
 

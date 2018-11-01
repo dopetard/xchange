@@ -1,16 +1,14 @@
-import { address, ECPair, Transaction } from 'bitcoinjs-lib';
+import { address, ECPair } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import { Info as LndInfo } from '../lightning/LndClient';
 import XudClient, { XudInfo } from '../xud/XudClient';
 import SwapManager from '../swap/SwapManager';
-import { Currency } from '../wallet/Wallet';
-import WalletManager from '../wallet/WalletManager';
+import WalletManager, { Currency } from '../wallet/WalletManager';
 import Errors from './Errors';
-import { getHexBuffer, getHexString, reverseString } from '../Utils';
+import { getHexBuffer } from '../Utils';
 import { constructClaimTransaction } from '../swap/Claim';
 import { OrderSide, OutputType } from '../proto/xchangerpc_pb';
-import { BIP32 } from 'bip32';
 
 const packageJson = require('../../package.json');
 
@@ -79,7 +77,7 @@ class Service {
   /**
    * Gets the balance for either all wallets or just a single one if specified
    */
-  public getBalance = (args: { currency: string }): Map<string, number> => {
+  public getBalance = async (args: { currency: string }) => {
     const { walletManager } = this.serviceComponents;
 
     const result = new Map<string, number>();
@@ -91,11 +89,14 @@ class Service {
         throw Errors.CURRENCY_NOT_FOUND(args.currency);
       }
 
-      result.set(args.currency, wallet.getBalance());
+      result.set(args.currency, await wallet.getBalance());
     } else {
-      walletManager.wallets.forEach((wallet, currency) => {
-        result.set(currency, wallet.getBalance());
-      });
+      for (const entry of walletManager.wallets) {
+        const currency = entry[0];
+        const wallet = entry[1];
+
+        result.set(currency, await wallet.getBalance());
+      }
     }
 
     return result;

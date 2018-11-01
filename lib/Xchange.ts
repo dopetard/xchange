@@ -6,17 +6,19 @@ import Config, { ConfigType } from './Config';
 import LndClient from './lightning/LndClient';
 import GrpcServer from './grpc/GrpcServer';
 import Service from './service/Service';
-import WalletManager from './wallet/WalletManager';
+import WalletManager, { Currency } from './wallet/WalletManager';
 import SwapManager from './swap/SwapManager';
 import ChainClient from './chain/ChainClient';
 import XudClient from './xud/XudClient';
 import Networks from './consts/Networks';
-import { Currency } from './wallet/Wallet';
+import Database from './db/Database';
 
 // TODO: trading pairs with already existing currencies like XUD
 class Xchange {
   private config: ConfigType;
   private logger: Logger;
+
+  private db: Database;
 
   private xudClient: XudClient;
 
@@ -32,19 +34,21 @@ class Xchange {
     this.config = new Config().load(config);
     this.logger = new Logger(this.config.logpath, this.config.loglevel);
 
+    this.db = new Database(this.logger, this.config.dbpath);
+
     this.xudClient = new XudClient(this.logger, this.config.xud);
 
     this.parseCurrencies();
 
     const walletCurrencies = Array.from(this.currencies.values());
 
-    if (fs.existsSync(this.config.walletpath)) {
-      this.walletManager = new WalletManager(this.logger, walletCurrencies, this.config.walletpath);
+    if (fs.existsSync(this.config.mnemonicpath)) {
+      this.walletManager = new WalletManager(this.logger, walletCurrencies, this.db, this.config.mnemonicpath);
     } else {
       const mnemonic = generateMnemonic();
       this.logger.info(`generated new mnemonic: ${mnemonic}`);
 
-      this.walletManager = WalletManager.fromMnemonic(this.logger, mnemonic, walletCurrencies, this.config.walletpath);
+      this.walletManager = WalletManager.fromMnemonic(this.logger, mnemonic, this.config.mnemonicpath, walletCurrencies, this.db);
     }
 
     const bitcoin = this.currencies.get('BTC')!;
@@ -72,6 +76,7 @@ class Xchange {
 
   public start = async () => {
     const promises = [
+      this.db.init(),
       this.connectXud(),
     ];
 
@@ -81,6 +86,8 @@ class Xchange {
     });
 
     await Promise.all(promises);
+
+    await this.walletManager.init();
 
     try {
       await this.grpcServer.listen();

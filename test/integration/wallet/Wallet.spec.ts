@@ -6,25 +6,49 @@ import Networks from '../../../lib/consts/Networks';
 import { OutputType } from '../../../lib/proto/xchangerpc_pb';
 import { btcdClient, btcManager } from '../chain/ChainClient.spec';
 import Logger from '../../../lib/Logger';
+import Database from '../../../lib/db/Database';
+import UtxoRepository from '../../../lib/wallet/UtxoRepository';
+import WalletRepository from '../../../lib/wallet/WalletRepository';
 
 describe('Wallet', () => {
   before(async () => {
-    await btcdClient.connect();
   });
+
+  const derivationPath = 'm/0/0';
+  const highestUsedIndex = 0;
 
   const mnemonic = bip39.generateMnemonic();
   const masterNode = bip32.fromSeed(bip39.mnemonicToSeed(mnemonic));
 
+  const database = new Database(Logger.disabledLogger, ':memory:');
+  const walletRepository = new WalletRepository(database.models);
+  const utxoRepository = new UtxoRepository(database.models);
+
   const wallet = new Wallet(
     Logger.disabledLogger,
+    walletRepository,
+    utxoRepository,
     masterNode,
-    'm/0/0',
-    0,
     Networks.bitcoinRegtest,
     btcdClient,
+    derivationPath,
+    highestUsedIndex,
   );
 
   let walletBalance: number;
+
+  before(async () => {
+    await btcdClient.connect();
+    await database.init();
+
+    // Create the foreign constraint for the "utxos" table
+    const walletRepository = new WalletRepository(database.models);
+    await walletRepository.addWallet({
+      derivationPath,
+      highestUsedIndex,
+      symbol: 'BTC',
+    });
+  });
 
   it('should recognize transactions to its addresses', async () => {
     const addresses: { address: string, amount: number }[] = [];
@@ -45,26 +69,18 @@ describe('Wallet', () => {
       await btcManager.broadcastAndMine(tx.toHex());
     }
 
-    const balancePromise = new Promise<void>((resolve, reject) => {
-      let iteration = 0;
-
-      const interval = setInterval(() => {
-        if (wallet.getBalance() !== 0) {
+    const balancePromise = new Promise<void>((resolve) => {
+      const interval = setInterval(async () => {
+        if (await wallet.getBalance() !== 0) {
           clearInterval(interval);
           resolve();
-        }
-
-        iteration += 1;
-
-        if (iteration > 20) {
-          reject('Wallet did not recognize transactions');
         }
       }, 100);
     });
 
     await balancePromise;
 
-    expect(wallet.getBalance()).to.be.equal(expectedBalance);
+    expect(await wallet.getBalance()).to.be.equal(expectedBalance);
 
     walletBalance = expectedBalance;
   });
@@ -81,7 +97,7 @@ describe('Wallet', () => {
     await btcdClient.generate(1);
 
     expect(vout).to.be.equal(0);
-    expect(wallet.getBalance()).to.be.equal(destinationAmount);
+    expect(await wallet.getBalance()).to.be.equal(destinationAmount);
   });
 
   after(async () => {

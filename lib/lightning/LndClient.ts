@@ -14,7 +14,7 @@ type LndConfig = {
   host: string;
   port: number;
   certpath: string;
-  macaroonpath?: string;
+  macaroonpath: string;
 };
 
 /** General information about the state of this lnd client. */
@@ -69,7 +69,7 @@ class LndClient extends EventEmitter implements LightningClient {
 
       this.meta = new grpc.Metadata();
 
-      if (macaroonpath) {
+      if (macaroonpath !== '') {
         if (fs.existsSync(macaroonpath)) {
           const adminMacaroon = fs.readFileSync(macaroonpath);
           this.meta.add('macaroon', adminMacaroon.toString('hex'));

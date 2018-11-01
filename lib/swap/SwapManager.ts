@@ -8,8 +8,7 @@ import { p2wshOutput, p2wpkhOutput, p2shP2wshOutput } from './Scripts';
 import { constructClaimTransaction } from './Claim';
 import { TransactionOutput } from '../consts/Types';
 import Errors from './Errors';
-import { Currency } from '../wallet/Wallet';
-import WalletManager from '../wallet/WalletManager';
+import WalletManager, { Currency } from '../wallet/WalletManager';
 import { OrderSide, OutputType } from '../proto/xchangerpc_pb';
 import LndClient from '../lightning/LndClient';
 
@@ -90,14 +89,14 @@ class SwapManager {
 
     this.logger.debug(`Creating new Swap on ${pairId} with preimage hash: ${paymentHash}`);
 
-    const claimKeys = receivingCurrency.wallet.getNewKeys();
+    const { keys, index } = receivingCurrency.wallet.getNewKeys();
 
     // Listen to the address to which the swap output will be claimed
-    await receivingCurrency.wallet.listenToOutput(p2wpkhOutput(crypto.hash160(claimKeys.publicKey)), claimKeys, OutputType.BECH32);
+    await receivingCurrency.wallet.listenToOutput(p2wpkhOutput(crypto.hash160(keys.publicKey)), index, OutputType.BECH32);
 
     const redeemScript = pkRefundSwap(
       getHexBuffer(paymentHash),
-      claimKeys.publicKey,
+      keys.publicKey,
       refundPublicKey,
       bestBlock.height + 10,
     );
@@ -110,7 +109,7 @@ class SwapManager {
       invoice,
       outputType,
       redeemScript,
-      claimKeys,
+      claimKeys: keys,
       lndClient: sendingCurrency.lndClient,
     });
 
@@ -140,11 +139,11 @@ class SwapManager {
     const { blocks } = await sendingCurrency.chainClient.getInfo();
     const { rHash, paymentRequest } = await receivingCurrency.lndClient.addInvoice(amount);
 
-    const refundKeys = sendingCurrency.wallet.getNewKeys();
+    const { keys } = sendingCurrency.wallet.getNewKeys();
     const redeemScript = pkRefundSwap(
       Buffer.from(rHash as string, 'base64'),
       claimPublicKey,
-      refundKeys.publicKey,
+      keys.publicKey,
       blocks + 10,
     );
 
@@ -158,7 +157,7 @@ class SwapManager {
 
     sendingCurrency.reverseSwaps.set(paymentRequest, {
       redeemScript,
-      refundKeys,
+      refundKeys: keys,
       output: {
         vout,
         txHash: tx.getHash(),

@@ -9,26 +9,51 @@ import ChainClient from '../../../lib/chain/ChainClient';
 import { OutputType } from '../../../lib/proto/xchangerpc_pb';
 import { getPubKeyHashEncodeFuntion, getHexBuffer } from '../../../lib/Utils';
 import Logger from '../../../lib/Logger';
+import Database from '../../../lib/db/Database';
+import UtxoRepository from '../../../lib/wallet/UtxoRepository';
+import WalletRepository from '../../../lib/wallet/WalletRepository';
 
 describe('Wallet', () => {
+  const currency = 'BTC';
+
   const mnemonic = bip39.generateMnemonic();
   const masterNode = bip32.fromSeed(bip39.mnemonicToSeed(mnemonic));
 
+  const database = new Database(Logger.disabledLogger, ':memory:');
+  const walletRepository = new WalletRepository(database.models);
+  const utxoRepository = new UtxoRepository(database.models);
+
   const derivationPath = 'm/0/0';
-  let highestIndex = 21;
+  let highestUsedIndex = 21;
 
   const network = Networks.bitcoinRegtest;
-  const chainClientMock = mock(ChainClient);
 
-  const wallet = new Wallet(Logger.disabledLogger, masterNode, derivationPath, highestIndex, network, chainClientMock);
+  const chainClientMock = mock(ChainClient);
+  // "as any" is needed to force override a "readonly" value
+  chainClientMock['symbol' as any] = currency;
+
+  const wallet = new Wallet(Logger.disabledLogger, walletRepository, utxoRepository,
+    masterNode, network, chainClientMock, derivationPath, highestUsedIndex);
 
   const incrementIndex = () => {
-    highestIndex = highestIndex + 1;
+    highestUsedIndex = highestUsedIndex + 1;
   };
 
   const getKeysByIndex = (index: number) => {
     return masterNode.derivePath(`${derivationPath}/${index}`);
   };
+
+  before(async () => {
+    await database.init();
+
+    // Create the foreign constraint for the "utxos" table
+    const walletRepository = new WalletRepository(database.models);
+    await walletRepository.addWallet({
+      derivationPath,
+      highestUsedIndex,
+      symbol: currency,
+    });
+  });
 
   it('should get correct address from index', () => {
     const index = 1;
@@ -39,8 +64,12 @@ describe('Wallet', () => {
   it('should get new keys', () => {
     incrementIndex();
 
-    expect(wallet.getNewKeys()).to.be.deep.equal(getKeysByIndex(highestIndex));
-    expect(wallet.highestUsedIndex).to.be.equal(highestIndex);
+    const { keys, index } = wallet.getNewKeys();
+
+    expect(keys).to.be.deep.equal(getKeysByIndex(highestUsedIndex));
+    expect(index).to.be.equal(wallet.highestUsedIndex);
+
+    expect(wallet.highestUsedIndex).to.be.equal(highestUsedIndex);
   });
 
   it('should encode an address', () => {
@@ -55,11 +84,39 @@ describe('Wallet', () => {
 
     const outputType = OutputType.BECH32;
 
-    const keys = getKeysByIndex(highestIndex);
+    const keys = getKeysByIndex(highestUsedIndex);
     const encodeFunction = getPubKeyHashEncodeFuntion(outputType);
     const outputScript = encodeFunction(crypto.hash160(keys.publicKey));
     const outputAddress = address.fromOutputScript(outputScript, network);
 
     expect(await wallet.getNewAddress(outputType)).to.be.equal(outputAddress);
+  });
+
+  it('should get correct balance', async () => {
+    let expectedBalance = 0;
+
+    for (let i = 0; i <= 10; i += 1) {
+      const value = Math.floor(Math.random() * 1000000) + 1;
+
+      await utxoRepository.addUtxo({
+        value,
+        currency: 'BTC',
+        keyIndex: 0,
+        txHash: `${value}`,
+        script: '',
+        type: 0,
+        vout: 0,
+      });
+
+      expectedBalance += value;
+    }
+
+    expect(await wallet.getBalance()).to.be.equal(expectedBalance);
+  });
+
+  it('should update highest used index in database', async () => {
+    const dbWallet = await walletRepository.getWallet(currency);
+
+    expect(dbWallet!.highestUsedIndex).to.be.equal(highestUsedIndex);
   });
 });

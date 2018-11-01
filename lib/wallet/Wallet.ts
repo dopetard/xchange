@@ -1,23 +1,16 @@
 import { BIP32 } from 'bip32';
-import FastPriorityQueue from 'fastpriorityqueue';
 import { Transaction, Network, address, crypto, TransactionBuilder, ECPair } from 'bitcoinjs-lib';
 import ChainClient from '../chain/ChainClient';
 import { OutputType } from '../proto/xchangerpc_pb';
-import { TransactionOutput } from '../consts/Types';
-import { getPubKeyHashEncodeFuntion, getHexString } from '../Utils';
+import { getPubKeyHashEncodeFuntion, getHexString, getHexBuffer } from '../Utils';
 import Errors from './Errors';
-import LndClient from '../lightning/LndClient';
-import Logger from 'lib/Logger';
+import Logger from '../Logger';
+import { TransactionOutput } from '../consts/Types';
+import UtxoRepository from './UtxoRepository';
+import WalletRepository from './WalletRepository';
 
 type UTXO = TransactionOutput & {
   keys: BIP32;
-};
-
-type Currency = {
-  symbol: string;
-  network: Network;
-  chainClient: ChainClient;
-  lndClient: LndClient;
 };
 
 // TODO: wait for funds being confirmed
@@ -26,59 +19,53 @@ type Currency = {
 // TODO: save UTXOs to disk
 // TODO: multiple transaction to same output
 class Wallet {
+  private relevantOutputs = new Map<string, { keyIndex: number, type: OutputType }>();
 
-  private relevantOutputs = new Map<string, { keys: BIP32, type: OutputType }>();
-
-  private utxos = new FastPriorityQueue(Wallet.getUTXOComparator());
+  private symbol: string;
 
   /**
    * Wallet is a hierarchical deterministic wallet for a single currency
    *
    * @param masterNode the master node from which wallets are derived
-   * @param derivationPath should be in the format "m/0/<index of the wallet>"
    * @param network the network of the wallet
    * @param chainClient the ChainClient for the network
+   * @param derivationPath should be in the format "m/0/<index of the wallet>"
    * @param highestIndex the highest index of a used address in the wallet
    */
   constructor(
     private logger: Logger,
+    private walletRepository: WalletRepository,
+    private utxoRepository: UtxoRepository,
     private masterNode: BIP32,
-    public readonly derivationPath: string,
-    private highestIndex: number,
     public readonly network: Network,
-    private chainClient: ChainClient) {
+    private chainClient: ChainClient,
+    public readonly derivationPath: string,
+    private highestIndex: number) {
+
+    this.symbol = this.chainClient.symbol;
 
     this.chainClient.on('transaction.relevant', (txHex) => {
       const transaction = Transaction.fromHex(txHex);
 
-      transaction.outs.forEach((output, vout) => {
+      transaction.outs.forEach(async (output, vout) => {
         const hexScript = getHexString(output.script);
         const outputInfo = this.relevantOutputs.get(hexScript);
 
         if (outputInfo) {
-          this.logger.debug(`Found UTXO of ${chainClient.symbol} wallet: ${transaction.getId()}:${vout} with value ${output.value}`);
+          this.logger.debug(`Found UTXO of ${this.symbol} wallet: ${transaction.getId()}:${vout} with value ${output.value}`);
 
           this.relevantOutputs.delete(hexScript);
-          this.utxos.add({
+          await this.utxoRepository.addUtxo({
             vout,
-            txHash: transaction.getHash(),
-            ...output,
+            currency: this.symbol,
+            txHash: getHexString(transaction.getHash()),
+            script: getHexString(output.script),
+            value: output.value,
             ...outputInfo,
           });
         }
       });
     });
-  }
-
-  private static getUTXOComparator = () => {
-    return (a: UTXO, b: UTXO) => {
-      if (a.value !== b.value) {
-        return a.value > b.value;
-      } else {
-        // TODO: prefer spending one OutputType over the other
-        return true;
-      }
-    };
   }
 
   public get highestUsedIndex() {
@@ -100,7 +87,13 @@ class Wallet {
   public getNewKeys = () => {
     this.highestIndex += 1;
 
-    return this.getKeysByIndex(this.highestIndex);
+    // tslint:disable-next-line no-floating-promises
+    this.walletRepository.updateHighestUsedIndex(this.symbol, this.highestIndex);
+
+    return {
+      keys: this.getKeysByIndex(this.highestIndex),
+      index: this.highestIndex,
+    };
   }
 
   /**
@@ -109,13 +102,13 @@ class Wallet {
    * @param type ouput type of the address
    */
   public getNewAddress = async (type: OutputType) => {
-    const keys = this.getNewKeys();
+    const { keys, index } = this.getNewKeys();
 
     const encodeFunction = getPubKeyHashEncodeFuntion(type);
     const output = encodeFunction(crypto.hash160(keys.publicKey));
     const address = this.encodeAddress(output);
 
-    await this.listenToOutput(output, keys, type, address);
+    await this.listenToOutput(output, index, type, address);
 
     return address;
   }
@@ -137,8 +130,8 @@ class Wallet {
    *
    * @param output a P2WPKH, P2SH nested P2WPKH or P2PKH ouput
    */
-  public listenToOutput = async (output: Buffer, keys: BIP32, type: OutputType, address?: string) => {
-    this.relevantOutputs.set(getHexString(output), { keys, type });
+  public listenToOutput = async (output: Buffer, keyIndex: number, type: OutputType, address?: string) => {
+    this.relevantOutputs.set(getHexString(output), { keyIndex, type });
 
     const chainAddress = address ? address : this.encodeAddress(output);
     await this.chainClient.loadTxFiler(false, [chainAddress], []);
@@ -147,10 +140,12 @@ class Wallet {
   /**
    * Get the balance of the wallet
    */
-  public getBalance = () => {
+  public getBalance = async () => {
     let balance = 0;
 
-    this.utxos.forEach((utxo) => {
+    const utxos = await this.utxoRepository.getUtxos(this.symbol);
+
+    utxos.forEach((utxo) => {
       balance += utxo.value;
     });
 
@@ -167,16 +162,32 @@ class Wallet {
    * @returns the transaction itself and the vout of the addres
    */
   public sendToAddress = async (address: string, amount: number): Promise<{ tx: Transaction, vout: number }> => {
+    const utxos = await this.utxoRepository.getUtxosSorted(this.symbol);
+
     let missingAmount = amount + 1000;
+
+    // The UTXOs that will be spent
     const toSpend: UTXO[] = [];
+    // The hex encoded strings of the UTXOs that will be spent
+    const toRemove: string[] = [];
 
     // Accumulate UTXO to spend
-    this.utxos.forEach((utxo) => {
-      if ((missingAmount) >= 0) {
-        missingAmount -= utxo.value;
-        toSpend.push(utxo);
+    for (const utxoInstance of utxos) {
+      missingAmount -= utxoInstance.value;
+      toSpend.push({
+        txHash: getHexBuffer(utxoInstance.txHash),
+        vout: utxoInstance.vout,
+        type: utxoInstance.type,
+        script: getHexBuffer(utxoInstance.script),
+        value: utxoInstance.value,
+        keys: this.getKeysByIndex(utxoInstance.keyIndex),
+      });
+      toRemove.push(utxoInstance.txHash);
+
+      if ((missingAmount) <= 0) {
+        break;
       }
-    });
+    }
 
     // Throw an error if the wallet doesn't have enough funds
     if (missingAmount > 0) {
@@ -184,10 +195,14 @@ class Wallet {
     }
 
     // Remove the UTXOs that are going to be spent from the UTXOs of the wallet
-    this.utxos.removeMany((utxo: UTXO) => {
-      return toSpend.includes(utxo);
+    const removePromises: Promise<any>[] = [];
+    toRemove.forEach((txHash) => {
+      removePromises.push(this.utxoRepository.removeUtxo(txHash));
     });
 
+    await Promise.all(removePromises);
+
+    // Construct the transaction
     const builder = new TransactionBuilder(this.network);
 
     // Add the UTXOs from before as inputs
@@ -226,4 +241,3 @@ class Wallet {
 }
 
 export default Wallet;
-export { Currency };
