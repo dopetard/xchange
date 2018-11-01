@@ -1,6 +1,6 @@
 import { EventEmitter } from 'events';
 import RpcClient, { RpcConfig } from '../RpcClient';
-import ChainClientInterface, { Info, Block } from './ChainClientInterface';
+import ChainClientInterface, { Info, Block, BestBlock } from './ChainClientInterface';
 
 interface ChainClientEvents {
   on(event: 'error', listener: (error: string) => void): this;
@@ -52,6 +52,10 @@ class ChainClient extends EventEmitter implements ChainClientInterface, ChainCli
   public loadTxFiler = (reload: boolean, addresses: string[], outpoints: string[]): Promise<null> => {
     // tslint:disable-next-line no-null-keyword
     return this.rpcClient.call<null>('loadtxfilter', reload, addresses, outpoints);
+  }
+
+  public getBestBlock = (): Promise<BestBlock> => {
+    return this.rpcClient.call<BestBlock>('getbestblock');
   }
 
   public getBlock = (blockHash: string): Promise<Block> => {

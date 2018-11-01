@@ -5,7 +5,7 @@ import { fromBase58 } from 'bip32';
 import { address } from 'bitcoinjs-lib';
 import { getHexBuffer } from '../../../lib/Utils';
 import Networks from '../../../lib/consts/Networks';
-import { OutputType } from '../../../lib/consts/Enums';
+import { OutputType } from '../../../lib/proto/xchangerpc_pb';
 
 // TODO: use valid values
 describe('Claim', () => {
@@ -29,7 +29,7 @@ describe('Claim', () => {
           vout,
           value,
           txHash,
-          type: OutputType.Bech32,
+          type: OutputType.BECH32,
           script: getHexBuffer('00206f38b6ce82427d4df080a9833d06cc6c66ab816545c9fd4df50f9d1ca8430b9e'),
         },
       },
@@ -58,7 +58,7 @@ describe('Claim', () => {
           vout,
           value,
           txHash,
-          type: OutputType.Legacy,
+          type: OutputType.LEGACY,
           script: getHexBuffer('a9148f439aff651860bdb28c66500c6e958cfbe7a69387'),
         },
       },
@@ -87,7 +87,7 @@ describe('Claim', () => {
           vout,
           value,
           txHash,
-          type: OutputType.Compatibility,
+          type: OutputType.COMPATIBILITY,
           script: getHexBuffer('a9143cdeb56e328a10d3bfe107fd5a16bd73871adb8d87'),
         },
       },

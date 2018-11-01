@@ -7,7 +7,7 @@ import { pkRefundSwap } from '../../../lib/swap/Submarine';
 import { constructClaimTransaction } from '../../../lib/swap/Claim';
 import Networks from '../../../lib/consts/Networks';
 import { btcManager, btcdClient, btcKeys, btcAddress } from '../chain/ChainClient.spec';
-import { OutputType } from '../../../lib/consts/Enums';
+import { OutputType } from '../../../lib/proto/xchangerpc_pb';
 
 describe('Submarine Swaps', () => {
   const preimage = getHexBuffer('b5b2dbb1f0663878ecbc20323b58b92c');
@@ -52,15 +52,15 @@ describe('Submarine Swaps', () => {
   });
 
   it('should execute a P2WSH Submarine Swap', async () => {
-    await executeSwap(p2wshOutput, OutputType.Bech32);
+    await executeSwap(p2wshOutput, OutputType.BECH32);
   });
 
   it('should execute a P2SH Submarine Swap', async () => {
-    await executeSwap(p2shOutput, OutputType.Legacy);
+    await executeSwap(p2shOutput, OutputType.LEGACY);
   });
 
   it('should execute a P2SH nested P2WSH Submarine Swap', async () => {
-    await executeSwap(p2shP2wshOutput, OutputType.Compatibility);
+    await executeSwap(p2shP2wshOutput, OutputType.COMPATIBILITY);
   });
 
   after(async () => {

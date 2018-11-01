@@ -6,8 +6,9 @@ import bip39 from 'bip39';
 import Networks from '../../../lib/consts/Networks';
 import Wallet from '../../../lib/wallet/Wallet';
 import ChainClient from '../../../lib/chain/ChainClient';
-import { OutputType } from '../../../lib/consts/Enums';
+import { OutputType } from '../../../lib/proto/xchangerpc_pb';
 import { getPubKeyHashEncodeFuntion, getHexBuffer } from '../../../lib/Utils';
+import Logger from '../../../lib/Logger';
 
 describe('Wallet', () => {
   const mnemonic = bip39.generateMnemonic();
@@ -19,7 +20,7 @@ describe('Wallet', () => {
   const network = Networks.bitcoinRegtest;
   const chainClientMock = mock(ChainClient);
 
-  const wallet = new Wallet(masterNode, derivationPath, highestIndex, network, chainClientMock);
+  const wallet = new Wallet(Logger.disabledLogger, masterNode, derivationPath, highestIndex, network, chainClientMock);
 
   const incrementIndex = () => {
     highestIndex = highestIndex + 1;
@@ -52,7 +53,7 @@ describe('Wallet', () => {
   it('should get a new address', async () => {
     incrementIndex();
 
-    const outputType = OutputType.Bech32;
+    const outputType = OutputType.BECH32;
 
     const keys = getKeysByIndex(highestIndex);
     const encodeFunction = getPubKeyHashEncodeFuntion(outputType);

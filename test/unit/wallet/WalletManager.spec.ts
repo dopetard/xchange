@@ -8,6 +8,7 @@ import WalletErrors from '../../../lib/wallet/Errors';
 import Networks from '../../../lib/consts/Networks';
 import ChainClient from '../../../lib/chain/ChainClient';
 import LndClient from '../../../lib/lightning/LndClient';
+import Logger from '../../../lib/Logger';
 
 describe('WalletManager', () => {
   const mnemonic = bip39.generateMnemonic();
@@ -44,11 +45,11 @@ describe('WalletManager', () => {
   });
 
   it('should not initialize without wallet file', () => {
-    expect(() => new WalletManager(coins, walletPath, false)).to.throw(WalletErrors.NOT_INITIALIZED().message);
+    expect(() => new WalletManager(Logger.disabledLogger, coins, walletPath, false)).to.throw(WalletErrors.NOT_INITIALIZED().message);
   });
 
   it('should initialize a new wallet for each coin', () => {
-    walletManager = WalletManager.fromMnemonic(mnemonic, coins, walletPath, false);
+    walletManager = WalletManager.fromMnemonic(Logger.disabledLogger, mnemonic, coins, walletPath, false);
 
     coins.forEach((coin, index) => {
       const wallet = walletManager.wallets.get(coin.symbol);
@@ -72,7 +73,7 @@ describe('WalletManager', () => {
   });
 
   it('should read wallet from the disk', () => {
-    const compare = new WalletManager(coins, walletPath, false);
+    const compare = new WalletManager(Logger.disabledLogger, coins, walletPath, false);
     compare['loadWallet'](walletPath);
 
     expect(compare['walletsInfo']).to.be.deep.equal(walletManager['walletsInfo']);
@@ -81,7 +82,8 @@ describe('WalletManager', () => {
   it('should not accept invalid mnemonics', () => {
     const invalidMnemonic = 'invalid';
 
-    expect(() => WalletManager.fromMnemonic(invalidMnemonic, [], '')).to.throw(WalletErrors.INVALID_MNEMONIC(invalidMnemonic).message);
+    expect(() => WalletManager.fromMnemonic(Logger.disabledLogger,
+      invalidMnemonic, [], '')).to.throw(WalletErrors.INVALID_MNEMONIC(invalidMnemonic).message);
   });
 
   after(() => {

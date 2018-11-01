@@ -4,11 +4,11 @@ import { getTsString } from './Utils';
 
 class Logger {
 
-  public static disabledLogger = new Logger('', '', true);
+  public static readonly disabledLogger = new Logger('', '', true);
 
   // TODO: multiple loggeres for different scopes
   // TODO: 'trace' level instead of 'silly'
-  constructor(filename: string, level: string, disabled = false) {
+  constructor(filename: string, level: string, private disabled = false) {
     if (disabled) {
       return;
     }
@@ -46,27 +46,33 @@ class Logger {
   }
 
   public error = (message: string) => {
-    winston.error(message);
+    this.log('error', message);
   }
 
   public warn = (message: string) => {
-    winston.warn(message);
+    this.log('warn', message);
   }
 
   public info = (message: string) => {
-    winston.info(message);
+    this.log('info', message);
   }
 
   public verbose = (message: string) => {
-    winston.verbose(message);
+    this.log('verbose', message);
   }
 
   public debug = (message: string) => {
-    winston.debug(message);
+    this.log('debug', message);
   }
 
   public silly = (message: string) => {
-    winston.silly(message);
+    this.log('silly', message);
+  }
+
+  private log = (level: string, message: string) => {
+    if (!this.disabled) {
+      winston.log(level, message);
+    }
   }
 }
 
