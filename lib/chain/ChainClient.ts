@@ -1,5 +1,7 @@
-import { EventEmitter } from 'events';
+import BaseClient from '../BaseClient';
+import Logger from '../Logger';
 import RpcClient, { RpcConfig } from '../RpcClient';
+import { ClientStatus } from '../consts/ClientStatus';
 import ChainClientInterface, { Info, Block, BestBlock } from './ChainClientInterface';
 
 interface ChainClientEvents {
@@ -9,17 +11,21 @@ interface ChainClientEvents {
   emit(event: 'transaction.relevant', transactionHex: string): boolean;
 }
 
-class ChainClient extends EventEmitter implements ChainClientInterface, ChainClientEvents {
+class ChainClient extends BaseClient implements ChainClientInterface, ChainClientEvents {
   private rpcClient: RpcClient;
+  private uri: string;
 
-  constructor(config: RpcConfig, public readonly symbol: string) {
+  constructor(private logger: Logger, config: RpcConfig, public readonly symbol: string) {
     super();
 
     this.rpcClient = new RpcClient(config);
-    this.rpcClient.on('error', error => this.emit('error', error));
+    this.uri = `${config.host}:${config.port}`;
+
+    this.bindWs();
   }
 
   private bindWs = () => {
+    this.rpcClient.on('error', error => this.emit('error', error));
     this.rpcClient.on('message.orphan', (data) => {
       if (data.method === 'relevanttxaccepted') {
         const transactions = data.params;
@@ -32,12 +38,34 @@ class ChainClient extends EventEmitter implements ChainClientInterface, ChainCli
   }
 
   public connect = async () => {
-    await this.rpcClient.connect();
+    if (this.isDisconnected) {
+      await this.rpcClient.connect();
 
-    this.bindWs();
+      try {
+        const info = await this.getInfo();
+
+        if (info.version) {
+          this.clearReconnectTimer();
+          this.setClientStatus(ClientStatus.Connected);
+
+        } else {
+          this.setClientStatus(ClientStatus.Disconnected);
+          this.logger.error(`${this.symbol} at ${this.uri} is not able to connect, retrying in ${this.RECONNECT_INTERVAL} ms`);
+          this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_INTERVAL);
+        }
+      } catch (error) {
+        this.setClientStatus(ClientStatus.Disconnected);
+        this.logger.error(`could not verify connection to chain ${this.symbol} chain at ${this.uri} because: ${JSON.stringify(error)}` +
+        ` retrying in ${this.RECONNECT_INTERVAL} ms`);
+        this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_INTERVAL);
+      }
+    }
   }
 
   public disconnect = async () => {
+    this.clearReconnectTimer();
+    this.setClientStatus(ClientStatus.Disconnected);
+
     await this.rpcClient.close();
   }
 

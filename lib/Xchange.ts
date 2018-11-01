@@ -130,7 +130,7 @@ class Xchange {
   private parseCurrencies = () => {
     this.config.currencies.forEach((currency) => {
       try {
-        const chainClient = new ChainClient(currency.chain, currency.symbol);
+        const chainClient = new ChainClient(this.logger, currency.chain, currency.symbol);
         const lndClient = new LndClient(this.logger, currency.lnd!, currency.symbol);
 
         this.currencies.set(currency.symbol, {

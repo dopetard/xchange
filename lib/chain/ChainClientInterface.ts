@@ -1,5 +1,3 @@
-import BaseClient from '../BaseClient';
-
 type Info = {
   version: number;
   protocolversion: number;
@@ -39,7 +37,7 @@ type Block = {
 /**
  * A generic interface that can be used for multiple chain nodes and implementations
  */
-interface ChainClientInterface extends BaseClient {
+interface ChainClientInterface {
   sendRawTransaction(rawTransaction: string): Promise<any>;
   connect(): Promise<void>;
   disconnect(): Promise<void>;

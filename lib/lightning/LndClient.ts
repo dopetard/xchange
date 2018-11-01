@@ -1,11 +1,12 @@
 import fs from 'fs';
 import grpc, { ClientReadableStream } from 'grpc';
-import { EventEmitter } from 'events';
+import BaseClient from '../BaseClient';
 import Logger from '../Logger';
 import Errors from './Errors';
 import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
+import { ClientStatus } from '../consts/ClientStatus';
 
 // TODO: error handling
 
@@ -20,6 +21,7 @@ type LndConfig = {
 /** General information about the state of this lnd client. */
 type Info = {
   version?: string;
+  syncedtochain?: boolean;
   chainsList?: string[];
   channels?: ChannelCount;
   blockheight?: number;
@@ -47,7 +49,11 @@ interface LndClient {
 }
 
 /** A class representing a client to interact with lnd. */
-class LndClient extends EventEmitter implements LightningClient {
+class LndClient extends BaseClient implements LightningClient {
+  public static readonly serviceName = 'LND';
+  private uri!: string;
+  private credentials!: grpc.ChannelCredentials;
+
   private lightning!: GrpcClient | LightningMethodIndex;
   private meta!: grpc.Metadata;
   private invoiceSubscription?: ClientReadableStream<lndrpc.InvoiceSubscription>;
@@ -62,10 +68,10 @@ class LndClient extends EventEmitter implements LightningClient {
     const { host, port, certpath, macaroonpath } = config;
 
     if (fs.existsSync(certpath)) {
-      const uri = `${host}:${port}`;
+      this.uri = `${host}:${port}`;
 
       const lndCert = fs.readFileSync(certpath);
-      const credentials = grpc.credentials.createSsl(lndCert);
+      this.credentials = grpc.credentials.createSsl(lndCert);
 
       this.meta = new grpc.Metadata();
 
@@ -77,8 +83,6 @@ class LndClient extends EventEmitter implements LightningClient {
           this.throwFilesNotFound();
         }
       }
-
-      this.lightning = new GrpcClient(uri, credentials);
     } else {
       this.throwFilesNotFound();
     }
@@ -91,14 +95,44 @@ class LndClient extends EventEmitter implements LightningClient {
   /**
    * Returns a boolean determines whether LND is ready or not
    */
-  public connect = async () => {
-    const info = await this.getInfo();
+  public connect = async (): Promise<boolean> => {
+    if (!this.isConnected()) {
+      this.lightning = new GrpcClient(this.uri, this.credentials);
 
-    return info.syncedToChain;
+      try {
+        const response = await this.getInfo();
+
+        if (response.syncedToChain) {
+          this.setClientStatus(ClientStatus.Connected);
+          this.subscribeInvoices();
+
+          this.clearReconnectTimer();
+
+          return true;
+        } else {
+          this.setClientStatus(ClientStatus.OutOfSync);
+          this.logger.error(`${LndClient.serviceName} at ${this.uri} is out of sync with chain, retrying in ${this.RECONNECT_INTERVAL} ms`);
+          this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_INTERVAL);
+
+          return false;
+        }
+      } catch (error) {
+        this.setClientStatus(ClientStatus.Disconnected);
+        this.logger.error(`could not connect to ${LndClient.serviceName} ${this.symbol} at ${this.uri}` +
+        ` because: "${error.details}", retrying in ${this.RECONNECT_INTERVAL} ms`);
+        this.reconnectionTimer = setTimeout(this.connect, this.RECONNECT_INTERVAL);
+
+        return false;
+      }
+    }
+
+    return true;
   }
 
   /** End all subscriptions and reconnection attempts. */
-  public close = () => {
+  public disconnect = () => {
+    this.clearReconnectTimer();
+
     if (this.invoiceSubscription) {
       this.invoiceSubscription.cancel();
     }
@@ -122,6 +156,7 @@ class LndClient extends EventEmitter implements LightningClient {
     let blockheight: number | undefined;
     let uris: string[] | undefined;
     let version: string | undefined;
+    let syncedtochain: boolean | undefined;
     try {
       const lnd = await this.getInfo();
       channels = {
@@ -132,8 +167,10 @@ class LndClient extends EventEmitter implements LightningClient {
       blockheight = lnd.blockHeight,
       uris = lnd.urisList,
       version = lnd.version;
+      syncedtochain = lnd.syncedToChain;
       return {
         version,
+        syncedtochain,
         chainsList,
         channels,
         blockheight,
@@ -143,6 +180,7 @@ class LndClient extends EventEmitter implements LightningClient {
       this.logger.error(`LND error: ${err}`);
       return {
         version,
+        syncedtochain,
         chainsList,
         channels,
         blockheight,
@@ -238,6 +276,10 @@ class LndClient extends EventEmitter implements LightningClient {
    * Subscribe to events for when invoices are settled.
    */
   private subscribeInvoices = (): void => {
+    if (this.invoiceSubscription) {
+      this.invoiceSubscription.cancel();
+    }
+
     this.invoiceSubscription = this.lightning.subscribeInvoices(new lndrpc.InvoiceSubscription(), this.meta)
       .on('data', (invoice: lndrpc.Invoice) => {
         this.logger.info(`invoice update: ${invoice.getRHash_asB64()}`);
