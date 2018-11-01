@@ -7,6 +7,7 @@ import LightningClient from './LightningClient';
 import * as lndrpc from '../proto/lndrpc_pb';
 import { LightningClient as GrpcClient } from '../proto/lndrpc_grpc_pb';
 import { ClientStatus } from '../consts/ClientStatus';
+import { getHexString } from '../Utils';
 
 // TODO: error handling
 
@@ -44,8 +45,8 @@ interface LightningMethodIndex extends GrpcClient {
 }
 
 interface LndClient {
-  on(event: 'invoice.settled', listener: (rHash: string) => void): this;
-  emit(event: 'invoice.settled', rHash: string);
+  on(event: 'invoice.settled', listener: (rHash: Buffer) => void): this;
+  emit(event: 'invoice.settled', rHash: Buffer);
 }
 
 /** A class representing a client to interact with lnd. */
@@ -282,10 +283,11 @@ class LndClient extends BaseClient implements LightningClient {
 
     this.invoiceSubscription = this.lightning.subscribeInvoices(new lndrpc.InvoiceSubscription(), this.meta)
       .on('data', (invoice: lndrpc.Invoice) => {
-        this.logger.info(`invoice update: ${invoice.getRHash_asB64()}`);
-
         if (invoice.getSettled()) {
-          this.emit('invoice.settled', String(invoice.getRHash_asB64()));
+          const rHash = Buffer.from(invoice.getRHash_asB64(), 'base64');
+
+          this.logger.silly(`${this.symbol} LND invoice settled: ${getHexString(rHash)}`);
+          this.emit('invoice.settled', rHash);
         }
       })
       .on('error', (error) => {

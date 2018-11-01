@@ -31,7 +31,6 @@ class GrpcServer {
       newAddress: grpcService.newAddress,
       createSwap: grpcService.createSwap,
       createReverseSwap: grpcService.createReverseSwap,
-      claimSwap: grpcService.claimSwap,
     });
   }
 

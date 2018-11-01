@@ -1,6 +1,6 @@
 import { Arguments } from 'yargs';
 import { ECPair } from 'bitcoinjs-lib';
-import Networks from '../../consts/Networks';
+import { getNetwork } from '../Utils';
 import { getHexString } from '../../Utils';
 
 export const command = 'newkeys <network>';
@@ -15,13 +15,7 @@ export const builder = {
 };
 
 export const handler = (argv: Arguments) => {
-  const network = Networks[argv.network];
-
-  if (!network) {
-    console.log(`Could not find network: ${argv.network}`);
-    return;
-  }
-
+  const network = getNetwork(argv.network);
   const keys = ECPair.makeRandom({ network });
 
   console.log(JSON.stringify({

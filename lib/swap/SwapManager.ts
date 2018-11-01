@@ -127,10 +127,9 @@ class SwapManager {
    * @param claimPublicKey the public key of the private key needed for the claiming
    * @param amount the amount of the invoice
    *
-   * @returns a Lightning invoice and the hash of a onchain transaction
+   * @returns a Lightning invoice, the lockup transaction and its hash
    */
-  public createReverseSwap = async (pairId: string, orderSide: OrderSide, claimPublicKey: Buffer, amount: number):
-    Promise<{ invoice: string, transactionHash: string }> => {
+  public createReverseSwap = async (pairId: string, orderSide: OrderSide, claimPublicKey: Buffer, amount: number) => {
 
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(pairId, orderSide);
 
@@ -154,7 +153,9 @@ class SwapManager {
 
     this.logger.debug(`Sending ${sendingAmount} on ${sendingCurrency.symbol} to ${address}`);
     const { tx, vout } = await sendingCurrency.wallet.sendToAddress(address, sendingAmount);
-    await sendingCurrency.chainClient.sendRawTransaction(tx.toHex());
+    const txHex = tx.toHex();
+
+    await sendingCurrency.chainClient.sendRawTransaction(txHex);
 
     sendingCurrency.reverseSwaps.set(paymentRequest, {
       redeemScript,
@@ -170,6 +171,8 @@ class SwapManager {
 
     return {
       invoice: paymentRequest,
+      redeemScript: getHexString(redeemScript),
+      transaction: txHex,
       transactionHash: tx.getId(),
     };
   }

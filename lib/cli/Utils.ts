@@ -1,3 +1,4 @@
+import Networks from '../consts/Networks';
 import { OutputType, OrderSide } from '../proto/xchangerpc_pb';
 
 export const getOrderSide = (side: string) => {
@@ -16,4 +17,14 @@ export const getOutputType = (type: string) => {
 
     default: return OutputType.LEGACY;
   }
+};
+
+export const getNetwork = (networkKey: string) => {
+  const network = Networks[networkKey];
+
+  if (!network) {
+    throw `Could not find network: ${networkKey}`;
+  }
+
+  return network;
 };
