@@ -3,8 +3,9 @@ import bip32 from 'bip32';
 import bip39 from 'bip39';
 import Wallet from '../../../lib/wallet/Wallet';
 import Networks from '../../../lib/consts/Networks';
-import { OutputType } from '../../../lib/consts/Enums';
+import { OutputType } from '../../../lib/proto/xchangerpc_pb';
 import { btcdClient, btcManager } from '../chain/ChainClient.spec';
+import Logger from '../../../lib/Logger';
 
 describe('Wallet', () => {
   before(async () => {
@@ -15,6 +16,7 @@ describe('Wallet', () => {
   const masterNode = bip32.fromSeed(bip39.mnemonicToSeed(mnemonic));
 
   const wallet = new Wallet(
+    Logger.disabledLogger,
     masterNode,
     'm/0/0',
     0,
@@ -30,7 +32,7 @@ describe('Wallet', () => {
 
     for (let i = 0; i < 5; i += 1) {
       const address = {
-        address: await wallet.getNewAddress(OutputType.Bech32),
+        address: await wallet.getNewAddress(OutputType.BECH32),
         amount: i * 10000,
       };
 
@@ -70,7 +72,7 @@ describe('Wallet', () => {
   it('should spend UTXOs', async () => {
     expect(walletBalance).to.not.be.undefined;
 
-    const destinationAddress = await wallet.getNewAddress(OutputType.Bech32);
+    const destinationAddress = await wallet.getNewAddress(OutputType.BECH32);
     const destinationAmount = walletBalance - 1000;
 
     const { tx, vout } = await wallet.sendToAddress(destinationAddress, destinationAmount);

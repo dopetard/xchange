@@ -1,3 +1,4 @@
+import { address, ECPair, Transaction } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import { Info as LndInfo } from '../lightning/LndClient';
@@ -5,12 +6,11 @@ import XudClient, { XudInfo } from '../xud/XudClient';
 import SwapManager from '../swap/SwapManager';
 import { Currency } from '../wallet/Wallet';
 import WalletManager from '../wallet/WalletManager';
-import { OutputType } from '../consts/Enums';
 import Errors from './Errors';
-import { OrderSide } from '../proto/xchangerpc_pb';
-import { getHexBuffer } from '../Utils';
+import { getHexBuffer, getHexString, reverseString } from '../Utils';
 import { constructClaimTransaction } from '../swap/Claim';
-import { address, ECPair } from 'bitcoinjs-lib';
+import { OrderSide, OutputType } from '../proto/xchangerpc_pb';
+import { BIP32 } from 'bip32';
 
 const packageJson = require('../../package.json');
 
@@ -167,8 +167,8 @@ class Service {
       throw Errors.SWAP_NOT_FOUND(args.invoice);
     }
 
-    const destinationScript = address.toOutputScript(args.destinationAddress, currency.network);
     const claimKeys = ECPair.fromPrivateKey(getHexBuffer(args.claimPrivateKey), { network: currency.network });
+    const destinationScript = address.toOutputScript(args.destinationAddress, currency.network);
 
     const claimTx = constructClaimTransaction(
       getHexBuffer(args.preimage),
@@ -194,9 +194,9 @@ class Service {
 
   private getOutputType = (type: number) => {
     switch (type) {
-      case 0: return OutputType.Bech32;
-      case 1: return OutputType.Compatibility;
-      default: return OutputType.Legacy;
+      case 0: return OutputType.BECH32;
+      case 1: return OutputType.COMPATIBILITY;
+      default: return OutputType.LEGACY;
     }
   }
 }

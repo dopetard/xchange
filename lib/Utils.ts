@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
-import { OutputType } from './consts/Enums';
 import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2wpkhOutput, p2pkhOutput, p2shP2wpkhOutput } from './swap/Scripts';
+import { OutputType } from './proto/xchangerpc_pb';
 
 /**
  * Get the pair id of a pair
@@ -198,26 +198,30 @@ export const getServiceDataDir = (service: string) => {
 
 export const getPubKeyHashEncodeFuntion = (outputType: OutputType) => {
   switch (outputType) {
-    case OutputType.Bech32:
+    case OutputType.BECH32:
       return p2wpkhOutput;
 
-    case OutputType.Compatibility:
+    case OutputType.COMPATIBILITY:
       return p2shP2wpkhOutput;
 
-    case OutputType.Legacy:
+    case OutputType.LEGACY:
       return p2pkhOutput;
   }
 };
 
 export const getScriptHashEncodeFunction = (outputType: OutputType) => {
   switch (outputType) {
-    case OutputType.Bech32:
+    case OutputType.BECH32:
       return p2wshOutput;
 
-    case OutputType.Compatibility:
+    case OutputType.COMPATIBILITY:
       return p2shP2wshOutput;
 
-    case OutputType.Legacy:
+    case OutputType.LEGACY:
       return p2shOutput;
   }
+};
+
+export const reverseString = (input: string) => {
+  return input.split('').reverse().join('');
 };
