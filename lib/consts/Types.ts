@@ -13,3 +13,8 @@ export type TransactionOutput = {
   vout: number;
   type: OutputType;
 } & Out;
+
+export type WalletInfo = {
+  derivationPath: string;
+  highestUsedIndex: number;
+};

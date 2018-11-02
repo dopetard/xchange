@@ -21,13 +21,16 @@ type CurrencyConfig = {
   chain: RpcConfig & ServiceOptions;
   lnd?: LndConfig & ServiceOptions;
 };
+
 type ConfigType = {
   datadir: string;
 
   configpath: string;
+  mnemonicpath: string;
+  dbpath: string;
   logpath: string;
+
   loglevel: string;
-  walletpath: string;
 
   grpc: GrpcConfig;
 
@@ -49,12 +52,13 @@ class Config {
     this.dataDir = getServiceDataDir('xchange');
     this.xudDir = getServiceDataDir('xud');
 
-    const { configpath, walletpath, logpath } = this.getDataDirPaths(this.dataDir);
+    const { configpath, mnemonicpath, dbpath, logpath } = this.getDataDirPaths(this.dataDir);
 
     this.config = {
       configpath,
+      mnemonicpath,
+      dbpath,
       logpath,
-      walletpath,
 
       datadir: this.dataDir,
       loglevel: this.getDefaultLogLevel(),
@@ -189,10 +193,11 @@ class Config {
     }
   }
 
-  private getDataDirPaths = (dataDir: string): { configpath: string, walletpath: string, logpath: string } => {
+  private getDataDirPaths = (dataDir: string) => {
     return {
       configpath: path.join(dataDir, 'xchange.conf'),
-      walletpath: path.join(dataDir, 'xchange.dat'),
+      mnemonicpath: path.join(dataDir, 'seed.dat'),
+      dbpath: path.join(dataDir, 'xchange.db'),
       logpath: path.join(dataDir, 'xchange.log'),
     };
   }

@@ -88,7 +88,7 @@ class GrpcService {
 
   public getBalance: grpc.handleUnaryCall<xchangerpc.GetBalanceRequest, xchangerpc.GetBalanceResponse> = async (call, callback) => {
     try {
-      const balances = this.service.getBalance(call.request.toObject());
+      const balances = await this.service.getBalance(call.request.toObject());
 
       const response = new xchangerpc.GetBalanceResponse();
 
