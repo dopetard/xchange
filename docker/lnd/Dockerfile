@@ -4,10 +4,10 @@ FROM golang:1.11.1-alpine as builder
 RUN apk update && apk upgrade && apk add --no-cache git make
 
 # Install LND
-RUN git clone https://github.com/lightningnetwork/lnd $GOPATH/src/github.com/lightningnetwork/lnd
+RUN git clone https://github.com/ExchangeUnion/lnd.git $GOPATH/src/github.com/lightningnetwork/lnd
 
 WORKDIR $GOPATH/src/github.com/lightningnetwork/lnd
-RUN git checkout v0.5-beta && make dep && make install
+RUN git checkout resolver+simnet-ltcd && make dep && make install
 
 # Start again with a new image to reduce the size
 FROM alpine:3.8 as final

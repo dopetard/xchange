@@ -30,7 +30,7 @@ describe('Wallet', () => {
     walletRepository,
     utxoRepository,
     masterNode,
-    Networks.bitcoinRegtest,
+    Networks.bitcoinSimnet,
     btcdClient,
     derivationPath,
     highestUsedIndex,
