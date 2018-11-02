@@ -1,18 +1,25 @@
 import { Arguments } from 'yargs';
-import { callback, loadXchangeClient } from '../Command';
-import { ClaimSwapRequest } from '../../proto/xchangerpc_pb';
+import { ECPair, address, Transaction } from 'bitcoinjs-lib';
+import { getNetwork } from '../Utils';
+import { constructClaimTransaction } from '../../swap/Claim';
+import { getHexBuffer, getHexString } from '../../Utils';
+import { OutputType } from '../../proto/xchangerpc_pb';
 
-export const command = 'claimswap <currency> <invoice> <preimage> <claim_private_key> <destination_address>';
+export const command = 'claimswap <network> <lockup_transaction> <redeem_script> <preimage> <claim_private_key> <destination_address>';
 
 export const describe = 'claims the onchain part of a reverse swap';
 
 export const builder = {
-  currency: {
-    describe: 'currency of the chain you are claiming on',
+  network: {
+    describe: 'network on which the claim transaction should be broadcasted',
     type: 'string',
   },
-  invoice: {
-    describe: 'invoice that was paid',
+  lockup_transaction: {
+    describe: 'hex encoded transaction in which Xchange locked up the funds',
+    type: 'string',
+  },
+  redeem_script: {
+    describe: 'hex encoded redeem script of the swap output',
     type: 'string',
   },
   preimage: {
@@ -24,19 +31,38 @@ export const builder = {
     type: 'string',
   },
   destination_address: {
-    descibe: 'address to which claimed funds should be sent',
+    describe: 'address to which the claimed funds should be sent',
     type: 'string',
   },
 };
 
+// TODO: detect swap output instead of assuming that it is the first one and compatibility
 export const handler = (argv: Arguments) => {
-  const request = new ClaimSwapRequest();
+  const network = getNetwork(argv.network);
 
-  request.setCurrency(argv.currency);
-  request.setInvoice(argv.invoice);
-  request.setPreimage(argv.preimage);
-  request.setClaimPrivateKey(argv.claim_private_key);
-  request.setDestinationAddress(argv.destination_address);
+  const claimKeys = ECPair.fromPrivateKey(getHexBuffer(argv.claim_private_key), { network });
+  const destinationScript = address.toOutputScript(argv.destination_address, network);
 
-  loadXchangeClient(argv).claimSwap(request, callback);
+  const lockupTransaction = Transaction.fromHex(argv.lockup_transaction);
+  const swapOutput = lockupTransaction.outs[0];
+
+  console.log(getHexString(swapOutput.script));
+
+  const claimTransaction = constructClaimTransaction(
+    getHexBuffer(argv.preimage),
+    claimKeys,
+    destinationScript,
+    {
+      txHash: lockupTransaction.getHash(),
+      vout: 0,
+      type: OutputType.COMPATIBILITY,
+      script: swapOutput.script,
+      value: swapOutput.value,
+    },
+    getHexBuffer(argv.redeem_script),
+  );
+
+  console.log(JSON.stringify({
+    claimTransaction: claimTransaction.toHex(),
+  }, undefined, 2));
 };

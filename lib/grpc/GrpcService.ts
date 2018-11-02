@@ -134,27 +134,15 @@ class GrpcService {
   async (call, callback) => {
 
     try {
-      const { invoice, transactionHash } = await this.service.createReverseSwap(call.request.toObject());
+      const { invoice, redeemScript, transaction, transactionHash } = await this.service.createReverseSwap(call.request.toObject());
 
       const response = new xchangerpc.CreateReverseSwapResponse();
       response.setInvoice(invoice);
+      response.setRedeemScript(redeemScript);
+      response.setTransaction(transaction);
       response.setTransactionHash(transactionHash);
 
       callback(null, response);
-    } catch (error) {
-      callback(error, null);
-    }
-  }
-
-  public claimSwap: grpc.handleUnaryCall<xchangerpc.ClaimSwapRequest, xchangerpc.ClaimSwapResponse> = async (call, callback) => {
-    try {
-      const transactionHash = await this.service.claimSwap(call.request.toObject());
-
-      const response = new xchangerpc.ClaimSwapResponse();
-      response.setTransactionHash(transactionHash);
-
-      callback(null, response);
-
     } catch (error) {
       callback(error, null);
     }

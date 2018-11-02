@@ -415,6 +415,12 @@ export class CreateReverseSwapResponse extends jspb.Message {
     getInvoice(): string;
     setInvoice(value: string): void;
 
+    getRedeemScript(): string;
+    setRedeemScript(value: string): void;
+
+    getTransaction(): string;
+    setTransaction(value: string): void;
+
     getTransactionHash(): string;
     setTransactionHash(value: string): void;
 
@@ -432,64 +438,8 @@ export class CreateReverseSwapResponse extends jspb.Message {
 export namespace CreateReverseSwapResponse {
     export type AsObject = {
         invoice: string,
-        transactionHash: string,
-    }
-}
-
-export class ClaimSwapRequest extends jspb.Message { 
-    getCurrency(): string;
-    setCurrency(value: string): void;
-
-    getInvoice(): string;
-    setInvoice(value: string): void;
-
-    getPreimage(): string;
-    setPreimage(value: string): void;
-
-    getClaimPrivateKey(): string;
-    setClaimPrivateKey(value: string): void;
-
-    getDestinationAddress(): string;
-    setDestinationAddress(value: string): void;
-
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ClaimSwapRequest.AsObject;
-    static toObject(includeInstance: boolean, msg: ClaimSwapRequest): ClaimSwapRequest.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ClaimSwapRequest, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ClaimSwapRequest;
-    static deserializeBinaryFromReader(message: ClaimSwapRequest, reader: jspb.BinaryReader): ClaimSwapRequest;
-}
-
-export namespace ClaimSwapRequest {
-    export type AsObject = {
-        currency: string,
-        invoice: string,
-        preimage: string,
-        claimPrivateKey: string,
-        destinationAddress: string,
-    }
-}
-
-export class ClaimSwapResponse extends jspb.Message { 
-    getTransactionHash(): string;
-    setTransactionHash(value: string): void;
-
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): ClaimSwapResponse.AsObject;
-    static toObject(includeInstance: boolean, msg: ClaimSwapResponse): ClaimSwapResponse.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: ClaimSwapResponse, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): ClaimSwapResponse;
-    static deserializeBinaryFromReader(message: ClaimSwapResponse, reader: jspb.BinaryReader): ClaimSwapResponse;
-}
-
-export namespace ClaimSwapResponse {
-    export type AsObject = {
+        redeemScript: string,
+        transaction: string,
         transactionHash: string,
     }
 }

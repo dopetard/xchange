@@ -1,4 +1,4 @@
-import { address, ECPair, Transaction } from 'bitcoinjs-lib';
+import { address, ECPair } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import { Info as LndInfo } from '../lightning/LndClient';
@@ -7,10 +7,9 @@ import SwapManager from '../swap/SwapManager';
 import { Currency } from '../wallet/Wallet';
 import WalletManager from '../wallet/WalletManager';
 import Errors from './Errors';
-import { getHexBuffer, getHexString, reverseString } from '../Utils';
+import { getHexBuffer } from '../Utils';
 import { constructClaimTransaction } from '../swap/Claim';
 import { OrderSide, OutputType } from '../proto/xchangerpc_pb';
-import { BIP32 } from 'bip32';
 
 const packageJson = require('../../package.json');
 
@@ -119,8 +118,7 @@ class Service {
   /**
    * Creates a new Swap from the chain to Lightning
    */
-  public createSwap = async (args: { pairId: string, orderSide: number, invoice: string, refundPublicKey: string, outputType: number }):
-    Promise<string> => {
+  public createSwap = async (args: { pairId: string, orderSide: number, invoice: string, refundPublicKey: string, outputType: number }) => {
 
     const { swapManager } = this.serviceComponents;
 
@@ -135,8 +133,7 @@ class Service {
   /**
    * Creates a new Swap from Lightning to the chain
    */
-  public createReverseSwap = async (args: { pairId: string, orderSide: number, claimPublicKey: string, amount: number }):
-    Promise<{ invoice: string, transactionHash: string }> => {
+  public createReverseSwap = async (args: { pairId: string, orderSide: number, claimPublicKey: string, amount: number }) => {
 
     const { swapManager } = this.serviceComponents;
 
@@ -145,42 +142,6 @@ class Service {
     const claimPublicKey = getHexBuffer(args.claimPublicKey);
 
     return await swapManager.createReverseSwap(args.pairId, orderSide, claimPublicKey, args.amount);
-  }
-
-  /**
-   * Claims the onchain part of a reverse Swap
-   */
-  public claimSwap = async (args: { currency: string, invoice: string, preimage: string, claimPrivateKey: string, destinationAddress: string }):
-    Promise<string> => {
-
-    const { swapManager } = this.serviceComponents;
-
-    const currency = swapManager.currencies.get(args.currency);
-
-    if (!currency) {
-      throw Errors.CURRENCY_NOT_FOUND(args.currency);
-    }
-
-    const reverseSwapDetails = currency.reverseSwaps.get(args.invoice);
-
-    if (!reverseSwapDetails) {
-      throw Errors.SWAP_NOT_FOUND(args.invoice);
-    }
-
-    const claimKeys = ECPair.fromPrivateKey(getHexBuffer(args.claimPrivateKey), { network: currency.network });
-    const destinationScript = address.toOutputScript(args.destinationAddress, currency.network);
-
-    const claimTx = constructClaimTransaction(
-      getHexBuffer(args.preimage),
-      claimKeys,
-      destinationScript,
-      reverseSwapDetails.output,
-      reverseSwapDetails.redeemScript,
-    );
-
-    await currency.chainClient.sendRawTransaction(claimTx.toHex());
-
-    return claimTx.getId();
   }
 
   private getOrderSide = (side: number) => {
