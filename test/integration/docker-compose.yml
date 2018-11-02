@@ -4,16 +4,16 @@ services:
   btcd:
     image: michael1011/btcd
     ports:
-      - 18334:18334
+      - 18556:18556
 
-    command: --regtest --miningaddr msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs
+    command: --simnet --miningaddr SbVnjfHyqqSJLd7eaEKKmw3xwsRLHG9cuh
 
   ltcd: 
     image: michael1011/ltcd
     ports:
-      - 19334:19334
+      - 19556:18556
 
-    command: --regtest --miningaddr mysNm7METD1JffsC4E1ZW7EcPapmVm9AK4
+    command: --simnet --miningaddr SSGEBiUF9kNdTR6wNqY8h7zgmacKo7PN6f
 
   lnd_btc1:
     image: michael1011/lnd
@@ -25,7 +25,7 @@ services:
     ports:
       - 10009:10009
 
-    command: --bitcoin.active --bitcoin.regtest --btcd.rpchost btcd:18334 --btcd.rpccert /rpc/rpc.cert --btcd.rpcuser user --btcd.rpcpass user
+    command: --bitcoin.active --bitcoin.simnet --btcd.rpchost btcd:18556 --btcd.rpccert /rpc/rpc.cert --btcd.rpcuser user --btcd.rpcpass user
 
   lnd_btc2:
     image: michael1011/lnd
@@ -36,4 +36,27 @@ services:
     ports:
       - 10010:10009
 
-    command: --bitcoin.active --bitcoin.regtest --btcd.rpchost btcd:18334 --btcd.rpccert /rpc/rpc.cert --btcd.rpcuser user --btcd.rpcpass user
+    command: --bitcoin.active --bitcoin.simnet --btcd.rpchost btcd:18556 --btcd.rpccert /rpc/rpc.cert --btcd.rpcuser user --btcd.rpcpass user
+
+  lnd_ltc1:
+    image: michael1011/lnd
+    links:
+      - ltcd
+      - lnd_ltc2:lnd
+    depends_on:
+      - ltcd
+    ports:
+      - 11009:10009
+
+    command: --litecoin.active --litecoin.simnet --ltcd.rpchost ltcd:18556 --ltcd.rpccert /rpc/rpc.cert --ltcd.rpcuser user --ltcd.rpcpass user
+
+  lnd_ltc2:
+    image: michael1011/lnd
+    links:
+      - ltcd
+    depends_on:
+      - ltcd
+    ports:
+      - 11010:10009
+
+    command: --litecoin.active --litecoin.simnet --ltcd.rpchost ltcd:18556 --ltcd.rpccert /rpc/rpc.cert --ltcd.rpcuser user --ltcd.rpcpass user

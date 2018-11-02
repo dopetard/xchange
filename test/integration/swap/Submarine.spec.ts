@@ -20,7 +20,7 @@ describe('Submarine Swaps', () => {
     const { blocks } = await btcdClient.getInfo();
 
     const redeemScript = pkRefundSwap(preimageHash, swapKeys.publicKey, btcKeys.publicKey, blocks + 1000);
-    const swapAddress = address.fromOutputScript(outputFunction(redeemScript), Networks.bitcoinRegtest);
+    const swapAddress = address.fromOutputScript(outputFunction(redeemScript), Networks.bitcoinSimnet);
 
     const transaction = btcManager.constructTransaction(swapAddress, 10000);
     await btcManager.broadcastAndMine(transaction.toHex());
@@ -35,7 +35,7 @@ describe('Submarine Swaps', () => {
       value: transactionOutput.value,
     };
 
-    const destinationScript = address.toOutputScript(btcAddress, Networks.bitcoinRegtest);
+    const destinationScript = address.toOutputScript(btcAddress, Networks.bitcoinSimnet);
     const claimTransaction = constructClaimTransaction(
       preimage,
       swapKeys,

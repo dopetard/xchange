@@ -11,14 +11,14 @@ describe('ChainClient', () => {
   });
 
   it('BtcdClient should activate SegWit', async () => {
-    // 433 blocks are needed to active SegWit on the BTCD regtest network
+    // 433 blocks are needed to active SegWit on the BTCD simnet network
     const blockHashes = await btcdClient.generate(433);
 
     const block = await btcdClient.getBlock(blockHashes[0]);
     const rawTransaction = await btcdClient.getRawTransaction(block.tx[0]);
     const transaction = Transaction.fromHex(rawTransaction);
 
-    btcManager = new UtxoManager(btcdClient, Networks.bitcoinRegtest, {
+    btcManager = new UtxoManager(btcdClient, Networks.bitcoinSimnet, {
       hash: transaction.getId(),
       value: transaction.outs[0].value,
     });
@@ -26,14 +26,17 @@ describe('ChainClient', () => {
 
   it('LtcdClient should connect', async () => {
     await ltcdClient.connect();
+  });
 
-    const blockHash = await ltcdClient.generate(1);
+  it('LtcdClient should activate SegWit', async () => {
+    // 433 blocks are needed to active SegWit on the BTCD simnet network
+    const blockHashes = await ltcdClient.generate(433);
 
-    const block = await ltcdClient.getBlock(blockHash[0]);
+    const block = await ltcdClient.getBlock(blockHashes[0]);
     const rawTransaction = await ltcdClient.getRawTransaction(block.tx[0]);
     const transaction = Transaction.fromHex(rawTransaction);
 
-    ltcManager = new UtxoManager(ltcdClient, Networks.litecoinRegtest, {
+    ltcManager = new UtxoManager(ltcdClient, Networks.litecoinSimnet, {
       hash: transaction.getId(),
       value: transaction.outs[0].value,
     });
@@ -73,11 +76,11 @@ type Utxo = {
   value: number;
 };
 
-class UtxoManager {
+export class UtxoManager {
   private keys: ECPair;
 
   constructor(private chainClient: ChainClient, private network: Network, private utxo: Utxo) {
-    this.keys = network === Networks.bitcoinRegtest ? btcKeys : ltcKeys;
+    this.keys = network === Networks.bitcoinSimnet ? btcKeys : ltcKeys;
   }
 
   public constructTransaction = (destinationAddress: string, value: number): Transaction => {
@@ -109,17 +112,17 @@ class UtxoManager {
   }
 }
 
-export const btcKeys = ECPair.fromWIF('cQ4crx5qPv7NDdj41ehumfB9f89zyWdggy8JnNDjKVQwsLswahd4', Networks.bitcoinRegtest);
-export const btcAddress = 'msRY4KpAJ8o9da1YEASy1j2ACnuzh4SyFs';
+export const btcKeys = ECPair.fromWIF('Fpzo4qxGBizwddWz6hGgjgmKCVniWAWU1iPMHQuV8cgQHmxsRBB9', Networks.bitcoinSimnet);
+export const btcAddress = 'SbVnjfHyqqSJLd7eaEKKmw3xwsRLHG9cuh';
 
-export const ltcKeys = ECPair.fromWIF('cPnCzwHtVipcX7hb72mkkMMf4MSrknHbRnff2LDutSB8AxvxLaby', Networks.litecoinRegtest);
-export const ltcAddress = 'mysNm7METD1JffsC4E1ZW7EcPapmVm9AK4';
+export const ltcKeys = ECPair.fromWIF('FsTTuNURWqFsMpSLUXEkciAzYuBYibZB3r8ZoatdSpAjTznFUhnd', Networks.litecoinSimnet);
+export const ltcAddress = 'SSGEBiUF9kNdTR6wNqY8h7zgmacKo7PN6f';
 
 const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
 
 export const btcdClient = new ChainClient(Logger.disabledLogger, {
   host,
-  port: 18334,
+  port: 18556,
   rpcuser: 'user',
   rpcpass: 'user',
   certpath: path.join('docker', 'data', 'rpc.cert'),
@@ -127,7 +130,7 @@ export const btcdClient = new ChainClient(Logger.disabledLogger, {
 
 export const ltcdClient = new ChainClient(Logger.disabledLogger, {
   host,
-  port: 19334,
+  port: 19556,
   rpcpass: 'user',
   rpcuser: 'user',
   certpath: path.join('docker', 'data', 'rpc.cert'),
