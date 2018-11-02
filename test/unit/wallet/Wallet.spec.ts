@@ -86,7 +86,7 @@ describe('Wallet', () => {
 
     const keys = getKeysByIndex(highestUsedIndex);
     const encodeFunction = getPubKeyHashEncodeFuntion(outputType);
-    const outputScript = encodeFunction(crypto.hash160(keys.publicKey));
+    const outputScript = encodeFunction(crypto.hash160(keys.publicKey)) as Buffer;
     const outputAddress = address.fromOutputScript(outputScript, network);
 
     expect(await wallet.getNewAddress(outputType)).to.be.equal(outputAddress);

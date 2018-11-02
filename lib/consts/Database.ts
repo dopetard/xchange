@@ -29,6 +29,7 @@ export type UtxoFactory = {
   keyIndex: number;
   vout: number;
   script: string;
+  redeemScript?: string;
   value: number;
   type: number;
 };

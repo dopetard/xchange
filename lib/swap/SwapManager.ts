@@ -102,10 +102,11 @@ class SwapManager {
     );
 
     const encodeFunction = getScriptHashEncodeFunction(outputType);
-    const output = encodeFunction(redeemScript);
-    const address = receivingCurrency.wallet.encodeAddress(output);
+    const outputScript = encodeFunction(redeemScript);
 
-    receivingCurrency.swaps.set(getHexString(output), {
+    const address = receivingCurrency.wallet.encodeAddress(outputScript);
+
+    receivingCurrency.swaps.set(getHexString(outputScript), {
       invoice,
       outputType,
       redeemScript,
@@ -146,8 +147,8 @@ class SwapManager {
       blocks + 10,
     );
 
-    const output = p2shP2wshOutput(redeemScript);
-    const address = sendingCurrency.wallet.encodeAddress(output);
+    const outputScript = p2shP2wshOutput(redeemScript);
+    const address = sendingCurrency.wallet.encodeAddress(outputScript);
     const sendingAmount = amount * this.getRate(pairId, orderSide);
 
     this.logger.debug(`Sending ${sendingAmount} on ${sendingCurrency.symbol} to ${address}`);
@@ -163,7 +164,7 @@ class SwapManager {
         vout,
         txHash: tx.getHash(),
         type: OutputType.COMPATIBILITY,
-        script: output,
+        script: outputScript,
         value: sendingAmount,
       },
     });

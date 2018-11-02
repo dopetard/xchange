@@ -29,6 +29,7 @@ interface XudMethodIndex extends GrpcClient {
   [methodName: string]: Function;
 }
 
+// TODO: reconnect logic
 class XudClient extends EventEmitter {
   public static readonly serviceName = 'XUD';
   private readonly disconnectedError = Errors.IS_DISCONNECTED(XudClient.serviceName);

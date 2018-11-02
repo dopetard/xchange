@@ -30,7 +30,7 @@ class Db {
   public init = async () => {
     try {
       await this.sequelize.authenticate();
-      this.logger.info(`Connected to database ${this.storage === ':memory:' ? this.storage : 'in memory'}`);
+      this.logger.info(`Connected to database: ${this.storage === ':memory:' ? 'in memory' : this.storage}`);
     } catch (error) {
       this.logger.error(`Could not connect to database: ${error}`);
       throw error;

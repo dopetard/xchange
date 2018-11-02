@@ -10,16 +10,16 @@ import UtxoRepository from './UtxoRepository';
 import WalletRepository from './WalletRepository';
 
 type UTXO = TransactionOutput & {
+  redeemScript?: Buffer;
   keys: BIP32;
 };
 
 // TODO: wait for funds being confirmed
 // TODO: fix coinbase transactions not being recognised
 // TODO: more advanced UTXO management
-// TODO: save UTXOs to disk
 // TODO: multiple transaction to same output
 class Wallet {
-  private relevantOutputs = new Map<string, { keyIndex: number, type: OutputType }>();
+  private relevantOutputs = new Map<string, { keyIndex: number, type: OutputType, redeemScript?: string }>();
 
   private symbol: string;
 
@@ -60,6 +60,7 @@ class Wallet {
             currency: this.symbol,
             txHash: getHexString(transaction.getHash()),
             script: getHexString(output.script),
+            redeemScript: outputInfo.redeemScript,
             value: output.value,
             ...outputInfo,
           });
@@ -106,9 +107,22 @@ class Wallet {
 
     const encodeFunction = getPubKeyHashEncodeFuntion(type);
     const output = encodeFunction(crypto.hash160(keys.publicKey));
-    const address = this.encodeAddress(output);
 
-    await this.listenToOutput(output, index, type, address);
+    let outputScript: Buffer;
+    let redeemScript: string | undefined = undefined;
+
+    if (type === OutputType.COMPATIBILITY) {
+      const nestedOutput = output as { redeemScript: Buffer, outputScript: Buffer };
+
+      outputScript = nestedOutput.outputScript;
+      redeemScript = getHexString(nestedOutput.redeemScript);
+    } else {
+      outputScript = output as Buffer;
+    }
+
+    const address = this.encodeAddress(outputScript);
+
+    await this.listenToOutput(outputScript, index, type, address, redeemScript);
 
     return address;
   }
@@ -127,11 +141,9 @@ class Wallet {
 
   /**
    * Add an output that can be spent by the wallet
-   *
-   * @param output a P2WPKH, P2SH nested P2WPKH or P2PKH ouput
    */
-  public listenToOutput = async (output: Buffer, keyIndex: number, type: OutputType, address?: string) => {
-    this.relevantOutputs.set(getHexString(output), { keyIndex, type });
+  public listenToOutput = async (output: Buffer, keyIndex: number, type: OutputType, address?: string, redeemScript?: string) => {
+    this.relevantOutputs.set(getHexString(output), { keyIndex, type, redeemScript });
 
     const chainAddress = address ? address : this.encodeAddress(output);
     await this.chainClient.loadTxFiler(false, [chainAddress], []);
@@ -153,7 +165,6 @@ class Wallet {
   }
 
   // TODO: fee estimation
-  // TODO: compatibility for nested Segwit addresses
   /** Sends a specific amount of funds to and address
    *
    * @param address address to which funds should be sent
@@ -174,7 +185,11 @@ class Wallet {
     // Accumulate UTXO to spend
     for (const utxoInstance of utxos) {
       missingAmount -= utxoInstance.value;
+
+      const redeemScript = utxoInstance.redeemScript ? getHexBuffer(utxoInstance.redeemScript) : undefined;
+
       toSpend.push({
+        redeemScript,
         txHash: getHexBuffer(utxoInstance.txHash),
         vout: utxoInstance.vout,
         type: utxoInstance.type,
@@ -182,6 +197,7 @@ class Wallet {
         value: utxoInstance.value,
         keys: this.getKeysByIndex(utxoInstance.keyIndex),
       });
+
       toRemove.push(utxoInstance.txHash);
 
       if ((missingAmount) <= 0) {
@@ -207,7 +223,7 @@ class Wallet {
 
     // Add the UTXOs from before as inputs
     toSpend.forEach((utxo) => {
-      if (utxo.type !== OutputType.LEGACY) {
+      if (utxo.type === OutputType.BECH32) {
         builder.addInput(utxo.txHash, utxo.vout, undefined, utxo.script);
       } else {
         builder.addInput(utxo.txHash, utxo.vout);
@@ -226,10 +242,18 @@ class Wallet {
     toSpend.forEach((utxo, index) => {
       const keys = ECPair.fromPrivateKey(utxo.keys.privateKey, { network: this.network });
 
-      if (utxo.type !== OutputType.LEGACY) {
-        builder.sign(index, keys, undefined, undefined, utxo.value);
-      } else {
-        builder.sign(index, keys);
+      switch (utxo.type) {
+        case OutputType.BECH32:
+          builder.sign(index, keys, undefined, undefined, utxo.value);
+          break;
+
+        case OutputType.COMPATIBILITY:
+          builder.sign(index, keys, utxo.redeemScript, undefined, utxo.value);
+          break;
+
+        case OutputType.LEGACY:
+          builder.sign(index, keys);
+          break;
       }
     });
 

@@ -55,7 +55,6 @@ const createXudInfo = (xudInfo: XudInfo): xchangerpc.XudInfo => {
 };
 
 class GrpcService {
-
   constructor(private service: Service) {}
 
   public getInfo: grpc.handleUnaryCall<xchangerpc.GetInfoRequest, xchangerpc.GetInfoResponse> = async (_, callback) => {

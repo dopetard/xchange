@@ -8,6 +8,7 @@ export default (sequelize: Sequelize.Sequelize, dataTypes: Sequelize.DataTypes) 
     keyIndex: { type: dataTypes.INTEGER, allowNull: false },
     vout: { type: dataTypes.INTEGER, allowNull: false },
     script: { type: dataTypes.STRING, allowNull: false },
+    redeemScript: { type: dataTypes.STRING, allowNull: true },
     value: { type: dataTypes.INTEGER, allowNull: false },
     type: { type: dataTypes.INTEGER, allowNull: false },
   };
