@@ -12,9 +12,6 @@ import WalletRepository from '../../../lib/wallet/WalletRepository';
 import { getOutputType } from '../../../lib/Utils';
 
 describe('Wallet', () => {
-  before(async () => {
-  });
-
   const derivationPath = 'm/0/0';
   const highestUsedIndex = 0;
 

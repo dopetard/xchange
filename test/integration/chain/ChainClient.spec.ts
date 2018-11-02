@@ -118,22 +118,23 @@ export const btcAddress = 'SbVnjfHyqqSJLd7eaEKKmw3xwsRLHG9cuh';
 export const ltcKeys = ECPair.fromWIF('FsTTuNURWqFsMpSLUXEkciAzYuBYibZB3r8ZoatdSpAjTznFUhnd', Networks.litecoinSimnet);
 export const ltcAddress = 'SSGEBiUF9kNdTR6wNqY8h7zgmacKo7PN6f';
 
+const certpath = path.join('docker', 'data', 'certs', 'rpc.cert');
 const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
 
 export const btcdClient = new ChainClient(Logger.disabledLogger, {
   host,
+  certpath,
   port: 18556,
   rpcuser: 'user',
   rpcpass: 'user',
-  certpath: path.join('docker', 'data', 'rpc.cert'),
 }, 'BTC');
 
 export const ltcdClient = new ChainClient(Logger.disabledLogger, {
   host,
+  certpath,
   port: 19556,
   rpcpass: 'user',
   rpcuser: 'user',
-  certpath: path.join('docker', 'data', 'rpc.cert'),
 }, 'LTC');
 
 export let btcManager: UtxoManager;

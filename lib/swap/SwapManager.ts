@@ -87,7 +87,7 @@ class SwapManager {
     const bestBlock = await receivingCurrency.chainClient.getBestBlock();
     const { paymentHash } = await sendingCurrency.lndClient.decodePayReq(invoice);
 
-    this.logger.debug(`Creating new Swap on ${pairId} with preimage hash: ${paymentHash}`);
+    this.logger.verbose(`Creating new Swap on ${pairId} with preimage hash: ${paymentHash}`);
 
     const { keys, index } = receivingCurrency.wallet.getNewKeys();
 
@@ -134,7 +134,7 @@ class SwapManager {
     const { sendingCurrency, receivingCurrency } = this.getCurrencies(pairId, orderSide);
 
     this.logger.silly(`Sending ${sendingCurrency.symbol} on the chain and receiving ${receivingCurrency.symbol} on Lightning`);
-    this.logger.debug(`Creating new reverse Swap on ${pairId} for public key: ${getHexString(claimPublicKey)}`);
+    this.logger.verbose(`Creating new reverse Swap on ${pairId} for public key: ${getHexString(claimPublicKey)}`);
 
     const { blocks } = await sendingCurrency.chainClient.getInfo();
     const { rHash, paymentRequest } = await receivingCurrency.lndClient.addInvoice(amount);
@@ -151,7 +151,7 @@ class SwapManager {
     const address = sendingCurrency.wallet.encodeAddress(outputScript);
     const sendingAmount = amount * this.getRate(pairId, orderSide);
 
-    this.logger.debug(`Sending ${sendingAmount} on ${sendingCurrency.symbol} to ${address}`);
+    this.logger.debug(`Sending ${sendingAmount} on ${sendingCurrency.symbol} to swap address: ${address}`);
     const { tx, vout } = await sendingCurrency.wallet.sendToAddress(address, sendingAmount);
     const txHex = tx.toHex();
 
