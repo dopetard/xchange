@@ -196,6 +196,14 @@ export const getServiceDataDir = (service: string) => {
   }
 };
 
+export const getOutputType = (type: number) => {
+  switch (type) {
+    case 0: return OutputType.BECH32;
+    case 1: return OutputType.COMPATIBILITY;
+    default: return OutputType.LEGACY;
+  }
+};
+
 export const getPubKeyHashEncodeFuntion = (outputType: OutputType) => {
   switch (outputType) {
     case OutputType.BECH32:

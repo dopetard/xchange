@@ -9,6 +9,7 @@ import Logger from '../../../lib/Logger';
 import Database from '../../../lib/db/Database';
 import UtxoRepository from '../../../lib/wallet/UtxoRepository';
 import WalletRepository from '../../../lib/wallet/WalletRepository';
+import { getOutputType } from '../../../lib/Utils';
 
 describe('Wallet', () => {
   before(async () => {
@@ -54,10 +55,12 @@ describe('Wallet', () => {
     const addresses: { address: string, amount: number }[] = [];
     let expectedBalance = 0;
 
-    for (let i = 0; i < 5; i += 1) {
+    for (let i = 0; i < 3; i += 1) {
+      const outputType = getOutputType(i);
+
       const address = {
-        address: await wallet.getNewAddress(OutputType.BECH32),
-        amount: i * 10000,
+        address: await wallet.getNewAddress(outputType),
+        amount: (i + 1) * 10000,
       };
 
       expectedBalance += address.amount;

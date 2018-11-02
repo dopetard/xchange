@@ -1,4 +1,3 @@
-import { address, ECPair } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import { Info as LndInfo } from '../lightning/LndClient';
@@ -6,8 +5,7 @@ import XudClient, { XudInfo } from '../xud/XudClient';
 import SwapManager from '../swap/SwapManager';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import Errors from './Errors';
-import { getHexBuffer } from '../Utils';
-import { constructClaimTransaction } from '../swap/Claim';
+import { getHexBuffer, getOutputType } from '../Utils';
 import { OrderSide, OutputType } from '../proto/xchangerpc_pb';
 
 const packageJson = require('../../package.json');
@@ -37,6 +35,7 @@ class Service {
 
   constructor(private serviceComponents: ServiceComponents) {}
 
+  // TODO: error handling if a service is offline
   /**
    * Gets general information about this Xchange instance and the nodes it is connected to
    */
@@ -114,7 +113,7 @@ class Service {
       throw Errors.CURRENCY_NOT_FOUND(args.currency);
     }
 
-    return wallet.getNewAddress(this.getOutputType(args.type));
+    return wallet.getNewAddress(getOutputType(args.type));
   }
 
   /**
@@ -125,7 +124,7 @@ class Service {
     const { swapManager } = this.serviceComponents;
 
     const orderSide = this.getOrderSide(args.orderSide);
-    const outputType = this.getOutputType(args.outputType);
+    const outputType = getOutputType(args.outputType);
 
     const refundPublicKey = getHexBuffer(args.refundPublicKey);
 
@@ -152,14 +151,6 @@ class Service {
       case 1: return OrderSide.SELL;
 
       default: throw Errors.ORDER_SIDE_NOT_FOUND(side);
-    }
-  }
-
-  private getOutputType = (type: number) => {
-    switch (type) {
-      case 0: return OutputType.BECH32;
-      case 1: return OutputType.COMPATIBILITY;
-      default: return OutputType.LEGACY;
     }
   }
 }
