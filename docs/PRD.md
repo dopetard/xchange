@@ -45,7 +45,7 @@ Consider a scenario in which the user wants to trade 10 LTC on Lightning for 1 B
 1. Xchange generates the preimage and locks up the funds the user wants to receive (1 BTC)
 2. The user locks up the funds he want to sell (10 LTC on Lightning)
 3. Xcahnge tells XUD to place a new order with the aforementioned amounts 
-4. Once that XUD order is filled Xchange claims the funds locked up by the user (10 lightning-LTC)
+4. Once that XUD order is filled Xchange claims the funds locked up by the user (10 LTC on Lightning)
 5. Because claiming locked up funds reveals the preimage the user is now able to claim their funds too (1 BTC)  
 
 ![](https://github.com/dopetard/xchange/blob/dopetard-doc-fixes/docs/PreImageFlow.png)
