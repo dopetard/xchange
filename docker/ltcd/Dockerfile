@@ -22,7 +22,10 @@ EXPOSE 18444 19334
 COPY --from=builder /go/bin/ltcd /bin/
 COPY --from=builder /go/bin/ltcctl /bin/
 
-# Copy the rpc certificates from the data directory 
-COPY data /rpc
+# Copy the rpc certificates from the data directory into the image 
+COPY data/certs /certs
 
-ENTRYPOINT ["ltcd", "--txindex", "--rpcuser=user", "--rpcpass=user", "--rpccert=/rpc/rpc.cert", "--rpckey=/rpc/rpc.key", "--rpclisten=0.0.0.0"]
+# Copy the ltcctl file from the data directory into the image
+COPY data/configs/ctl.conf /root/.ltcctl/ltcctl.conf
+
+ENTRYPOINT ["ltcd", "--txindex", "--rpcuser=user", "--rpcpass=user", "--rpccert=/certs/rpc.cert", "--rpckey=/certs/rpc.key", "--rpclisten=0.0.0.0"]

@@ -45,7 +45,7 @@ describe('LndClient', () => {
   it('LndClients should fund get funds', async () => {
     const fundLndWallet = async (utxoManager: UtxoManager, lndClient: LndClient) => {
       const addressResponse = await lndClient.newAddress();
-      const tx = utxoManager.constructTransaction(addressResponse.address, channelCapacity * 10);
+      const tx = utxoManager.constructTransaction(addressResponse.address, channelCapacity * 400);
 
       await utxoManager.broadcastAndMine(tx.toHex());
     };
@@ -69,7 +69,7 @@ describe('LndClient', () => {
         const interval = setInterval(async () => {
           try {
             await lndClient.openChannel(remoteLndPubKey, channelCapacity, channelCapacity / 2),
-            await chainClient.generate(6);
+            await chainClient.generate(10);
 
             clearInterval(interval);
             resolve();
@@ -85,7 +85,7 @@ describe('LndClient', () => {
 
     await Promise.all([
       openChannel(btcdClient, lndBtcClient1, lndBtc2PubKey),
-      // openChannel(ltcdClient, lndLtcClient1, lndLtc2PubKey),
+      openChannel(ltcdClient, lndLtcClient1, lndLtc2PubKey),
     ]);
   });
 
@@ -125,7 +125,7 @@ const connectPromise = async (client1: LndClient, client2: LndClient) => {
   });
 };
 
-const certpath = path.join('docker', 'data', 'lnd', 'tls.cert');
+const certpath = path.join('docker', 'data', 'certs', 'lnd', 'tls.cert');
 const host = process.platform === 'win32' ? '192.168.99.100' : 'localhost';
 
 export const lndBtcClient1 = new LndClient(Logger.disabledLogger, {
