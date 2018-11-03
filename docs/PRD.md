@@ -38,25 +38,25 @@ The picture below depicts one specific case of tangled submarine swap that allow
 
 ![](https://github.com/dopetard/xchange/blob/master/docs/Submarine%20Swap.png)
 
-The GIF below depicts the flow of the preimage in case of a swap in which the user receives funds on-chain (which will probably be used most of the time):
+The picture below depicts the flow of the preimage in case of a swap in which the user receives funds on-chain (which will probably be used most of the time):
 
-Consider a scenario in which the user wants to trade 1 BTC for 10 LTC:
+Consider a scenario in which the user wants to trade 10 lightning-LTC for 1 BTC:
 
-1. Xchange generates the preimage and locks up the funds the user wants to receive (10 LTC)
-2. The user locks up the funds he want to sell (1 BTC)
+1. Xchange generates the preimage and locks up the funds the user wants to receive (1 BTC)
+2. The user locks up the funds he want to sell (10 lightning-LTC)
 3. Xcahnge tells XUD to place a new order with the aforementioned amounts 
-4. Once that XUD order is filled Xchange claims the funds locked up by the user (1 BTC)
-5. Because claiming locked up funds reveals the preimage the user is now able to claim their funds too (10 LTC)  
+4. Once that XUD order is filled Xchange claims the funds locked up by the user (10 lightning-LTC)
+5. Because claiming locked up funds reveals the preimage the user is now able to claim their funds too (1 BTC)  
 
-![](https://github.com/dopetard/xchange/blob/master/docs/Preimage%20Flow.gif)
+![](https://github.com/dopetard/xchange/blob/dopetard-doc-fixes/docs/PreImageFlow.png)
 
 In one special case of the user wanting to receive off-chain, the preimage is controlled by the user, resulting in a different preimage flow:
 
-1. The user generates a lightning invoice with the amount the user wants to buy (10 LTC); that includes generating a preimage
-2. Because the preimage is controlled by the user locking up the funds the user wants to sell (1 BTC) has to get initiated first
+1. The user generates a lightning invoice with the amount the user wants to buy (1 BTC); that includes generating a preimage
+2. Because the preimage is controlled by the user locking up the funds the user wants to sell (10 lightning-LTC) has to get initiated first
 3. Then Xchange tells XUD to place a new order with the aforementioned amounts
 4. When the XUD order is filled Xcahnge pays the Lightning invoice of the user which reveals the preimage
-5. And therefore Xchange is able to claim the funds locked up by the user (1 BTC)
+5. And therefore Xchange is able to claim the funds locked up by the user (10 lightning-LTC)
 
 # Tech Notes
 
