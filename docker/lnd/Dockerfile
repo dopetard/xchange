@@ -20,6 +20,6 @@ COPY --from=builder /go/bin/lncli /bin/
 COPY --from=builder /go/bin/lnd /bin/
 
 # Copy the LND rpc certificates from the data directory 
-COPY data /rpc
+COPY data/certs /certs
 
-ENTRYPOINT ["lnd", "--noseedbackup", "--no-macaroons", "--debuglevel=debug", "--tlscertpath=/rpc/lnd/tls.cert", "--tlskeypath=/rpc/lnd/tls.key", "--rpclisten=0.0.0.0", "--listen=0.0.0.0:9735"]
+ENTRYPOINT ["lnd", "--noseedbackup", "--no-macaroons", "--debuglevel=debug", "--tlscertpath=/certs/lnd/tls.cert", "--tlskeypath=/certs/lnd/tls.key", "--rpclisten=0.0.0.0", "--listen=0.0.0.0:9735"]

@@ -22,7 +22,10 @@ EXPOSE 18444 18334
 COPY --from=builder /go/bin/btcd /bin/
 COPY --from=builder /go/bin/btcctl /bin/
 
-# Copy the rpc certificates from the data directory 
-COPY data /rpc
+# Copy the rpc certificates from the data directory into the image 
+COPY data/certs /certs
 
-ENTRYPOINT ["btcd", "--txindex", "--rpcuser=user", "--rpcpass=user", "--rpccert=/rpc/rpc.cert", "--rpckey=/rpc/rpc.key", "--rpclisten=0.0.0.0"]
+# Copy the btcctl file from the data directory into the image
+COPY data/configs/ctl.conf /root/.btcctl/btcctl.conf
+
+ENTRYPOINT ["btcd", "--txindex", "--rpcuser=user", "--rpcpass=user", "--rpccert=/certs/rpc.cert", "--rpckey=/certs/rpc.key", "--rpclisten=0.0.0.0"]
