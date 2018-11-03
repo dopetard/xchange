@@ -40,7 +40,7 @@ The picture below depicts one specific case of tangled submarine swap that allow
 
 The picture below depicts the flow of the preimage in case of a swap in which the user receives funds on-chain (which will probably be used most of the time):
 
-Consider a scenario in which the user wants to trade 10 lightning-LTC for 1 BTC:
+Consider a scenario in which the user wants to trade 10 LTC on Lightning for 1 BTC on the chain:
 
 1. Xchange generates the preimage and locks up the funds the user wants to receive (1 BTC)
 2. The user locks up the funds he want to sell (10 lightning-LTC)
