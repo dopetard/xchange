@@ -56,7 +56,7 @@ In one special case of the user wanting to receive off-chain, the preimage is co
 2. Because the preimage is controlled by the user locking up the funds the user wants to sell (10 LTC on Lightning) has to get initiated first
 3. Then Xchange tells XUD to place a new order with the aforementioned amounts
 4. When the XUD order is filled Xcahnge pays the Lightning invoice of the user which reveals the preimage
-5. And therefore Xchange is able to claim the funds locked up by the user (10 lightning-LTC)
+5. And therefore Xchange is able to claim the funds locked up by the user (10 LTC on Lightning)
 
 # Tech Notes
 
