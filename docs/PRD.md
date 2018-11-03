@@ -53,7 +53,7 @@ Consider a scenario in which the user wants to trade 10 LTC on Lightning for 1 B
 In one special case of the user wanting to receive off-chain, the preimage is controlled by the user, resulting in a different preimage flow:
 
 1. The user generates a lightning invoice with the amount the user wants to buy (1 BTC); that includes generating a preimage
-2. Because the preimage is controlled by the user locking up the funds the user wants to sell (10 lightning-LTC) has to get initiated first
+2. Because the preimage is controlled by the user locking up the funds the user wants to sell (10 LTC on Lightning) has to get initiated first
 3. Then Xchange tells XUD to place a new order with the aforementioned amounts
 4. When the XUD order is filled Xcahnge pays the Lightning invoice of the user which reveals the preimage
 5. And therefore Xchange is able to claim the funds locked up by the user (10 lightning-LTC)
