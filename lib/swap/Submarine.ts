@@ -2,33 +2,37 @@
  * This file is based on the repository github.com/submarineswaps/swaps-service created by Alex Bosworth
  */
 
-import { script } from 'bitcoinjs-lib';
+import { script, crypto } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
 import * as bip65 from 'bip65';
 import { toPushdataScript } from './SwapUtils';
+
+const encodeCltv = (timeoutBlockHeight: number) => {
+  return script.number.encode(
+    bip65.encode({ blocks: timeoutBlockHeight }),
+  );
+};
 
 /**
  * Generate a Submarine Swap redeem script with a public key refund path
  *
  * @param preimageHash hash of the preimage of the swap
- * @param destinationPublicKey public key of the receiving address
- * @param refundPublicKey public key of the refund address
+ * @param claimPublicKey public key of the keypair needed for claiming
+ * @param refundPublicKey public key of the keypair needed for claiming
  * @param timeoutBlockHeight at what block the HTLC should time out
  *
  * @returns redeem script
  */
-export const pkRefundSwap = (preimageHash: Buffer, destinationPublicKey: Buffer, refundPublicKey: Buffer, timeoutBlockHeight: number) => {
-  const cltv = script.number.encode(
-    bip65.encode({ blocks: timeoutBlockHeight }),
-  );
+export const pkRefundSwap = (preimageHash: Buffer, claimPublicKey: Buffer, refundPublicKey: Buffer, timeoutBlockHeight: number) => {
+  const cltv = encodeCltv(timeoutBlockHeight);
 
   return toPushdataScript([
-    ops.OP_SHA256,
-    preimageHash,
+    ops.OP_HASH160,
+    crypto.ripemd160(preimageHash),
     ops.OP_EQUAL,
 
     ops.OP_IF,
-    destinationPublicKey,
+    claimPublicKey,
 
     ops.OP_ELSE,
     cltv,
@@ -45,26 +49,24 @@ export const pkRefundSwap = (preimageHash: Buffer, destinationPublicKey: Buffer,
  * Generate a Submarine Swap redeem script with a public key hash refund path
  *
  * @param preimageHash hash of the preimage of the swap
- * @param destinationPublicKey public key of the receiving address
- * @param refundPublicKeyHash hash of the public key of the refund address
+ * @param claimPublicKey public key of the keypair needed for claiming
+ * @param refundPublicKeyHash hash of the public key of the keypair needed for claiming
  * @param timeoutBlockHeight at what block the HTLC should time out
  *
  * @returns redeem script
  */
-export const pkHashRefundSwap = (preimageHash: Buffer, destinationPublicKey: Buffer, refundPublicKeyHash: Buffer, timeoutBlockHeight: number) => {
-  const cltv = script.number.encode(
-    bip65.encode({ blocks: timeoutBlockHeight }),
-  );
+export const pkHashRefundSwap = (preimageHash: Buffer, claimPublicKey: Buffer, refundPublicKeyHash: Buffer, timeoutBlockHeight: number) => {
+  const cltv = encodeCltv(timeoutBlockHeight);
 
   return toPushdataScript([
     ops.OP_DUP,
-    ops.OP_SHA256,
-    preimageHash,
+    ops.OP_HASH160,
+    crypto.ripemd160(preimageHash),
     ops.OP_EQUAL,
 
     ops.OP_IF,
     ops.OP_DROP,
-    destinationPublicKey,
+    claimPublicKey,
 
     ops.OP_ELSE,
     cltv,

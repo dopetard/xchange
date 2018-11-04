@@ -74,7 +74,7 @@ class SwapManager {
    * @param pairId pair of the Swap
    * @param orderSide whether the order is a buy or sell one
    * @param invoice the invoice that should be paid
-   * @param refundPublicKey the public key for the refund
+   * @param refundPublicKey public key of the keypair needed for claiming
    * @param outputType what kind of adress should be returned
    *
    * @returns an onchain address
@@ -124,7 +124,7 @@ class SwapManager {
    *
    * @param pairId pair of the Swap
    * @param orderSide whether the order is a buy or sell one
-   * @param claimPublicKey the public key of the private key needed for the claiming
+   * @param claimPublicKey public key of the keypair needed for claiming
    * @param amount the amount of the invoice
    *
    * @returns a Lightning invoice, the lockup transaction and its hash
