@@ -5,7 +5,7 @@ import { Arguments } from 'yargs';
 import { getServiceDataDir } from '../Utils';
 import { XchangeClient } from '../proto/xchangerpc_grpc_pb';
 
-interface GrpcResponse {
+export interface GrpcResponse {
   toObject: Function;
 }
 
@@ -18,13 +18,21 @@ export const loadXchangeClient = (argv: Arguments): XchangeClient => {
 
 export const callback = (error: Error | null, response: GrpcResponse) => {
   if (error) {
-    console.error(`${error.name}: ${error.message}`);
+    printError(error);
   } else {
     const responseObj = response.toObject();
     if (Object.keys(responseObj).length === 0) {
       console.log('success');
     } else {
-      console.log(JSON.stringify(responseObj, undefined, 2));
+      printResponse(responseObj);
     }
   }
+};
+
+export const printResponse = (response: any) => {
+  console.log(JSON.stringify(response, undefined, 2));
+};
+
+export const printError = (error: Error) => {
+  console.error(`${error.name}: ${error.message}`);
 };
