@@ -96,6 +96,8 @@ message CreateSwapRequest {
 }
 message CreateSwapResponse {
   string address = 1;
+  int64 expected_amount = 2;
+  string bip21 = 3;
 }
 
 message CreateReverseSwapRequest {

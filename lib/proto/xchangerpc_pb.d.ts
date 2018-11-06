@@ -361,6 +361,12 @@ export class CreateSwapResponse extends jspb.Message {
     getAddress(): string;
     setAddress(value: string): void;
 
+    getExpectedAmount(): number;
+    setExpectedAmount(value: number): void;
+
+    getBip21(): string;
+    setBip21(value: string): void;
+
 
     serializeBinary(): Uint8Array;
     toObject(includeInstance?: boolean): CreateSwapResponse.AsObject;
@@ -375,6 +381,8 @@ export class CreateSwapResponse extends jspb.Message {
 export namespace CreateSwapResponse {
     export type AsObject = {
         address: string,
+        expectedAmount: number,
+        bip21: string,
     }
 }
 
