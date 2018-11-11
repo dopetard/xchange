@@ -91,10 +91,16 @@ class GrpcService {
 
       const response = new xchangerpc.GetBalanceResponse();
 
-      const responseMap: Map<string, number> = response.getBalancesMap();
+      const responseMap: Map<string, xchangerpc.WalletBalance> = response.getBalancesMap();
 
-      balances.forEach((value, key) => {
-        responseMap.set(key, value);
+      balances.forEach((balance, currency) => {
+        const walletBalance = new xchangerpc.WalletBalance();
+
+        walletBalance.setTotalBalance(balance.totalBalance);
+        walletBalance.setConfirmedBalance(balance.confirmedBalance);
+        walletBalance.setUnconfirmedBalance(balance.unconfirmedBalance);
+
+        responseMap.set(currency, walletBalance);
       });
 
       callback(null, response);

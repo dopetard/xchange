@@ -32,6 +32,7 @@ export type UtxoFactory = {
   redeemScript?: string;
   value: number;
   type: number;
+  confirmed: boolean;
 };
 
 export type UtxoAttributes = UtxoFactory;

@@ -4,6 +4,7 @@ import { getNetwork } from '../Utils';
 import { constructClaimTransaction } from '../../swap/Claim';
 import { getHexBuffer, getHexString } from '../../Utils';
 import { OutputType } from '../../proto/xchangerpc_pb';
+import { printResponse } from '../Command';
 
 export const command = 'claimswap <network> <lockup_transaction> <redeem_script> <preimage> <claim_private_key> <destination_address>';
 
@@ -46,8 +47,6 @@ export const handler = (argv: Arguments) => {
   const lockupTransaction = Transaction.fromHex(argv.lockup_transaction);
   const swapOutput = lockupTransaction.outs[0];
 
-  console.log(getHexString(swapOutput.script));
-
   const claimTransaction = constructClaimTransaction(
     getHexBuffer(argv.preimage),
     claimKeys,
@@ -62,7 +61,7 @@ export const handler = (argv: Arguments) => {
     getHexBuffer(argv.redeem_script),
   );
 
-  console.log(JSON.stringify({
+  printResponse({
     claimTransaction: claimTransaction.toHex(),
-  }, undefined, 2));
+  });
 };

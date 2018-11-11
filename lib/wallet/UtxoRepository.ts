@@ -19,6 +19,7 @@ class UtxoRepository {
       },
       order: [
         ['value', 'DESC'],
+        ['confirmed', 'DESC'],
       ],
     });
   }
@@ -29,6 +30,23 @@ class UtxoRepository {
         txHash,
       },
     });
+  }
+
+  /**
+   * Creates a new or updates an existing UTXO
+   */
+  public upsertUtxo = async (utxo: db.UtxoFactory) => {
+    const existing = await this.models.Utxo.findOne({
+      where: {
+        txHash: utxo.txHash,
+      },
+    });
+
+    if (existing) {
+      return existing.update(utxo);
+    } else {
+      return this.addUtxo(utxo);
+    }
   }
 
   public addUtxo = async (utxo: db.UtxoFactory) => {

@@ -48,6 +48,13 @@ interface ChainClientInterface {
   getBlock(blockHash: string): Promise<Block>;
   getRawTransaction(transactionHash: string): Promise<any>;
   generate(blocks: number): Promise<string[]>;
+
+  on(event: 'error', listener: (error: string) => void): this;
+  on(event: 'transaction.relevant.mempool', listener: (transactionHex: string) => void): this;
+  on(event: 'transaction.relevant.block', listener: (transactionhex: string, blockHeigh: number) => void): this;
+  emit(event: 'error', error: string): boolean;
+  emit(event: 'transaction.relevant.mempool', transactionHex: string): boolean;
+  emit(event: 'transaction.relevant.block', transactionhex: string, blockHeigh: number): boolean;
 }
 
 export default ChainClientInterface;

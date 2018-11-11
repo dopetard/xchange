@@ -25,7 +25,7 @@ export const builder = {
     type: 'string',
   },
   show_qr: {
-    describe: 'whether a QR code for the BIP21 payment request',
+    describe: 'whether a QR code for the BIP21 payment request should be shown',
     type: 'boolean',
   },
 };

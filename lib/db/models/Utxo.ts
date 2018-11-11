@@ -11,6 +11,7 @@ export default (sequelize: Sequelize.Sequelize, dataTypes: Sequelize.DataTypes) 
     redeemScript: { type: dataTypes.STRING, allowNull: true },
     value: { type: dataTypes.INTEGER, allowNull: false },
     type: { type: dataTypes.INTEGER, allowNull: false },
+    confirmed: { type: dataTypes.BOOLEAN, allowNull: true },
   };
 
   const options: Sequelize.DefineOptions<db.UtxoInstance> = {

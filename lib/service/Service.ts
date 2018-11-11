@@ -4,9 +4,10 @@ import { Info as LndInfo } from '../lightning/LndClient';
 import XudClient, { XudInfo } from '../xud/XudClient';
 import SwapManager from '../swap/SwapManager';
 import WalletManager, { Currency } from '../wallet/WalletManager';
+import { WalletBalance } from '../wallet/Wallet';
 import Errors from './Errors';
 import { getHexBuffer, getOutputType } from '../Utils';
-import { OrderSide, OutputType } from '../proto/xchangerpc_pb';
+import { OrderSide } from '../proto/xchangerpc_pb';
 
 const packageJson = require('../../package.json');
 
@@ -79,7 +80,7 @@ class Service {
   public getBalance = async (args: { currency: string }) => {
     const { walletManager } = this.serviceComponents;
 
-    const result = new Map<string, number>();
+    const result = new Map<string, WalletBalance>();
 
     if (args.currency !== '') {
       const wallet = walletManager.wallets.get(args.currency);
