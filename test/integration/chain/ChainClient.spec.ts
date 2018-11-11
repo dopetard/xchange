@@ -48,19 +48,38 @@ describe('ChainClient', () => {
 
   it('should emit an event when a transaction is sent to relevant address', async () => {
     const transaction = await btcManager.constructTransaction(btcAddress, 1);
-    const txHex = transaction.toHex();
+    const relevantTxHex = transaction.toHex();
 
-    let eventReceived = false;
+    let blockEventReceived = false;
+    let mempoolEventReceived = false;
 
-    btcdClient.on('transaction.relevant', (transactionHex) => {
-      if (transactionHex === txHex) {
-        eventReceived = true;
+    btcdClient.on('transaction.relevant.mempool', (transactionHex) => {
+      if (transactionHex === relevantTxHex) {
+        mempoolEventReceived = true;
       }
     });
 
-    await btcManager.broadcastAndMine(txHex);
+    btcdClient.on('transaction.relevant.block', (transactionHex) => {
+      if (transactionHex === relevantTxHex) {
+        blockEventReceived = true;
+      }
+    });
 
-    expect(eventReceived).to.be.true;
+    await btcManager.broadcastAndMine(relevantTxHex);
+
+    const eventPromise = new Promise<void>((resolve) => {
+      const interval = setInterval(async () => {
+        if (mempoolEventReceived && blockEventReceived) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
+
+    await eventPromise;
+
+    expect(mempoolEventReceived).to.be.true;
+    expect(blockEventReceived).to.be.true;
   });
 
   after(async () => {

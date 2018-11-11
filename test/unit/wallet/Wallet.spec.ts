@@ -93,13 +93,19 @@ describe('Wallet', () => {
   });
 
   it('should get correct balance', async () => {
-    let expectedBalance = 0;
+    const expectedBalance = {
+      confirmedBalance: 0,
+      unconfirmedBalance: 0,
+      totalBalance: 0,
+    };
 
     for (let i = 0; i <= 10; i += 1) {
+      const confirmed = i % 2 === 0;
       const value = Math.floor(Math.random() * 1000000) + 1;
 
       await utxoRepository.addUtxo({
         value,
+        confirmed,
         currency: 'BTC',
         keyIndex: 0,
         txHash: `${value}`,
@@ -108,10 +114,16 @@ describe('Wallet', () => {
         vout: 0,
       });
 
-      expectedBalance += value;
+      if (confirmed) {
+        expectedBalance.confirmedBalance += value;
+      } else {
+        expectedBalance.unconfirmedBalance += value;
+      }
+
+      expectedBalance.totalBalance += value;
     }
 
-    expect(await wallet.getBalance()).to.be.equal(expectedBalance);
+    expect(await wallet.getBalance()).to.be.deep.equal(expectedBalance);
   });
 
   it('should update highest used index in database', async () => {

@@ -4,14 +4,7 @@ import RpcClient, { RpcConfig } from '../RpcClient';
 import { ClientStatus } from '../consts/ClientStatus';
 import ChainClientInterface, { Info, Block, BestBlock } from './ChainClientInterface';
 
-interface ChainClientEvents {
-  on(event: 'error', listener: (error: string) => void): this;
-  on(event: 'transaction.relevant', listener: (transactionHex: string) => void): this;
-  emit(event: 'error', error: string): boolean;
-  emit(event: 'transaction.relevant', transactionHex: string): boolean;
-}
-
-class ChainClient extends BaseClient implements ChainClientInterface, ChainClientEvents {
+class ChainClient extends BaseClient implements ChainClientInterface {
   private rpcClient: RpcClient;
   private uri: string;
 
@@ -27,12 +20,26 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
   private bindWs = () => {
     this.rpcClient.on('error', error => this.emit('error', error));
     this.rpcClient.on('message.orphan', (data) => {
-      if (data.method === 'relevanttxaccepted') {
-        const transactions = data.params;
+      switch (data.method) {
+        // Emits an event on mempool acceptance
+        case 'relevanttxaccepted':
+          data.params.forEach((transaction) => {
+            this.emit('transaction.relevant.mempool', transaction);
+          });
+          break;
 
-        transactions.forEach((transaction) => {
-          this.emit('transaction.relevant', transaction);
-        });
+        // Emits an event on block acceptance
+        case 'filteredblockconnected':
+          const params: any[] = data.params;
+
+          if (params[2] !== null) {
+            const transactions = params[2] as string[];
+
+            transactions.forEach((transaction) => {
+              this.emit('transaction.relevant.block', transaction, params[0]);
+            });
+          }
+          break;
       }
     });
   }
@@ -44,9 +51,10 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
         const info = await this.getInfo();
 
         if (info.version) {
+          await this.notifyBlocks();
+
           this.clearReconnectTimer();
           this.setClientStatus(ClientStatus.Connected);
-
         } else {
           this.setClientStatus(ClientStatus.Disconnected);
           this.logger.error(`${this.symbol} at ${this.uri} is not able to connect, retrying in ${this.RECONNECT_INTERVAL} ms`);
@@ -95,6 +103,13 @@ class ChainClient extends BaseClient implements ChainClientInterface, ChainClien
 
   public generate = (blocks: number): Promise<string[]> => {
     return this.rpcClient.call<string[]>('generate', blocks);
+  }
+
+  /**
+   * Call this function to get notifications about the block acceptance of relevant transactions
+   */
+  private notifyBlocks = () => {
+    return this.rpcClient.call<void>('notifyblocks');
   }
 }
 

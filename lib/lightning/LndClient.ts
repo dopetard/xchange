@@ -44,11 +44,6 @@ interface LightningMethodIndex extends GrpcClient {
   [methodName: string]: Function;
 }
 
-interface LndClient {
-  on(event: 'invoice.settled', listener: (rHash: Buffer) => void): this;
-  emit(event: 'invoice.settled', rHash: Buffer);
-}
-
 /** A class representing a client to interact with lnd. */
 class LndClient extends BaseClient implements LightningClient {
   public static readonly serviceName = 'LND';

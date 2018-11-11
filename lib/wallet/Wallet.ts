@@ -8,10 +8,17 @@ import Logger from '../Logger';
 import { TransactionOutput } from '../consts/Types';
 import UtxoRepository from './UtxoRepository';
 import WalletRepository from './WalletRepository';
+import { UtxoInstance } from 'lib/consts/Database';
 
 type UTXO = TransactionOutput & {
   redeemScript?: Buffer;
   keys: BIP32;
+};
+
+type WalletBalance = {
+  totalBalance: number;
+  confirmedBalance: number;
+  unconfirmedBalance: number;
 };
 
 // TODO: wait for funds being confirmed
@@ -44,19 +51,32 @@ class Wallet {
 
     this.symbol = this.chainClient.symbol;
 
-    this.chainClient.on('transaction.relevant', (txHex) => {
+    // If a transaction is found in the mempool and mined a few milliseconds afterwards
+    // it can happen that the UTXO gets inserted in the database twice which would result
+    // in "SequelizeUniqueConstraintError: Validation error" errors. To avoid these errors
+    // this Map between the txHex of unconfirmed transactions and their database insertion
+    // Promises is checked before inserting a confirmed transaction into the database.
+    const mempoolInsertPromises = new Map<string, Promise<UtxoInstance>>();
+
+    const upsertUtxo = (txHex: string, blockHeight?: number) => {
       const transaction = Transaction.fromHex(txHex);
+      const confirmed = blockHeight !== undefined;
 
       transaction.outs.forEach(async (output, vout) => {
         const hexScript = getHexString(output.script);
         const outputInfo = this.relevantOutputs.get(hexScript);
 
         if (outputInfo) {
-          this.logger.debug(`Found UTXO of ${this.symbol} wallet: ${transaction.getId()}:${vout} with value ${output.value}`);
+          this.logger.debug(`Found UTXO of ${this.symbol} wallet ${confirmed ? `in block #${blockHeight}` : 'in mempool'}:` +
+            ` ${transaction.getId()}:${vout} with value ${output.value}`);
 
-          this.relevantOutputs.delete(hexScript);
-          await this.utxoRepository.addUtxo({
+          if (confirmed) {
+            this.relevantOutputs.delete(hexScript);
+          }
+
+          const promise = this.utxoRepository.upsertUtxo({
             vout,
+            confirmed,
             currency: this.symbol,
             txHash: getHexString(transaction.getHash()),
             script: getHexString(output.script),
@@ -64,8 +84,29 @@ class Wallet {
             value: output.value,
             ...outputInfo,
           });
+
+          if (confirmed) {
+            await promise;
+          } else {
+            mempoolInsertPromises.set(txHex, promise);
+          }
         }
       });
+    };
+
+    this.chainClient.on('transaction.relevant.mempool', (txHex) => {
+      upsertUtxo(txHex);
+    });
+
+    this.chainClient.on('transaction.relevant.block', async (txHex, blockHeight: number) => {
+      const mempoolInsertPromise = mempoolInsertPromises.get(txHex);
+
+      if (mempoolInsertPromise) {
+        mempoolInsertPromises.delete(txHex);
+        await mempoolInsertPromise;
+      }
+
+      upsertUtxo(txHex, blockHeight);
     });
   }
 
@@ -152,16 +193,25 @@ class Wallet {
   /**
    * Get the balance of the wallet
    */
-  public getBalance = async () => {
-    let balance = 0;
+  public getBalance = async (): Promise<WalletBalance> => {
+    let confirmedBalance = 0;
+    let unconfirmedBalance = 0;
 
     const utxos = await this.utxoRepository.getUtxos(this.symbol);
 
     utxos.forEach((utxo) => {
-      balance += utxo.value;
+      if (utxo.confirmed) {
+        confirmedBalance += utxo.value;
+      } else {
+        unconfirmedBalance += utxo.value;
+      }
     });
 
-    return balance;
+    return {
+      confirmedBalance,
+      unconfirmedBalance,
+      totalBalance: confirmedBalance + unconfirmedBalance,
+    };
   }
 
   // TODO: fee estimation
@@ -216,8 +266,6 @@ class Wallet {
       removePromises.push(this.utxoRepository.removeUtxo(txHash));
     });
 
-    await Promise.all(removePromises);
-
     // Construct the transaction
     const builder = new TransactionBuilder(this.network);
 
@@ -257,6 +305,8 @@ class Wallet {
       }
     });
 
+    await Promise.all(removePromises);
+
     return {
       tx: builder.build(),
       vout: 0,
@@ -265,3 +315,4 @@ class Wallet {
 }
 
 export default Wallet;
+export { WalletBalance };

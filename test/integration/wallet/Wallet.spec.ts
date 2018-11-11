@@ -35,6 +35,19 @@ describe('Wallet', () => {
 
   let walletBalance: number;
 
+  const confirmedBalancePromise = () => {
+    return new Promise<void>((resolve) => {
+      const interval = setInterval(async () => {
+        const balance = await wallet.getBalance();
+
+        if (balance.confirmedBalance !== 0) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, 100);
+    });
+  };
+
   before(async () => {
     await btcdClient.connect();
     await database.init();
@@ -50,7 +63,11 @@ describe('Wallet', () => {
 
   it('should recognize transactions to its addresses', async () => {
     const addresses: { address: string, amount: number }[] = [];
-    let expectedBalance = 0;
+    const expectedBalance = {
+      confirmedBalance: 0,
+      unconfirmedBalance: 0,
+      totalBalance: 0,
+    };
 
     for (let i = 0; i < 3; i += 1) {
       const outputType = getOutputType(i);
@@ -60,29 +77,24 @@ describe('Wallet', () => {
         amount: (i + 1) * 10000,
       };
 
-      expectedBalance += address.amount;
+      expectedBalance.confirmedBalance += address.amount;
       addresses.push(address);
     }
 
+    expectedBalance.totalBalance = expectedBalance.confirmedBalance;
+
     for (const address of addresses) {
       const tx = btcManager.constructTransaction(address.address, address.amount);
-      await btcManager.broadcastAndMine(tx.toHex());
+      await btcdClient.sendRawTransaction(tx.toHex());
     }
 
-    const balancePromise = new Promise<void>((resolve) => {
-      const interval = setInterval(async () => {
-        if (await wallet.getBalance() !== 0) {
-          clearInterval(interval);
-          resolve();
-        }
-      }, 100);
-    });
+    await btcdClient.generate(1);
 
-    await balancePromise;
+    await confirmedBalancePromise();
 
-    expect(await wallet.getBalance()).to.be.equal(expectedBalance);
+    expect(await wallet.getBalance()).to.be.deep.equal(expectedBalance);
 
-    walletBalance = expectedBalance;
+    walletBalance = expectedBalance.confirmedBalance;
   });
 
   it('should spend UTXOs', async () => {
@@ -97,7 +109,11 @@ describe('Wallet', () => {
     await btcdClient.generate(1);
 
     expect(vout).to.be.equal(0);
-    expect(await wallet.getBalance()).to.be.equal(destinationAmount);
+
+    await confirmedBalancePromise();
+
+    const balance = await wallet.getBalance();
+    expect(balance.confirmedBalance).to.be.equal(destinationAmount);
   });
 
   after(async () => {
