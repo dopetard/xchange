@@ -53,7 +53,7 @@ const estimateSize = (inputs: Input[], outputs: Output[]) => {
         // PUSHDATA opcode if there is a preimage
         input.swapDetails.preimage ? 1 : 0,
         // preimage if there is one
-        input.swapDetails.preimage ? input.swapDetails.preimage!.length : 0,
+        input.swapDetails.preimage ? input.swapDetails.preimage.length : 0,
         // Sequence
         4,
         // Redeemscript
