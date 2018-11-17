@@ -4,7 +4,7 @@ import bip39 from 'bip39';
 import Wallet from '../../../lib/wallet/Wallet';
 import Networks from '../../../lib/consts/Networks';
 import { OutputType } from '../../../lib/proto/xchangerpc_pb';
-import { btcdClient, btcManager } from '../chain/ChainClient.spec';
+import { btcdClient, btcManager, btcAddress } from '../chain/ChainClient.spec';
 import Logger from '../../../lib/Logger';
 import Database from '../../../lib/db/Database';
 import UtxoRepository from '../../../lib/wallet/UtxoRepository';
@@ -100,10 +100,10 @@ describe('Wallet', () => {
   it('should spend UTXOs', async () => {
     expect(walletBalance).to.not.be.undefined;
 
-    const destinationAddress = await wallet.getNewAddress(OutputType.BECH32);
-    const destinationAmount = walletBalance - 1000;
+    const destinationAddress = btcAddress;
+    const destinationAmount = walletBalance / 2;
 
-    const { tx, vout } = await wallet.sendToAddress(destinationAddress, destinationAmount);
+    const { tx, vout } = await wallet.sendToAddress(destinationAddress, OutputType.LEGACY, false, destinationAmount);
 
     await btcdClient.sendRawTransaction(tx.toHex());
     await btcdClient.generate(1);
@@ -113,7 +113,7 @@ describe('Wallet', () => {
     await confirmedBalancePromise();
 
     const balance = await wallet.getBalance();
-    expect(balance.confirmedBalance).to.be.equal(destinationAmount);
+    expect(balance.confirmedBalance).to.be.lessThan(walletBalance);
   });
 
   after(async () => {

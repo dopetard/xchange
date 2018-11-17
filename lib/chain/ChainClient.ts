@@ -80,8 +80,12 @@ class ChainClient extends BaseClient implements ChainClientInterface {
     return this.rpcClient.call<Info>('getinfo');
   }
 
-  public sendRawTransaction = (rawTransaction: string, allowHighFees = true): Promise<string> => {
-    return this.rpcClient.call<string>('sendrawtransaction', rawTransaction, allowHighFees);
+  public getBestBlock = (): Promise<BestBlock> => {
+    return this.rpcClient.call<BestBlock>('getbestblock');
+  }
+
+  public getBlock = (blockHash: string): Promise<Block> => {
+    return this.rpcClient.call<Block>('getblock', blockHash);
   }
 
   public loadTxFiler = (reload: boolean, addresses: string[], outpoints: string[]): Promise<null> => {
@@ -89,12 +93,21 @@ class ChainClient extends BaseClient implements ChainClientInterface {
     return this.rpcClient.call<null>('loadtxfilter', reload, addresses, outpoints);
   }
 
-  public getBestBlock = (): Promise<BestBlock> => {
-    return this.rpcClient.call<BestBlock>('getbestblock');
+  /**
+   * Returns the estimated fee in sats per kilobyte
+   *
+   * @param blocks after how many blocks the transaction should confirm
+   */
+  public estimateFee = async (blocks: number): Promise<number> => {
+    // BTCD returns the amount of Bitcoins not satoshis and therefore the returned amount
+    // has to be multipled by 100 million to get the amount of satohis per kilobyte
+    const bitcoins = await this.rpcClient.call<number>('estimatefee', blocks);
+
+    return Math.ceil(bitcoins * 100000000);
   }
 
-  public getBlock = (blockHash: string): Promise<Block> => {
-    return this.rpcClient.call<Block>('getblock', blockHash);
+  public sendRawTransaction = (rawTransaction: string, allowHighFees = true): Promise<string> => {
+    return this.rpcClient.call<string>('sendrawtransaction', rawTransaction, allowHighFees);
   }
 
   public getRawTransaction = (transactionHash: string) => {
@@ -111,6 +124,7 @@ class ChainClient extends BaseClient implements ChainClientInterface {
   private notifyBlocks = () => {
     return this.rpcClient.call<void>('notifyblocks');
   }
+
 }
 
 export default ChainClient;

@@ -160,7 +160,7 @@ class SwapManager {
     const sendingAmount = amount * this.getRate(pairId, orderSide);
 
     this.logger.debug(`Sending ${sendingAmount} on ${sendingCurrency.symbol} to swap address: ${address}`);
-    const { tx, vout } = await sendingCurrency.wallet.sendToAddress(address, sendingAmount);
+    const { tx, vout } = await sendingCurrency.wallet.sendToAddress(address, OutputType.COMPATIBILITY, true, sendingAmount);
     const txHex = tx.toHex();
 
     await sendingCurrency.chainClient.sendRawTransaction(txHex);
