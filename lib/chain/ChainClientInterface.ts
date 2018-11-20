@@ -38,15 +38,20 @@ type Block = {
  * A generic interface that can be used for multiple chain nodes and implementations
  */
 interface ChainClientInterface {
-  sendRawTransaction(rawTransaction: string): Promise<any>;
   connect(): Promise<void>;
   disconnect(): Promise<void>;
+
   getInfo(): Promise<Info>;
-  sendRawTransaction(rawTransaction: string, allowHighFees: boolean): Promise<string>;
-  loadTxFiler (reload: boolean, addresses: string[], outpoints: string[]): Promise<null>;
   getBestBlock(): Promise<BestBlock>;
   getBlock(blockHash: string): Promise<Block>;
+
+  loadTxFiler (reload: boolean, addresses: string[], outpoints: string[]): Promise<null>;
+
+  estimateFee(blocks: number): Promise<number>;
+
+  sendRawTransaction(rawTransaction: string, allowHighFees: boolean): Promise<string>;
   getRawTransaction(transactionHash: string): Promise<any>;
+
   generate(blocks: number): Promise<string[]>;
 
   on(event: 'error', listener: (error: string) => void): this;

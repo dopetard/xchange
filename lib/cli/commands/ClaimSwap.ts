@@ -2,7 +2,7 @@ import { Arguments } from 'yargs';
 import { ECPair, address, Transaction } from 'bitcoinjs-lib';
 import { getNetwork } from '../Utils';
 import { constructClaimTransaction } from '../../swap/Claim';
-import { getHexBuffer, getHexString } from '../../Utils';
+import { getHexBuffer } from '../../Utils';
 import { OutputType } from '../../proto/xchangerpc_pb';
 import { printResponse } from '../Command';
 

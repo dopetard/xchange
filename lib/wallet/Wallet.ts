@@ -9,6 +9,7 @@ import { TransactionOutput } from '../consts/Types';
 import UtxoRepository from './UtxoRepository';
 import WalletRepository from './WalletRepository';
 import { UtxoInstance } from 'lib/consts/Database';
+import * as feeCalculator from './FeeCalculator';
 
 type UTXO = TransactionOutput & {
   redeemScript?: Buffer;
@@ -21,10 +22,12 @@ type WalletBalance = {
   unconfirmedBalance: number;
 };
 
+// TODO: detect funds received during Xchange being offline
 // TODO: wait for funds being confirmed
 // TODO: fix coinbase transactions not being recognised
 // TODO: more advanced UTXO management
 // TODO: multiple transaction to same output
+// TODO: multiple outputs to the wallet in one transaction
 class Wallet {
   private relevantOutputs = new Map<string, { keyIndex: number, type: OutputType, redeemScript?: string }>();
 
@@ -214,28 +217,36 @@ class Wallet {
     };
   }
 
-  // TODO: fee estimation
+  // TODO: custom fee
+  // TODO: avoid dust to change addresses
   /** Sends a specific amount of funds to and address
    *
-   * @param address address to which funds should be sent
-   * @param amount how mush should be sent
-   *
-   * @returns the transaction itself and the vout of the addres
+   * @returns the transaction itself and the vout of the provided address
    */
-  public sendToAddress = async (address: string, amount: number): Promise<{ tx: Transaction, vout: number }> => {
-    const utxos = await this.utxoRepository.getUtxosSorted(this.symbol);
+  public sendToAddress = async (address: string, type: OutputType, isScriptHash: boolean, amount: number):
+      Promise<{ tx: Transaction, vout: number }> => {
 
-    let missingAmount = amount + 1000;
+    const utxos = await this.utxoRepository.getUtxosSorted(this.symbol);
+    const feePerByte = Math.ceil(await this.chainClient.estimateFee(1) / 1000);
 
     // The UTXOs that will be spent
     const toSpend: UTXO[] = [];
     // The hex encoded strings of the UTXOs that will be spent
     const toRemove: string[] = [];
 
+    const estimateFee = () => {
+      return feeCalculator.estimateFee(feePerByte, toSpend, [{ type: OutputType.BECH32 }, { type, isSh: isScriptHash }]);
+    };
+
+    let toSpendSum = 0;
+    let fee = estimateFee();
+
+    const fundsSufficient = () => {
+      return (amount + fee) <= toSpendSum;
+    };
+
     // Accumulate UTXO to spend
     for (const utxoInstance of utxos) {
-      missingAmount -= utxoInstance.value;
-
       const redeemScript = utxoInstance.redeemScript ? getHexBuffer(utxoInstance.redeemScript) : undefined;
 
       toSpend.push({
@@ -250,13 +261,16 @@ class Wallet {
 
       toRemove.push(utxoInstance.txHash);
 
-      if ((missingAmount) <= 0) {
+      toSpendSum += utxoInstance.value;
+      fee = estimateFee();
+
+      if (fundsSufficient()) {
         break;
       }
     }
 
     // Throw an error if the wallet doesn't have enough funds
-    if (missingAmount > 0) {
+    if (!fundsSufficient()) {
       throw Errors.NOT_ENOUGH_FUNDS(amount);
     }
 
@@ -281,10 +295,8 @@ class Wallet {
     // Add the requested ouput to the transaction
     builder.addOutput(address, amount);
 
-    // If there is anything left from the value of the UTXOs send it to a new change address
-    if (missingAmount !== 0) {
-      builder.addOutput(await this.getNewAddress(OutputType.BECH32), missingAmount * -1);
-    }
+    // Sent the value left of the UTXOs to a new change address
+    builder.addOutput(await this.getNewAddress(OutputType.BECH32), toSpendSum - (amount + fee));
 
     // Sign the transaction
     toSpend.forEach((utxo, index) => {
