@@ -14,11 +14,11 @@ const encodeCltv = (timeoutBlockHeight: number) => {
 };
 
 /**
- * Generate a Submarine Swap redeem script with a public key refund path
+ * Generate a swap redeem script with a public key refund path
  *
  * @param preimageHash hash of the preimage of the swap
  * @param claimPublicKey public key of the keypair needed for claiming
- * @param refundPublicKey public key of the keypair needed for claiming
+ * @param refundPublicKey public key of the keypair needed for refunding
  * @param timeoutBlockHeight at what block the HTLC should time out
  *
  * @returns redeem script
@@ -39,6 +39,7 @@ export const pkRefundSwap = (preimageHash: Buffer, claimPublicKey: Buffer, refun
     ops.OP_CHECKLOCKTIMEVERIFY,
     ops.OP_DROP,
     refundPublicKey,
+
     ops.OP_ENDIF,
 
     ops.OP_CHECKSIG,
@@ -46,11 +47,11 @@ export const pkRefundSwap = (preimageHash: Buffer, claimPublicKey: Buffer, refun
 };
 
 /**
- * Generate a Submarine Swap redeem script with a public key hash refund path
+ * Generate a swap redeem script with a public key hash refund path
  *
  * @param preimageHash hash of the preimage of the swap
  * @param claimPublicKey public key of the keypair needed for claiming
- * @param refundPublicKeyHash hash of the public key of the keypair needed for claiming
+ * @param refundPublicKeyHash hash of the public key of the keypair needed for refunding
  * @param timeoutBlockHeight at what block the HTLC should time out
  *
  * @returns redeem script

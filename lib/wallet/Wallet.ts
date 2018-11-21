@@ -8,7 +8,7 @@ import Logger from '../Logger';
 import { TransactionOutput } from '../consts/Types';
 import UtxoRepository from './UtxoRepository';
 import WalletRepository from './WalletRepository';
-import { UtxoInstance } from 'lib/consts/Database';
+import { UtxoInstance } from '../consts/Database';
 import * as feeCalculator from './FeeCalculator';
 
 type UTXO = TransactionOutput & {
