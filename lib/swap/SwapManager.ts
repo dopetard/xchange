@@ -1,10 +1,9 @@
-import assert from 'assert';
 import { BIP32 } from 'bip32';
 import { Transaction, crypto } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import { getHexBuffer, getPairId, getHexString, getScriptHashEncodeFunction, reverseString } from '../Utils';
 import { pkRefundSwap } from './Submarine';
-import { p2wshOutput, p2wpkhOutput, p2shP2wshOutput } from './Scripts';
+import { p2wpkhOutput, p2shP2wshOutput } from './Scripts';
 import { constructClaimTransaction } from './Claim';
 import { TransactionOutput } from '../consts/Types';
 import Errors from './Errors';
@@ -123,6 +122,7 @@ class SwapManager {
     return {
       address,
       expectedAmount,
+      redeemScript: getHexString(redeemScript),
       bip21: encodeBip21(getBip21Prefix(receivingCurrency), address, expectedAmount, `Submarine Swap to ${sendingCurrency.symbol}`),
     };
   }
@@ -186,7 +186,7 @@ class SwapManager {
   }
 
   private bindCurrency = (currency: Currency, maps: SwapMaps) => {
-    currency.chainClient.on('transaction.relevant', async (transactionHex: string) => {
+    currency.chainClient.on('transaction.relevant.mempool', async (transactionHex: string) => {
       const transaction = Transaction.fromHex(transactionHex);
 
       let vout = 0;
@@ -219,7 +219,8 @@ class SwapManager {
     const swapOutput = `${reverseString(getHexString(txHash))}:${vout}`;
 
     if (outputValue < details.expectedAmount) {
-      this.logger.warn(`Value ${outputValue} of ${swapOutput} is less than expected ${details.expectedAmount}`);
+      this.logger.warn(`Value ${outputValue} of ${swapOutput} is less than expected ${details.expectedAmount}. Aborting swap`);
+      return;
     }
 
     const { symbol, chainClient } = currency;

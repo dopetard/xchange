@@ -3,9 +3,10 @@
  */
 
 import { BIP32 } from 'bip32';
-import { Transaction, crypto, script, ECPair } from 'bitcoinjs-lib';
 import ops from '@michael1011/bitcoin-ops';
+import * as bip65 from 'bip65';
 import * as varuint from 'varuint-bitcoin';
+import { Transaction, crypto, script, ECPair } from 'bitcoinjs-lib';
 import { encodeSignature, scriptBuffersToScript } from './SwapUtils';
 import { OutputType } from '../proto/xchangerpc_pb';
 import { TransactionOutput } from '../consts/Types';
@@ -15,22 +16,29 @@ import { TransactionOutput } from '../consts/Types';
 // TODO: set locktime of transaction
 // TODO: check that Swap didn't time out yet
 /**
- * Claim a Submarine Swap
+ * Claim a swap
  *
  * @param preimage the preimage of the transaction
  * @param claimKeys the key pair needed to claim the swap
  * @param destinationScript the output script to which the funds should be sent
- * @param utxo the Swap UTXO to claim
+ * @param utxo the swap UTXO to claim
  * @param redeemScript the redeem script of the swap
+ * @param timeoutBlockHeight locktime of the transaction; only needed if used used for a refund
  *
  * @returns claim transaction
  */
 export const constructClaimTransaction = (preimage: Buffer, claimKeys: ECPair | BIP32, destinationScript: Buffer, utxo: TransactionOutput,
-  redeemScript: Buffer): Transaction => {
+  redeemScript: Buffer, timeoutBlockHeight?: number): Transaction => {
 
   const tx = new Transaction();
 
-  // Add UTXO as input to transaction
+  // Refund uses this method to generate refund transactions and CTLVs
+  // require the transaction to have a locktime after the timeout
+  if (timeoutBlockHeight) {
+    tx.locktime = bip65.encode({ blocks: timeoutBlockHeight });
+  }
+
+  // Add the swap as input to the transaction
   tx.addInput(utxo.txHash, utxo.vout, 0);
 
   // TODO: fee estimation
@@ -51,7 +59,6 @@ export const constructClaimTransaction = (preimage: Buffer, claimKeys: ECPair | 
       ];
 
       tx.setInputScript(0, scriptBuffersToScript(inputScript));
-
       break;
 
     // Construct the nested redeem script for nested SegWit inputs
@@ -64,7 +71,6 @@ export const constructClaimTransaction = (preimage: Buffer, claimKeys: ECPair | 
       const nested = scriptBuffersToScript(nestedScript);
 
       tx.setInputScript(0, scriptBuffersToScript([nested]));
-
       break;
   }
 

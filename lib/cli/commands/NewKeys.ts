@@ -2,6 +2,7 @@ import { Arguments } from 'yargs';
 import { ECPair } from 'bitcoinjs-lib';
 import { getNetwork } from '../Utils';
 import { getHexString } from '../../Utils';
+import { printResponse } from '../Command';
 
 export const command = 'newkeys <network>';
 
@@ -18,8 +19,8 @@ export const handler = (argv: Arguments) => {
   const network = getNetwork(argv.network);
   const keys = ECPair.makeRandom({ network });
 
-  console.log(JSON.stringify({
+  printResponse({
     publicKey: getHexString(keys.publicKey),
     privateKey: getHexString(keys.privateKey),
-  }, undefined, 2));
+  });
 };

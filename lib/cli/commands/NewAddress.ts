@@ -2,7 +2,7 @@ import { Arguments } from 'yargs';
 import { callback, loadXchangeClient } from '../Command';
 import { NewAddressRequest } from '../../proto/xchangerpc_pb';
 import { getOutputType } from '../Utils';
-import { OutputTypeComponent } from '../BuilderComponents';
+import BuilderComponents from '../BuilderComponents';
 
 export const command = 'newaddress <currency> [type]';
 
@@ -13,7 +13,7 @@ export const builder = {
     describe: 'ticker symbol of the currency',
     type: 'string',
   },
-  type: OutputTypeComponent,
+  type: BuilderComponents.outputType,
 };
 
 export const handler = (argv: Arguments) => {

@@ -121,7 +121,6 @@ class Service {
    * Creates a new Swap from the chain to Lightning
    */
   public createSwap = async (args: { pairId: string, orderSide: number, invoice: string, refundPublicKey: string, outputType: number }) => {
-
     const { swapManager } = this.serviceComponents;
 
     const orderSide = this.getOrderSide(args.orderSide);
@@ -136,7 +135,6 @@ class Service {
    * Creates a new Swap from Lightning to the chain
    */
   public createReverseSwap = async (args: { pairId: string, orderSide: number, claimPublicKey: string, amount: number }) => {
-
     const { swapManager } = this.serviceComponents;
 
     const orderSide = this.getOrderSide(args.orderSide);
