@@ -1,6 +1,6 @@
 // tslint:disable:max-line-length
 import { expect } from 'chai';
-import { pkRefundSwap, pkHashRefundSwap } from '../../../lib/swap/Submarine';
+import { pkRefundSwap, pkHashRefundSwap } from '../../../lib/swap/Swap';
 import { getHexString, getHexBuffer } from '../../../lib/Utils';
 
 describe('SubmarineSwaps', () => {
