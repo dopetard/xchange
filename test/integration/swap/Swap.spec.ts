@@ -2,7 +2,7 @@
 import { crypto, address, ECPair } from 'bitcoinjs-lib';
 import { getHexBuffer } from '../../../lib/Utils';
 import { p2shOutput, p2wshOutput, p2shP2wshOutput } from '../../../lib/swap/Scripts';
-import { pkRefundSwap } from '../../../lib/swap/Submarine';
+import { pkRefundSwap } from '../../../lib/swap/Swap';
 import { constructClaimTransaction } from '../../../lib/swap/Claim';
 import { constructRefundTransaction } from '../../../lib/swap/Refund';
 import Networks from '../../../lib/consts/Networks';

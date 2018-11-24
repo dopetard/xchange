@@ -13,8 +13,6 @@ import { TransactionOutput } from '../consts/Types';
 
 // TODO: claiming with multiple UTXOs
 // TODO: support for RBF
-// TODO: set locktime of transaction
-// TODO: check that Swap didn't time out yet
 /**
  * Claim a swap
  *

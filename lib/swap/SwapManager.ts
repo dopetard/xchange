@@ -2,7 +2,7 @@ import { BIP32 } from 'bip32';
 import { Transaction, crypto } from 'bitcoinjs-lib';
 import Logger from '../Logger';
 import { getHexBuffer, getPairId, getHexString, getScriptHashEncodeFunction, reverseString } from '../Utils';
-import { pkRefundSwap } from './Submarine';
+import { pkRefundSwap } from './Swap';
 import { p2wpkhOutput, p2shP2wshOutput } from './Scripts';
 import { constructClaimTransaction } from './Claim';
 import { TransactionOutput } from '../consts/Types';

@@ -60,8 +60,22 @@ const estimateSize = (inputs: Input[], outputs: Output[]) => {
         input.swapDetails.redeemScript.length,
       ].reduce((swapSize, n) => swapSize + n);
 
-      // TODO: calculate SegWit discount
-      return swapSize;
+      switch (input.type) {
+        case OutputType.BECH32:
+          return swapSize;
+
+        case OutputType.COMPATIBILITY:
+          // Three times the original serialization (in this case OP_0 and
+          // the SHA256 hash of the redeemScript) plus the witness size (swapSize)
+          //
+          // Reference: https://bitcoincore.org/en/segwit_wallet_dev/#transaction-fee-estimation
+          return 35 * 3 + swapSize;
+
+        case OutputType.LEGACY:
+          return swapSize * 4;
+      }
+
+      return 0;
     } else {
       return inputVbytesEstimations[input.type];
     }
@@ -110,7 +124,7 @@ const estimateSize = (inputs: Input[], outputs: Output[]) => {
   });
 
   if (hasWitness) {
-    sum += 2;
+    sum += 8;
   }
 
   // Divide the weight by 4 and round it up to the next integer
