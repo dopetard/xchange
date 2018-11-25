@@ -1,7 +1,7 @@
 import { Arguments } from 'yargs';
-import { callback, loadXchangeClient } from '../Command';
+import { callback, loadBoltzClient } from '../Command';
 import BuilderComponents from '../BuilderComponents';
-import { CreateReverseSwapRequest } from '../../proto/xchangerpc_pb';
+import { CreateReverseSwapRequest } from '../../proto/boltzrpc_pb';
 import { getOrderSide } from '../Utils';
 
 export const command = 'createreverseswap <pair_id> <order_side> <claim_public_key> <amount>';
@@ -29,5 +29,5 @@ export const handler = (argv: Arguments) => {
   request.setClaimPublicKey(argv.claim_public_key);
   request.setAmount(argv.amount);
 
-  loadXchangeClient(argv).createReverseSwap(request, callback);
+  loadBoltzClient(argv).createReverseSwap(request, callback);
 };

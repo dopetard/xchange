@@ -1,6 +1,6 @@
 import { Arguments } from 'yargs';
-import { callback, loadXchangeClient } from '../Command';
-import { NewAddressRequest } from '../../proto/xchangerpc_pb';
+import { callback, loadBoltzClient } from '../Command';
+import { NewAddressRequest } from '../../proto/boltzrpc_pb';
 import { getOutputType } from '../Utils';
 import BuilderComponents from '../BuilderComponents';
 
@@ -22,5 +22,5 @@ export const handler = (argv: Arguments) => {
   request.setCurrency(argv.currency);
   request.setType(getOutputType(argv.type));
 
-  loadXchangeClient(argv).newAddress(request, callback);
+  loadBoltzClient(argv).newAddress(request, callback);
 };

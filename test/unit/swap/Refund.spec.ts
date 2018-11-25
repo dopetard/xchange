@@ -5,7 +5,7 @@ import { address } from 'bitcoinjs-lib';
 import { getHexBuffer } from '../../../lib/Utils';
 import Networks from '../../../lib/consts/Networks';
 import { constructRefundTransaction } from '../../../lib/swap/Refund';
-import { OutputType } from '../../../lib/proto/xchangerpc_pb';
+import { OutputType } from '../../../lib/proto/boltzrpc_pb';
 
 // TODO: use valid values
 describe('Refund', () => {

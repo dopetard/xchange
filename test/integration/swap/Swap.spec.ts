@@ -7,7 +7,7 @@ import { constructClaimTransaction } from '../../../lib/swap/Claim';
 import { constructRefundTransaction } from '../../../lib/swap/Refund';
 import Networks from '../../../lib/consts/Networks';
 import { btcManager, btcdClient, btcAddress } from '../chain/ChainClient.spec';
-import { OutputType } from '../../../lib/proto/xchangerpc_pb';
+import { OutputType } from '../../../lib/proto/boltzrpc_pb';
 import { TransactionOutput } from '../../../lib/consts/Types';
 
 describe('Submarine Swaps', () => {

@@ -1,7 +1,7 @@
 import { BIP32 } from 'bip32';
 import { Transaction, Network, address, crypto, TransactionBuilder, ECPair } from 'bitcoinjs-lib';
 import ChainClient from '../chain/ChainClient';
-import { OutputType } from '../proto/xchangerpc_pb';
+import { OutputType } from '../proto/boltzrpc_pb';
 import { getPubKeyHashEncodeFuntion, getHexString, getHexBuffer } from '../Utils';
 import Errors from './Errors';
 import Logger from '../Logger';
@@ -22,7 +22,7 @@ type WalletBalance = {
   unconfirmedBalance: number;
 };
 
-// TODO: detect funds received during Xchange being offline
+// TODO: detect funds received whlie Boltz was not running
 // TODO: wait for funds being confirmed
 // TODO: fix coinbase transactions not being recognised
 // TODO: more advanced UTXO management
@@ -56,7 +56,7 @@ class Wallet {
 
     // If a transaction is found in the mempool and mined a few milliseconds afterwards
     // it can happen that the UTXO gets inserted in the database twice which would result
-    // in "SequelizeUniqueConstraintError: Validation error" errors. To avoid these errors
+    // in "SequelizeUniqueConstraintError: Validation error". To avoid these errors
     // this Map between the txHex of unconfirmed transactions and their database insertion
     // Promises is checked before inserting a confirmed transaction into the database.
     const mempoolInsertPromises = new Map<string, Promise<UtxoInstance>>();

@@ -1,7 +1,7 @@
 import os from 'os';
 import path from 'path';
 import { p2wshOutput, p2shP2wshOutput, p2shOutput, p2wpkhOutput, p2pkhOutput, p2shP2wpkhOutput } from './swap/Scripts';
-import { OutputType } from './proto/xchangerpc_pb';
+import { OutputType } from './proto/boltzrpc_pb';
 
 /**
  * Get the pair id of a pair

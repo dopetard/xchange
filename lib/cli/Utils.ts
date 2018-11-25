@@ -1,8 +1,8 @@
 import { Arguments } from 'yargs';
 import { address, ECPair, Transaction } from 'bitcoinjs-lib';
-import { getHexBuffer, getHexString } from '../Utils';
+import { getHexBuffer } from '../Utils';
 import Networks from '../consts/Networks';
-import { OutputType, OrderSide } from '../proto/xchangerpc_pb';
+import { OutputType, OrderSide } from '../proto/boltzrpc_pb';
 import { detectSwap } from '../swap/SwapDetector';
 import { constructClaimTransaction } from '../swap/Claim';
 import { constructRefundTransaction } from '../swap/Refund';

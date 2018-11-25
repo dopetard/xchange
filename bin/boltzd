@@ -1,11 +1,11 @@
 #!/usr/bin/env node
 
-const Xchange = require('../dist/Xchange').default;
+const Boltz = require('../dist/Boltz').default;
 
 const { argv } = require('yargs')
   .options({
     datadir: {
-      describe: 'Data directory for Xchange',
+      describe: 'Data directory of Boltz',
       alias: 'w',
       type: 'string',
     },
@@ -28,35 +28,23 @@ const { argv } = require('yargs')
       describe: 'Path to the wallet file',
     },
     'grpc.host': {
-      describe: 'Host for the Xchange gRPC interface',
+      describe: 'Host of the Boltz gRPC interface',
       type: 'string',
     },
     'grpc.port': {
-      describe: 'Port for the Xchange gRPC interface',
+      describe: 'Port of the Boltz gRPC interface',
       type: 'number',
     },
     'grpc.certpath': {
-      describe: 'Path to the TLS certificate of the Xchange gRPC interface',
+      describe: 'Path to the TLS certificate of the Boltz gRPC interface',
       type: 'string',
     },
     'grpc.keypath': {
-      describe: 'Path to the key of the TLS certificate of the Xchange gRPC interface',
-      type: 'string',
-    },
-    'xud.host': {
-      describe: 'Host of the XUD gRPC interface',
-      type: 'string',
-    },
-    'xud.port': {
-      describe: 'Port of the XUD gRPC interface',
-      type: 'number',
-    },
-    'xud.certpath': {
-      describe: 'Path to the certificate of the XUD gRPC interface',
+      describe: 'Path to the key of the TLS certificate of the Boltz gRPC interface',
       type: 'string',
     },
     currencies: {
-      describe: 'Currencies that XChange should support',
+      describe: 'Currencies that Boltz should support',
       type: 'array',
     },
   });
@@ -67,5 +55,5 @@ delete argv.version;
 delete argv.help;
 delete argv.$0;
 
-const xchange = new Xchange(argv);
-xchange.start();
+const boltz = new Boltz(argv);
+boltz.start();

@@ -3,17 +3,17 @@ import path from 'path';
 import grpc from 'grpc';
 import { Arguments } from 'yargs';
 import { getServiceDataDir } from '../Utils';
-import { XchangeClient } from '../proto/xchangerpc_grpc_pb';
+import { BoltzClient } from '../proto/boltzrpc_grpc_pb';
 
 export interface GrpcResponse {
   toObject: Function;
 }
 
-export const loadXchangeClient = (argv: Arguments): XchangeClient => {
-  const certPath = argv.tlscertpath ? argv.tlscertpath : path.join(getServiceDataDir('xchange'), 'tls.cert');
+export const loadBoltzClient = (argv: Arguments): BoltzClient => {
+  const certPath = argv.tlscertpath ? argv.tlscertpath : path.join(getServiceDataDir('boltz'), 'tls.cert');
   const cert = fs.readFileSync(certPath);
 
-  return new XchangeClient(`${argv.rpc.host}:${argv.rpc.port}`, grpc.credentials.createSsl(cert));
+  return new BoltzClient(`${argv.rpc.host}:${argv.rpc.port}`, grpc.credentials.createSsl(cert));
 };
 
 export const callback = (error: Error | null, response: GrpcResponse) => {

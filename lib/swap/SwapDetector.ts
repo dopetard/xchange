@@ -5,10 +5,10 @@
 import { Transaction, Out } from 'bitcoinjs-lib';
 import { p2shOutput, p2shP2wshOutput, p2wshOutput } from './Scripts';
 import { getHexString } from '../Utils';
-import { OutputType } from '../proto/xchangerpc_pb';
+import { OutputType } from '../proto/boltzrpc_pb';
 
 /**
- * Detects a swap output with the matching redeem script in the transaction
+ * Detects a swap output with the matching redeem script in a transaction
  */
 export const detectSwap = (redeemScript: Buffer, transaction: Transaction) => {
   const scripts = [

@@ -6,7 +6,7 @@ import bip39 from 'bip39';
 import Networks from '../../../lib/consts/Networks';
 import Wallet from '../../../lib/wallet/Wallet';
 import ChainClient from '../../../lib/chain/ChainClient';
-import { OutputType } from '../../../lib/proto/xchangerpc_pb';
+import { OutputType } from '../../../lib/proto/boltzrpc_pb';
 import { getPubKeyHashEncodeFuntion, getHexBuffer } from '../../../lib/Utils';
 import Logger from '../../../lib/Logger';
 import Database from '../../../lib/db/Database';

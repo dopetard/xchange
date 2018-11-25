@@ -8,7 +8,7 @@ import * as bip65 from 'bip65';
 import * as varuint from 'varuint-bitcoin';
 import { Transaction, crypto, script, ECPair } from 'bitcoinjs-lib';
 import { encodeSignature, scriptBuffersToScript } from './SwapUtils';
-import { OutputType } from '../proto/xchangerpc_pb';
+import { OutputType } from '../proto/boltzrpc_pb';
 import { TransactionOutput } from '../consts/Types';
 
 // TODO: claiming with multiple UTXOs

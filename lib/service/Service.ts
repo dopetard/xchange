@@ -1,19 +1,17 @@
 import Logger from '../Logger';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
 import { Info as LndInfo } from '../lightning/LndClient';
-import XudClient, { XudInfo } from '../xud/XudClient';
 import SwapManager from '../swap/SwapManager';
 import WalletManager, { Currency } from '../wallet/WalletManager';
 import { WalletBalance } from '../wallet/Wallet';
 import Errors from './Errors';
 import { getHexBuffer, getOutputType } from '../Utils';
-import { OrderSide } from '../proto/xchangerpc_pb';
+import { OrderSide } from '../proto/boltzrpc_pb';
 
 const packageJson = require('../../package.json');
 
 type ServiceComponents = {
   logger: Logger;
-  xudClient: XudClient;
   currencies: Map<string, Currency>;
   walletManager: WalletManager;
   swapManager: SwapManager;
@@ -25,9 +23,8 @@ type CurrencyInfo = {
   lndInfo: LndInfo;
 };
 
-type XchangeInfo = {
+type BoltzInfo = {
   version: string;
-  xudInfo: XudInfo;
   currencies: CurrencyInfo[];
 };
 
@@ -38,10 +35,10 @@ class Service {
 
   // TODO: error handling if a service is offline
   /**
-   * Gets general information about this Xchange instance and the nodes it is connected to
+   * Gets general information about this Boltz instance and the nodes it is connected to
    */
-  public getInfo = async (): Promise<XchangeInfo> => {
-    const { xudClient, currencies } = this.serviceComponents;
+  public getInfo = async (): Promise<BoltzInfo> => {
+    const { currencies } = this.serviceComponents;
     const version = packageJson.version;
 
     const currencyInfos: CurrencyInfo[] = [];
@@ -65,11 +62,8 @@ class Service {
 
     await Promise.all(currenciesPromises);
 
-    const xudInfo = await xudClient.getXudInfo();
-
     return {
       version,
-      xudInfo,
       currencies: currencyInfos,
     };
   }

@@ -19,7 +19,7 @@ export default {
     type: 'string',
   },
   lockupTransaction: {
-    describe: 'hex encoded transaction in which Xchange locked up the funds',
+    describe: 'hex encoded lockup transaction',
     type: 'string',
   },
   redeemScript: {

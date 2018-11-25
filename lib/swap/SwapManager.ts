@@ -8,7 +8,7 @@ import { constructClaimTransaction } from './Claim';
 import { TransactionOutput } from '../consts/Types';
 import Errors from './Errors';
 import WalletManager, { Currency } from '../wallet/WalletManager';
-import { OrderSide, OutputType } from '../proto/xchangerpc_pb';
+import { OrderSide, OutputType } from '../proto/boltzrpc_pb';
 import LndClient from '../lightning/LndClient';
 import { encodeBip21, getBip21Prefix } from './SwapUtils';
 
@@ -46,7 +46,7 @@ type SwapMaps = {
 // TODO: custom rates
 // TODO: configurable timeouts
 // TODO: verify values and amounts
-// TODO: fees for the Xchange to collect
+// TODO: fees for the Boltz to collect
 // TODO: automatically refund failed swaps
 class SwapManager {
   public currencies = new Map<string, Currency & SwapMaps>();

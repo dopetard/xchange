@@ -1,13 +1,12 @@
 /* tslint:disable no-null-keyword */
 import grpc from 'grpc';
 import Service from '../service/Service';
-import * as xchangerpc from '../proto/xchangerpc_pb';
+import * as boltzrpc from '../proto/boltzrpc_pb';
 import { Info as LndInfo } from '../lightning/LndClient';
 import { Info as ChainInfo } from '../chain/ChainClientInterface';
-import { XudInfo } from '../xud/XudClient';
 
-const createChainClientInfo = (info: ChainInfo): xchangerpc.ChainInfo => {
-  const chainInfo = new xchangerpc.ChainInfo();
+const createChainClientInfo = (info: ChainInfo): boltzrpc.ChainInfo => {
+  const chainInfo = new boltzrpc.ChainInfo();
   const { version, protocolversion, blocks, connections, testnet } = info;
 
   chainInfo.setVersion(version);
@@ -19,12 +18,12 @@ const createChainClientInfo = (info: ChainInfo): xchangerpc.ChainInfo => {
   return chainInfo;
 };
 
-const createLndInfo = (lndInfo: LndInfo): xchangerpc.LndInfo => {
-  const lnd = new xchangerpc.LndInfo();
+const createLndInfo = (lndInfo: LndInfo): boltzrpc.LndInfo => {
+  const lnd = new boltzrpc.LndInfo();
   const { version, blockheight, error } = lndInfo;
 
   if (lndInfo.channels) {
-    const channels = new xchangerpc.LndChannels();
+    const channels = new boltzrpc.LndChannels();
 
     channels.setActive(lndInfo.channels.active);
     channels.setPending(lndInfo.channels.pending);
@@ -41,33 +40,20 @@ const createLndInfo = (lndInfo: LndInfo): xchangerpc.LndInfo => {
   return lnd;
 };
 
-const createXudInfo = (xudInfo: XudInfo): xchangerpc.XudInfo => {
-  const xud = new xchangerpc.XudInfo();
-  const { version, nodepubkey, lndbtc, lndltc, raiden } = xudInfo;
-
-  xud.setVersion(version);
-  xud.setNodepubkey(nodepubkey);
-  xud.setLndbtc(lndbtc);
-  xud.setLndltc(lndltc);
-  xud.setRaiden(raiden);
-
-  return xud;
-};
-
 class GrpcService {
   constructor(private service: Service) {}
 
-  public getInfo: grpc.handleUnaryCall<xchangerpc.GetInfoRequest, xchangerpc.GetInfoResponse> = async (_, callback) => {
+  public getInfo: grpc.handleUnaryCall<boltzrpc.GetInfoRequest, boltzrpc.GetInfoResponse> = async (_, callback) => {
     try {
       const getInfoResponse = await this.service.getInfo();
 
-      const response = new xchangerpc.GetInfoResponse();
+      const response = new boltzrpc.GetInfoResponse();
       response.setVersion(getInfoResponse.version);
 
-      const currencies: xchangerpc.CurrencyInfo[] = [];
+      const currencies: boltzrpc.CurrencyInfo[] = [];
 
       getInfoResponse.currencies.forEach((currency) => {
-        const currencyInfo = new xchangerpc.CurrencyInfo();
+        const currencyInfo = new boltzrpc.CurrencyInfo();
 
         currencyInfo.setSymbol(currency.symbol);
         currencyInfo.setChain(createChainClientInfo(currency.chainInfo));
@@ -77,7 +63,6 @@ class GrpcService {
       });
 
       response.setChainsList(currencies);
-      response.setXudinfo(createXudInfo(getInfoResponse.xudInfo));
 
       callback(null, response);
     } catch (error) {
@@ -85,16 +70,16 @@ class GrpcService {
     }
   }
 
-  public getBalance: grpc.handleUnaryCall<xchangerpc.GetBalanceRequest, xchangerpc.GetBalanceResponse> = async (call, callback) => {
+  public getBalance: grpc.handleUnaryCall<boltzrpc.GetBalanceRequest, boltzrpc.GetBalanceResponse> = async (call, callback) => {
     try {
       const balances = await this.service.getBalance(call.request.toObject());
 
-      const response = new xchangerpc.GetBalanceResponse();
+      const response = new boltzrpc.GetBalanceResponse();
 
-      const responseMap: Map<string, xchangerpc.WalletBalance> = response.getBalancesMap();
+      const responseMap: Map<string, boltzrpc.WalletBalance> = response.getBalancesMap();
 
       balances.forEach((balance, currency) => {
-        const walletBalance = new xchangerpc.WalletBalance();
+        const walletBalance = new boltzrpc.WalletBalance();
 
         walletBalance.setTotalBalance(balance.totalBalance);
         walletBalance.setConfirmedBalance(balance.confirmedBalance);
@@ -109,11 +94,11 @@ class GrpcService {
     }
   }
 
-  public newAddress: grpc.handleUnaryCall<xchangerpc.NewAddressRequest, xchangerpc.NewAddressResponse> = async (call, callback) => {
+  public newAddress: grpc.handleUnaryCall<boltzrpc.NewAddressRequest, boltzrpc.NewAddressResponse> = async (call, callback) => {
     try {
       const address = await this.service.newAddress(call.request.toObject());
 
-      const response = new xchangerpc.NewAddressResponse();
+      const response = new boltzrpc.NewAddressResponse();
       response.setAddress(address);
 
       callback(null, response);
@@ -122,11 +107,11 @@ class GrpcService {
     }
   }
 
-  public createSwap: grpc.handleUnaryCall<xchangerpc.CreateSwapRequest, xchangerpc.CreateSwapResponse> = async (call, callback) => {
+  public createSwap: grpc.handleUnaryCall<boltzrpc.CreateSwapRequest, boltzrpc.CreateSwapResponse> = async (call, callback) => {
     try {
       const { address, redeemScript, expectedAmount, bip21 } = await this.service.createSwap(call.request.toObject());
 
-      const response = new xchangerpc.CreateSwapResponse();
+      const response = new boltzrpc.CreateSwapResponse();
       response.setAddress(address);
       response.setRedeemScript(redeemScript);
       response.setExpectedAmount(expectedAmount);
@@ -138,13 +123,13 @@ class GrpcService {
     }
   }
 
-  public createReverseSwap: grpc.handleUnaryCall<xchangerpc.CreateReverseSwapRequest, xchangerpc.CreateReverseSwapResponse> =
+  public createReverseSwap: grpc.handleUnaryCall<boltzrpc.CreateReverseSwapRequest, boltzrpc.CreateReverseSwapResponse> =
   async (call, callback) => {
 
     try {
       const { invoice, redeemScript, transaction, transactionHash } = await this.service.createReverseSwap(call.request.toObject());
 
-      const response = new xchangerpc.CreateReverseSwapResponse();
+      const response = new boltzrpc.CreateReverseSwapResponse();
       response.setInvoice(invoice);
       response.setRedeemScript(redeemScript);
       response.setTransaction(transaction);

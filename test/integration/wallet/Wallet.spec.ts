@@ -3,7 +3,7 @@ import bip32 from 'bip32';
 import bip39 from 'bip39';
 import Wallet from '../../../lib/wallet/Wallet';
 import Networks from '../../../lib/consts/Networks';
-import { OutputType } from '../../../lib/proto/xchangerpc_pb';
+import { OutputType } from '../../../lib/proto/boltzrpc_pb';
 import { btcdClient, btcManager, btcAddress } from '../chain/ChainClient.spec';
 import Logger from '../../../lib/Logger';
 import Database from '../../../lib/db/Database';

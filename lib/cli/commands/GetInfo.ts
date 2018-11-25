@@ -1,11 +1,11 @@
 import { Arguments } from 'yargs';
-import { callback, loadXchangeClient } from '../Command';
-import { GetInfoRequest } from '../../proto/xchangerpc_pb';
+import { callback, loadBoltzClient } from '../Command';
+import { GetInfoRequest } from '../../proto/boltzrpc_pb';
 
 export const command = 'getinfo';
 
-export const describe = 'get information about the Xchange instance';
+export const describe = 'get information about the Boltz instance';
 
 export const handler = (argv: Arguments) => {
-  loadXchangeClient(argv).getInfo(new GetInfoRequest(), callback);
+  loadBoltzClient(argv).getInfo(new GetInfoRequest(), callback);
 };
