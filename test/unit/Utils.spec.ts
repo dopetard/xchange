@@ -49,7 +49,7 @@ describe('Utils', () => {
   });
 
   it('should resolve home', () => {
-    const input = '~.xchange';
+    const input = '~.boltz';
 
     if (os.platform() !== 'win32') {
       expect(utils.resolveHome(input).charAt(0)).to.be.equal('/');

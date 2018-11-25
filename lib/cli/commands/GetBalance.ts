@@ -1,6 +1,6 @@
 import { Arguments } from 'yargs';
-import { callback, loadXchangeClient } from '../Command';
-import { GetBalanceRequest } from '../../proto/xchangerpc_pb';
+import { callback, loadBoltzClient } from '../Command';
+import { GetBalanceRequest } from '../../proto/boltzrpc_pb';
 
 export const command = 'getbalance [currency]';
 
@@ -18,5 +18,5 @@ export const handler = (argv: Arguments) => {
 
   request.setCurrency(argv.currency);
 
-  loadXchangeClient(argv).getBalance(request, callback);
+  loadBoltzClient(argv).getBalance(request, callback);
 };

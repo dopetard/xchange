@@ -1,5 +1,5 @@
 import { Out } from 'bitcoinjs-lib';
-import { OutputType } from '../proto/xchangerpc_pb';
+import { OutputType } from '../proto/boltzrpc_pb';
 
 export type Error = {
   message: string;

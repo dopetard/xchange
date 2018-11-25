@@ -1,8 +1,8 @@
 import { Arguments } from 'yargs';
 import * as qrcode from 'qrcode-terminal';
-import { loadXchangeClient, GrpcResponse, printError, printResponse } from '../Command';
+import { loadBoltzClient, GrpcResponse, printError, printResponse } from '../Command';
 import BuilderComponents from '../BuilderComponents';
-import { CreateSwapRequest } from '../../proto/xchangerpc_pb';
+import { CreateSwapRequest } from '../../proto/boltzrpc_pb';
 import { getOutputType, getOrderSide } from '../Utils';
 
 export const command = 'createswap <pair_id> <order_side> <invoice> <refund_public_key> [output_type] [show_qr]';
@@ -55,5 +55,5 @@ export const handler = (argv: Arguments) => {
 
   showQr = argv.show_qr;
 
-  loadXchangeClient(argv).createSwap(request, callback);
+  loadBoltzClient(argv).createSwap(request, callback);
 };

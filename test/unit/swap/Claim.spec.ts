@@ -4,7 +4,7 @@ import { fromBase58 } from 'bip32';
 import { address } from 'bitcoinjs-lib';
 import { getHexBuffer } from '../../../lib/Utils';
 import Networks from '../../../lib/consts/Networks';
-import { OutputType } from '../../../lib/proto/xchangerpc_pb';
+import { OutputType } from '../../../lib/proto/boltzrpc_pb';
 import { constructClaimTransaction } from '../../../lib/swap/Claim';
 
 // TODO: use valid values

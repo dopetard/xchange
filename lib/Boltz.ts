@@ -9,18 +9,15 @@ import Service from './service/Service';
 import WalletManager, { Currency } from './wallet/WalletManager';
 import SwapManager from './swap/SwapManager';
 import ChainClient from './chain/ChainClient';
-import XudClient from './xud/XudClient';
 import Networks from './consts/Networks';
 import Database from './db/Database';
 
-// TODO: trading pairs with already existing currencies like XUD
-class Xchange {
+// TODO: configurable trading pairs
+class Boltz {
   private config: ConfigType;
   private logger: Logger;
 
   private db: Database;
-
-  private xudClient: XudClient;
 
   private currencies = new Map<string, Currency>();
 
@@ -35,8 +32,6 @@ class Xchange {
     this.logger = new Logger(this.config.logpath, this.config.loglevel);
 
     this.db = new Database(this.logger, this.config.dbpath);
-
-    this.xudClient = new XudClient(this.logger, this.config.xud);
 
     this.parseCurrencies();
 
@@ -66,7 +61,6 @@ class Xchange {
     this.service = new Service({
       logger: this.logger,
       currencies: this.currencies,
-      xudClient: this.xudClient,
       swapManager: this.swapManager,
       walletManager: this.walletManager,
     });
@@ -77,7 +71,6 @@ class Xchange {
   public start = async () => {
     const promises = [
       this.db.init(),
-      this.connectXud(),
     ];
 
     this.currencies.forEach((currency) => {
@@ -122,17 +115,6 @@ class Xchange {
     }
   }
 
-  private connectXud = async () => {
-    try {
-      await this.xudClient.connect();
-
-      const info = await this.xudClient.getXudInfo();
-      this.logStatus('XUD', info);
-    } catch (error) {
-      this.logCouldNotConnect(XudClient.serviceName, error);
-    }
-  }
-
   // TODO: support for more currencies
   private parseCurrencies = () => {
     this.config.currencies.forEach((currency) => {
@@ -161,4 +143,4 @@ class Xchange {
   }
 }
 
-export default Xchange;
+export default Boltz;

@@ -1,9 +1,9 @@
 syntax = "proto3";
 
-package xchangerpc;
+package boltzrpc;
 
-service Xchange {
-  /* Gets general information about this Xchange instance and the nodes it is connected to */
+service Boltz {
+  /* Gets general information about this Boltz instance and the nodes it is connected to */
   rpc GetInfo (GetInfoRequest) returns (GetInfoResponse);
 
   /* Gets the balance for either all wallets or just a single one if specified */
@@ -33,16 +33,7 @@ enum OrderSide {
 message GetInfoRequest {}
 message GetInfoResponse {
   string version = 1;
-  XudInfo xudInfo = 2;
   repeated CurrencyInfo chains = 3;
-}
-
-message XudInfo {
-  string version = 1;
-  string nodepubkey = 2;
-  bool lndbtc = 3;
-  bool lndltc = 4;
-  bool raiden = 5;
 }
 
 message CurrencyInfo {

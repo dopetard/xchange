@@ -1,6 +1,6 @@
 // tslint:disable:max-line-length
 import { expect } from 'chai';
-import { OutputType } from '../../../lib/proto/xchangerpc_pb';
+import { OutputType } from '../../../lib/proto/boltzrpc_pb';
 import { estimateFee } from '../../../lib/wallet/FeeCalculator';
 import { getHexBuffer } from '../../../lib/Utils';
 

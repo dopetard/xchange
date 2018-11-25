@@ -1,5 +1,5 @@
-// package: xchangerpc
-// file: xchangerpc.proto
+// package: boltzrpc
+// file: boltzrpc.proto
 
 /* tslint:disable */
 
@@ -26,12 +26,6 @@ export class GetInfoResponse extends jspb.Message {
     getVersion(): string;
     setVersion(value: string): void;
 
-
-    hasXudinfo(): boolean;
-    clearXudinfo(): void;
-    getXudinfo(): XudInfo | undefined;
-    setXudinfo(value?: XudInfo): void;
-
     clearChainsList(): void;
     getChainsList(): Array<CurrencyInfo>;
     setChainsList(value: Array<CurrencyInfo>): void;
@@ -51,45 +45,7 @@ export class GetInfoResponse extends jspb.Message {
 export namespace GetInfoResponse {
     export type AsObject = {
         version: string,
-        xudinfo?: XudInfo.AsObject,
         chainsList: Array<CurrencyInfo.AsObject>,
-    }
-}
-
-export class XudInfo extends jspb.Message { 
-    getVersion(): string;
-    setVersion(value: string): void;
-
-    getNodepubkey(): string;
-    setNodepubkey(value: string): void;
-
-    getLndbtc(): boolean;
-    setLndbtc(value: boolean): void;
-
-    getLndltc(): boolean;
-    setLndltc(value: boolean): void;
-
-    getRaiden(): boolean;
-    setRaiden(value: boolean): void;
-
-
-    serializeBinary(): Uint8Array;
-    toObject(includeInstance?: boolean): XudInfo.AsObject;
-    static toObject(includeInstance: boolean, msg: XudInfo): XudInfo.AsObject;
-    static extensions: {[key: number]: jspb.ExtensionFieldInfo<jspb.Message>};
-    static extensionsBinary: {[key: number]: jspb.ExtensionFieldBinaryInfo<jspb.Message>};
-    static serializeBinaryToWriter(message: XudInfo, writer: jspb.BinaryWriter): void;
-    static deserializeBinary(bytes: Uint8Array): XudInfo;
-    static deserializeBinaryFromReader(message: XudInfo, reader: jspb.BinaryReader): XudInfo;
-}
-
-export namespace XudInfo {
-    export type AsObject = {
-        version: string,
-        nodepubkey: string,
-        lndbtc: boolean,
-        lndltc: boolean,
-        raiden: boolean,
     }
 }
 

@@ -6,19 +6,19 @@ require('yargs')
       hidden: true,
     },
     'rpc.host': {
-      describe: 'RPC service host',
+      describe: 'gRPC service host',
       alias: 'h',
       default: '127.0.0.1',
       type: 'string',
     },
     'rpc.port': {
-      describe: 'RPC service port',
+      describe: 'gRPC service port',
       alias: 'p',
       default: 9000,
       type: 'number',
     },
     tlscertpath: {
-      describe: 'Path to TLS cert',
+      describe: 'Path to the TLS certificate',
       type: 'string',
       alias: 't',
     },
